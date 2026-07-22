@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0E14;color:#C9D1D9;font-family:'Space Grotesk',-apple-system,'Segoe UI',system-ui,sans-serif;}
+a{color:#22FF88;text-decoration:none}
+a:hover{color:#8CFFC4;text-decoration:underline}
+::selection{background:#22FF88;color:#0B0E14}
+input::placeholder{color:#4E5866}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes scan{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0B0E14;color:#C9D1D9;font-family:'Space Grotesk',-apple-system,'Segoe UI',system-ui,sans-serif;font-size:16px;line-height:1.55">
+
+  <nav data-screen-label="Navbar" style="display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1120px;margin:0 auto;padding:18px 24px;border-bottom:1px solid #1C2330">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="width:8px;height:8px;background:#22FF88;border-radius:2px;animation:pulse 2s ease-in-out infinite"></span>
+      <span style="font-weight:700;font-size:19px;letter-spacing:-0.02em;color:#E8EDF3">PrecioReal<span style="color:#22FF88;font-family:'JetBrains Mono',monospace;animation:blink 1.1s steps(1) infinite">_</span></span>
+    </div>
+    <a href="https://t.me/precioreal_mx" target="_blank" rel="noopener" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#22FF88;border:1px solid #1F5C3D;padding:9px 16px;border-radius:4px;text-decoration:none" style-hover="background:#122419;text-decoration:none;color:#8CFFC4" style-focus="outline:2px solid #22FF88;outline-offset:2px">Únete al Telegram</a>
+  </nav>
+
+  <header data-screen-label="Hero" style="max-width:1120px;margin:0 auto;padding:72px 24px 56px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center;background-image:linear-gradient(rgba(34,255,136,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(34,255,136,0.03) 1px,transparent 1px);background-size:48px 48px">
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5C6878">~/precioreal $ verify --evento buen-fin<span style="color:#22FF88;animation:blink 1.1s steps(1) infinite">▌</span></div>
+      <h1 style="margin:0;font-size:clamp(38px,5.5vw,60px);line-height:1.05;font-weight:700;letter-spacing:-0.03em;color:#E8EDF3">¿Ese descuento<br>es <span style="color:#22FF88">real</span>?</h1>
+      <p style="margin:0;max-width:46ch;font-size:17px;color:#9AA6B5;text-wrap:pretty">Rastreamos los precios de hardware en México todos los días. Cuando llega la "oferta", nosotros ya sabemos cuánto costaba antes.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px">
+        <a href="#suscribete" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;background:#22FF88;color:#0B0E14;padding:13px 22px;border-radius:4px;text-decoration:none" style-hover="background:#8CFFC4;text-decoration:none;color:#0B0E14" style-focus="outline:2px solid #22FF88;outline-offset:2px">Avísame de ofertas reales</a>
+        <a href="https://t.me/precioreal_mx" target="_blank" rel="noopener" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;color:#C9D1D9;border:1px solid #2A3342;padding:13px 22px;border-radius:4px;text-decoration:none" style-hover="border-color:#22FF88;color:#22FF88;text-decoration:none" style-focus="outline:2px solid #22FF88;outline-offset:2px">Ver el canal de Telegram</a>
+      </div>
+    </div>
+    <figure style="margin:0;background:#12161F;border:1px solid #1C2330;border-radius:6px;overflow:hidden">
+      <figcaption style="display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid #1C2330;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5C6878">
+        <span>track --producto "SSD NVMe 2TB" --dias 90</span>
+        <span>MXN · diario</span>
+      </figcaption>
+      <svg viewBox="0 0 640 320" role="img" aria-label="Historial de precio: estable en $2,299, inflado a $3,499 antes del evento, y 'descuento' a $2,799 — arriba del precio original" style="display:block;width:100%;height:auto">
+        <g font-family="JetBrains Mono,monospace" font-size="11" fill="#4E5866">
+          <line x1="40" y1="20" x2="620" y2="20" stroke="#1C2330" stroke-width="1"></line>
+          <line x1="40" y1="107" x2="620" y2="107" stroke="#1C2330" stroke-width="1"></line>
+          <line x1="40" y1="193" x2="620" y2="193" stroke="#1C2330" stroke-width="1"></line>
+          <line x1="40" y1="280" x2="620" y2="280" stroke="#1C2330" stroke-width="1"></line>
+          <text x="36" y="24" text-anchor="end" font-size="10">$3,500</text>
+          <text x="36" y="111" text-anchor="end" font-size="10">$3,000</text>
+          <text x="36" y="197" text-anchor="end" font-size="10">$2,500</text>
+          <text x="36" y="284" text-anchor="end" font-size="10">$2,000</text>
+          <text x="40" y="304" font-size="10">hace 90 días</text>
+          <text x="620" y="304" text-anchor="end" font-size="10">hoy</text>
+        </g>
+        <line x1="40" y1="228" x2="620" y2="228" stroke="#22FF88" stroke-width="1" stroke-dasharray="4 5" opacity="0.5"></line>
+        <polyline points="40,228 120,226 200,229 280,227 340,228 394,228" fill="none" stroke="#22FF88" stroke-width="2.5"></polyline>
+        <polyline points="394,228 439,20 523,20" fill="none" stroke="#FF4D4D" stroke-width="2.5"></polyline>
+        <polyline points="523,20 529,142 620,142" fill="none" stroke="#FFB347" stroke-width="2.5"></polyline>
+        <circle cx="394" cy="228" r="4" fill="#22FF88"></circle>
+        <circle cx="523" cy="20" r="4" fill="#FF4D4D"></circle>
+        <circle cx="620" cy="142" r="4" fill="#FFB347"></circle>
+        <g font-family="JetBrains Mono,monospace" font-size="11">
+          <text x="46" y="218" fill="#22FF88">precio real · $2,299</text>
+          <text x="514" y="42" text-anchor="end" fill="#FF4D4D">inflado antes del evento · $3,499</text>
+          <text x="614" y="130" text-anchor="end" fill="#FFB347">el "descuento" · $2,799</text>
+        </g>
+      </svg>
+      <div style="display:flex;gap:18px;padding:10px 14px;border-top:1px solid #1C2330;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5C6878">
+        <span style="color:#22FF88">— precio real</span>
+        <span style="color:#FF4D4D">— inflado</span>
+        <span style="color:#FFB347">— "descuento" (sigue arriba del real)</span>
+      </div>
+    </figure>
+  </header>
+
+  <section data-screen-label="Detectadas hoy" style="max-width:1120px;margin:0 auto;padding:40px 24px 64px">
+    <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:20px">
+      <h2 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em;color:#E8EDF3">Detectadas hoy</h2>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5C6878">{{ updatedText }}</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+      <sc-for list="{{ chips }}" as="chip" hint-placeholder-count="5">
+        <button onClick="{{ chip.onClick }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 14px;border-radius:4px;cursor:pointer;background:{{ chip.bg }};color:{{ chip.color }};border:1px solid {{ chip.border }}" style-hover="border-color:#22FF88" style-focus="outline:2px solid #22FF88;outline-offset:2px">{{ chip.label }}</button>
+      </sc-for>
+    </div>
+    <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+        <sc-for list="{{ skeletons }}" as="sk" hint-placeholder-count="6">
+          <div style="height:190px;border:1px solid #1C2330;border-radius:6px;background:linear-gradient(90deg,#12161F 25%,#1A2130 50%,#12161F 75%);background-size:200% 100%;animation:scan 1.4s linear infinite"></div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid #4A2020;background:#1A1114;border-radius:6px;padding:32px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#FF4D4D">ERR_FEED_UNAVAILABLE</span>
+        <p style="margin:0;color:#9AA6B5;font-size:15px">No pudimos cargar las ofertas. La red falló, no nosotros.</p>
+        <button onClick="{{ retry }}" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;background:transparent;color:#22FF88;border:1px solid #1F5C3D;padding:10px 18px;border-radius:4px;cursor:pointer" style-hover="background:#122419" style-focus="outline:2px solid #22FF88;outline-offset:2px">Reintentar</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid #1C2330;background:#12161F;border-radius:6px;padding:40px 32px;text-align:center">
+        <p style="margin:0;color:#9AA6B5;font-size:15px;text-wrap:pretty">Sin ofertas verificadas ahora mismo — así se ve la honestidad.<br><a href="#suscribete">Suscríbete y te avisamos.</a></p>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasDeals }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+        <sc-for list="{{ deals }}" as="deal" hint-placeholder-count="6">
+          <article style="display:flex;flex-direction:column;gap:12px;background:#12161F;border:1px solid #1C2330;border-radius:6px;padding:18px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B96A5;border:1px solid #2A3342;padding:3px 8px;border-radius:3px">{{ deal.store }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#0B0E14;background:#22FF88;padding:3px 8px;border-radius:3px">{{ deal.badge }}</span>
+            </div>
+            <h3 style="margin:0;font-size:15px;font-weight:500;line-height:1.4;color:#C9D1D9;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:42px">{{ deal.product }}</h3>
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#22FF88">{{ deal.priceNow }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#5C6878;text-decoration:line-through">{{ deal.priceRef }}</span>
+            </div>
+            <a href="{{ deal.url }}" target="_blank" rel="noopener" style="margin-top:auto;font-family:'JetBrains Mono',monospace;font-size:13px;text-align:center;color:#C9D1D9;border:1px solid #2A3342;padding:9px 14px;border-radius:4px;text-decoration:none" style-hover="border-color:#22FF88;color:#22FF88;text-decoration:none" style-focus="outline:2px solid #22FF88;outline-offset:2px">Ver en tienda →</a>
+          </article>
+        </sc-for>
+      </div>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="Cómo funciona" style="border-top:1px solid #1C2330;background:#0D111A">
+    <div style="max-width:1120px;margin:0 auto;padding:64px 24px">
+      <h2 style="margin:0 0 32px;font-size:28px;font-weight:700;letter-spacing:-0.02em;color:#E8EDF3">Cómo funciona</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+        <sc-for list="{{ steps }}" as="step" hint-placeholder-count="3">
+          <div style="position:relative;background:#12161F;border:1px solid #1C2330;border-radius:6px;padding:22px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#22FF88;border:1px solid #1F5C3D;padding:3px 8px;border-radius:3px">{{ step.num }}</span>
+              <span style="flex:1;height:1px;background:repeating-linear-gradient(90deg,#2A3342 0 6px,transparent 6px 12px)"></span>
+            </div>
+            <h3 style="margin:0;font-size:17px;font-weight:600;color:#E8EDF3">{{ step.title }}</h3>
+            <p style="margin:0;font-size:14px;color:#9AA6B5;text-wrap:pretty">{{ step.body }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section data-screen-label="Contadores" style="border-top:1px solid #1C2330">
+    <div style="max-width:1120px;margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+      <sc-for list="{{ counters }}" as="c" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:4px;border-left:1px solid #1F5C3D;padding-left:16px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:#22FF88">{{ c.value }}</span>
+          <span style="font-size:13px;color:#8B96A5">{{ c.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="suscribete" data-screen-label="Captura de email" style="border-top:1px solid #1C2330;background:#0D111A">
+    <div style="max-width:680px;margin:0 auto;padding:72px 24px;display:flex;flex-direction:column;gap:20px">
+      <h2 style="margin:0;font-size:clamp(26px,4vw,36px);font-weight:700;letter-spacing:-0.02em;line-height:1.15;color:#E8EDF3;text-wrap:pretty">Buen Fin 2026 se acerca.<br>Llega sabiendo los <span style="color:#22FF88">precios reales</span>.</h2>
+      <sc-if value="{{ formSuccess }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid #1F5C3D;background:#122419;border-radius:6px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:15px;color:#22FF88">✓ Listo. Estás dentro.</div>
+      </sc-if>
+      <sc-if value="{{ formVisible }}" hint-placeholder-val="{{ true }}">
+        <form onSubmit="{{ onSubmit }}" style="display:flex;flex-wrap:wrap;gap:10px">
+          <input type="email" value="{{ emailValue }}" onChange="{{ onEmailChange }}" placeholder="tu@correo.com" aria-label="Tu correo electrónico" style="flex:1;min-width:220px;font-family:'JetBrains Mono',monospace;font-size:15px;background:#0B0E14;color:#C9D1D9;border:1px solid #2A3342;border-radius:4px;padding:13px 16px" style-focus="outline:2px solid #22FF88;outline-offset:1px;border-color:#22FF88"></input>
+          <button type="submit" disabled="{{ formLoading }}" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;background:#22FF88;color:#0B0E14;border:none;padding:13px 22px;border-radius:4px;cursor:pointer" style-hover="background:#8CFFC4" style-focus="outline:2px solid #22FF88;outline-offset:2px">{{ submitLabel }}</button>
+        </form>
+        <sc-if value="{{ formInvalid }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:-8px 0 0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#FF4D4D">Ese correo no se ve válido. Revísalo.</p>
+        </sc-if>
+        <sc-if value="{{ formServerError }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:-8px 0 0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#FFB347">Algo falló de nuestro lado. Intenta de nuevo en un momento.</p>
+        </sc-if>
+        <div style="width:300px;max-width:100%;height:65px;border:1px dashed #2A3342;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:#4E5866">[ Cloudflare Turnstile · sitekey placeholder ]</div>
+      </sc-if>
+      <p style="margin:0;font-size:13px;color:#5C6878">Sin spam. Solo ofertas que verificamos contra el historial. Date de baja cuando quieras.</p>
+    </div>
+  </section>
+
+  <section data-screen-label="CTA Telegram" style="border-top:1px solid #1C2330">
+    <div style="max-width:1120px;margin:0 auto;padding:56px 24px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <h2 style="margin:0;font-size:22px;font-weight:700;color:#E8EDF3">Las ofertas también caen en vivo en Telegram</h2>
+        <sc-if value="{{ showTelegramCount }}" hint-placeholder-val="{{ true }}">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#5C6878">@precioreal_mx · 1,240 miembros</span>
+        </sc-if>
+      </div>
+      <a href="https://t.me/precioreal_mx" target="_blank" rel="noopener" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;background:transparent;color:#22FF88;border:1px solid #1F5C3D;padding:13px 22px;border-radius:4px;text-decoration:none" style-hover="background:#122419;text-decoration:none" style-focus="outline:2px solid #22FF88;outline-offset:2px">Abrir @precioreal_mx →</a>
+    </div>
+  </section>
+
+  <footer data-screen-label="Footer" style="border-top:1px solid #1C2330;background:#0D111A">
+    <div style="max-width:1120px;margin:0 auto;padding:32px 24px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:baseline">
+        <span style="font-size:14px;color:#8B96A5">PrecioReal.mx — precios verificados con datos, no con promesas.</span>
+        <div style="display:flex;gap:20px;font-family:'JetBrains Mono',monospace;font-size:13px">
+          <a href="https://t.me/precioreal_mx" target="_blank" rel="noopener">Telegram</a>
+          <a href="mailto:hola@precioreal.mx">Contacto</a>
+        </div>
+      </div>
+      <p style="margin:0;font-size:12px;color:#4E5866;text-wrap:pretty">Los precios provienen de tiendas públicas. Las marcas y productos mencionados pertenecen a sus respectivos dueños.</p>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;demoData&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Datos&quot;},&quot;gridState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;cargando&quot;,&quot;vacio&quot;,&quot;error&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Datos&quot;},&quot;showTelegramCount&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Contenido&quot;}}">
+const FEED_URL = 'https://feed.precioreal.mx/public/deals.json';
+const STORES = ['Todas', 'Cyberpuerta', 'Innovasport', 'Liverpool', 'MercadoLibre'];
+const SAMPLE_DEALS = [
+  { product: 'Teclado Mecánico Gamer Logitech G Pro X TKL Lightspeed, Switch GX Brown', store: 'MercadoLibre', url: 'https://www.mercadolibre.com.mx/', current_price: '2199.00', reference_price: '3399.00', discount_pct: 35.3 },
+  { product: 'Pantalla Samsung 55" QLED 4K Q60D Smart TV (2024)', store: 'Liverpool', url: 'https://www.liverpool.com.mx/', current_price: '9999.00', reference_price: '14999.00', discount_pct: 33.3 },
+  { product: 'Monitor Gamer LG UltraGear 27" QHD IPS 165Hz 1ms HDR10', store: 'Liverpool', url: 'https://www.liverpool.com.mx/', current_price: '4999.00', reference_price: '7299.00', discount_pct: 31.5 },
+  { product: 'Mouse Gamer Logitech G502 X Plus Lightspeed RGB', store: 'MercadoLibre', url: 'https://www.mercadolibre.com.mx/', current_price: '1999.00', reference_price: '2899.00', discount_pct: 31.0 },
+  { product: 'Smartwatch Garmin Forerunner 255 GPS 46mm', store: 'Innovasport', url: 'https://www.innovasport.com/', current_price: '5599.00', reference_price: '7999.00', discount_pct: 30.0 },
+  { product: 'Tarjeta de Video ASUS Dual GeForce RTX 4070 SUPER EVO OC 12GB GDDR6X', store: 'Cyberpuerta', url: 'https://www.cyberpuerta.mx/', current_price: '12999.00', reference_price: '18499.00', discount_pct: 29.7 },
+  { product: 'Diadema Gamer Inalámbrica HyperX Cloud III Wireless', store: 'Cyberpuerta', url: 'https://www.cyberpuerta.mx/', current_price: '2399.00', reference_price: '3299.00', discount_pct: 27.3 },
+  { product: 'SSD Kingston NV3 2TB NVMe M.2 PCIe 4.0, 6000 MB/s', store: 'Cyberpuerta', url: 'https://www.cyberpuerta.mx/', current_price: '1899.00', reference_price: '2549.00', discount_pct: 25.5 },
+  { product: 'Procesador AMD Ryzen 7 7800X3D, S-AM5, 4.20GHz, 8 núcleos', store: 'Cyberpuerta', url: 'https://www.cyberpuerta.mx/', current_price: '7489.00', reference_price: '9999.00', discount_pct: 25.1 },
+];
+const fmtMXN = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+class Component extends DCLogic {
+  state = { deals: null, loading: true, error: false, generatedAt: null, filter: 'Todas', email: '', form: 'idle' };
+  componentDidMount() { this.load(); }
+  isDemo() { return this.props.demoData ?? true; }
+  load() {
+    this.setState({ loading: true, error: false });
+    if (this.isDemo()) {
+      setTimeout(() => this.setState({
+        loading: false, deals: SAMPLE_DEALS,
+        generatedAt: new Date(Date.now() - 12 * 60000).toISOString(),
+      }), 900);
+      return;
+    }
+    fetch(FEED_URL)
+      .then((r) => { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then((j) => this.setState({ loading: false, deals: j.deals || [], generatedAt: j.generated_at }))
+      .catch(() => this.setState({ loading: false, error: true }));
+  }
+  relTime() {
+    if (!this.state.generatedAt) return '';
+    const mins = Math.max(0, Math.round((Date.now() - new Date(this.state.generatedAt).getTime()) / 60000));
+    if (mins < 60) return 'actualizado hace ' + mins + ' min';
+    const h = Math.round(mins / 60);
+    return 'actualizado hace ' + h + (h === 1 ? ' hora' : ' horas');
+  }
+  submit(e) {
+    e.preventDefault();
+    const email = this.state.email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { this.setState({ form: 'invalid' }); return; }
+    this.setState({ form: 'loading' });
+    if (this.isDemo()) { setTimeout(() => this.setState({ form: 'success' }), 700); return; }
+    fetch('/api/subscribe', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, turnstileToken: '' }),
+    }).then((r) => {
+      if (r.status === 200) this.setState({ form: 'success' });
+      else if (r.status === 400) this.setState({ form: 'invalid' });
+      else this.setState({ form: 'server' });
+    }).catch(() => this.setState({ form: 'server' }));
+  }
+  renderVals() {
+    const gs = this.props.gridState ?? 'auto';
+    let loading = this.state.loading, error = this.state.error, raw = this.state.deals || [];
+    if (gs === 'cargando') { loading = true; error = false; }
+    else if (gs === 'error') { loading = false; error = true; }
+    else if (gs === 'vacio') { loading = false; error = false; raw = []; }
+    const filter = this.state.filter;
+    const filtered = raw
+      .filter((d) => filter === 'Todas' || d.store === filter)
+      .sort((a, b) => b.discount_pct - a.discount_pct)
+      .map((d) => ({
+        product: d.product, store: d.store, url: d.url,
+        priceNow: fmtMXN.format(parseFloat(d.current_price)),
+        priceRef: fmtMXN.format(parseFloat(d.reference_price)),
+        badge: '-' + Math.round(d.discount_pct) + '%',
+      }));
+    const form = this.state.form;
+    return {
+      updatedText: loading ? 'consultando feed…' : (error ? '' : this.relTime()),
+      chips: STORES.map((s) => ({
+        label: s,
+        bg: filter === s ? '#122419' : 'transparent',
+        color: filter === s ? '#22FF88' : '#8B96A5',
+        border: filter === s ? '#1F5C3D' : '#2A3342',
+        onClick: () => this.setState({ filter: s }),
+      })),
+      skeletons: [1, 2, 3, 4, 5, 6],
+      isLoading: loading,
+      isError: !loading && error,
+      isEmpty: !loading && !error && filtered.length === 0,
+      hasDeals: !loading && !error && filtered.length > 0,
+      deals: filtered,
+      retry: () => this.load(),
+      steps: [
+        { num: '01', title: 'Rastreamos 4 tiendas todos los días', body: 'Miles de productos de hardware y tecnología en Cyberpuerta, Innovasport, Liverpool y MercadoLibre.' },
+        { num: '02', title: 'Guardamos el historial de cada precio', body: 'La serie completa, no el precio de hoy. Sabemos exactamente qué costaba hace 90 días.' },
+        { num: '03', title: 'Detectamos el truco', body: 'Si inflaron el precio antes de la "oferta", lo sabemos. Y te lo decimos.' },
+      ],
+      counters: [
+        { value: '12,000+', label: 'Productos monitoreados' },
+        { value: '4.2M+', label: 'Observaciones de precio' },
+        { value: '4', label: 'Tiendas' },
+        { value: 'dic 2025', label: 'Rastreando desde' },
+      ],
+      emailValue: this.state.email,
+      onEmailChange: (e) => this.setState({ email: e.target.value, form: this.state.form === 'invalid' ? 'idle' : this.state.form }),
+      onSubmit: (e) => this.submit(e),
+      submitLabel: form === 'loading' ? 'Enviando…' : 'Quiero ofertas verificadas',
+      formLoading: form === 'loading',
+      formVisible: form !== 'success',
+      formSuccess: form === 'success',
+      formInvalid: form === 'invalid',
+      formServerError: form === 'server',
+      showTelegramCount: this.props.showTelegramCount ?? true,
+    };
+  }
+}
+</script>
+</body>
+</html>

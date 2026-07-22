@@ -2,20 +2,1141 @@
 <html lang="es-MX">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>PrecioReal — próximamente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PrecioReal — ¿Ese descuento es real?</title>
+    <meta
+      name="description"
+      content="Rastreamos los precios de hardware en México y detectamos descuentos falsos antes de Buen Fin."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230B0E14'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%2322FF88' rx='2'/%3E%3C/svg%3E"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin="anonymous"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body
-    style="
-      background: #0b0e14;
-      color: #22ff88;
-      font-family: monospace;
-      display: grid;
-      place-items: center;
-      height: 100vh;
-      margin: 0;
-    "
-  >
-    <p>precioreal.mx_</p>
+  <body>
+    <div
+      style="
+        min-height: 100vh;
+        background: #0b0e14;
+        color: #c9d1d9;
+        font-family:
+          &quot;Space Grotesk&quot;,
+          -apple-system,
+          &quot;Segoe UI&quot;,
+          system-ui,
+          sans-serif;
+        font-size: 16px;
+        line-height: 1.55;
+      "
+    >
+      <nav
+        data-screen-label="Navbar"
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          max-width: 1120px;
+          margin: 0 auto;
+          padding: 18px 24px;
+          border-bottom: 1px solid #1c2330;
+        "
+      >
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span
+            style="
+              width: 8px;
+              height: 8px;
+              background: #22ff88;
+              border-radius: 2px;
+              animation: pulse 2s ease-in-out infinite;
+            "
+          ></span>
+          <span
+            style="
+              font-weight: 700;
+              font-size: 19px;
+              letter-spacing: -0.02em;
+              color: #e8edf3;
+            "
+            >PrecioReal<span
+              style="
+                color: #22ff88;
+                font-family: &quot;JetBrains Mono&quot;, monospace;
+                animation: blink 1.1s steps(1) infinite;
+              "
+              >_</span
+            ></span
+          >
+        </div>
+        <a
+          href="https://t.me/precioreal_mx"
+          target="_blank"
+          rel="noopener"
+          class="nav-telegram"
+          >Únete al Telegram</a
+        >
+      </nav>
+
+      <header
+        data-screen-label="Hero"
+        style="
+          max-width: 1120px;
+          margin: 0 auto;
+          padding: 72px 24px 56px;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 48px;
+          align-items: center;
+          background-image:
+            linear-gradient(rgba(34, 255, 136, 0.03) 1px, transparent 1px),
+            linear-gradient(
+              90deg,
+              rgba(34, 255, 136, 0.03) 1px,
+              transparent 1px
+            );
+          background-size: 48px 48px;
+        "
+      >
+        <div style="display: flex; flex-direction: column; gap: 20px">
+          <div
+            style="
+              font-family: &quot;JetBrains Mono&quot;, monospace;
+              font-size: 12px;
+              color: #5c6878;
+            "
+          >
+            ~/precioreal $ verify --evento buen-fin<span
+              style="color: #22ff88; animation: blink 1.1s steps(1) infinite"
+              >▌</span
+            >
+          </div>
+          <h1
+            style="
+              margin: 0;
+              font-size: clamp(38px, 5.5vw, 60px);
+              line-height: 1.05;
+              font-weight: 700;
+              letter-spacing: -0.03em;
+              color: #e8edf3;
+            "
+          >
+            ¿Ese descuento<br />es <span style="color: #22ff88">real</span>?
+          </h1>
+          <p
+            style="
+              margin: 0;
+              max-width: 46ch;
+              font-size: 17px;
+              color: #9aa6b5;
+              text-wrap: pretty;
+            "
+          >
+            Rastreamos los precios de hardware en México todos los días. Cuando
+            llega la "oferta", nosotros ya sabemos cuánto costaba antes.
+          </p>
+          <div
+            style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px"
+          >
+            <a href="#suscribete" class="btn-primary"
+              >Avísame de ofertas reales</a
+            >
+            <a
+              href="https://t.me/precioreal_mx"
+              target="_blank"
+              rel="noopener"
+              class="btn-ghost"
+              >Ver el canal de Telegram</a
+            >
+          </div>
+        </div>
+        <figure
+          style="
+            margin: 0;
+            background: #12161f;
+            border: 1px solid #1c2330;
+            border-radius: 6px;
+            overflow: hidden;
+          "
+        >
+          <figcaption
+            style="
+              display: flex;
+              justify-content: space-between;
+              gap: 12px;
+              padding: 10px 14px;
+              border-bottom: 1px solid #1c2330;
+              font-family: &quot;JetBrains Mono&quot;, monospace;
+              font-size: 11px;
+              color: #5c6878;
+            "
+          >
+            <span>track --producto "SSD NVMe 2TB" --dias 90</span>
+            <span>MXN · diario</span>
+          </figcaption>
+          <svg
+            viewBox="0 0 640 320"
+            role="img"
+            aria-label="Historial de precio: estable en $2,299, inflado a $3,499 antes del evento, y 'descuento' a $2,799 — arriba del precio original"
+            style="display: block; width: 100%; height: auto"
+          >
+            <g
+              font-family="JetBrains Mono,monospace"
+              font-size="11"
+              fill="#4E5866"
+            >
+              <line
+                x1="40"
+                y1="20"
+                x2="620"
+                y2="20"
+                stroke="#1C2330"
+                stroke-width="1"
+              ></line>
+              <line
+                x1="40"
+                y1="107"
+                x2="620"
+                y2="107"
+                stroke="#1C2330"
+                stroke-width="1"
+              ></line>
+              <line
+                x1="40"
+                y1="193"
+                x2="620"
+                y2="193"
+                stroke="#1C2330"
+                stroke-width="1"
+              ></line>
+              <line
+                x1="40"
+                y1="280"
+                x2="620"
+                y2="280"
+                stroke="#1C2330"
+                stroke-width="1"
+              ></line>
+              <text x="36" y="24" text-anchor="end" font-size="10">$3,500</text>
+              <text x="36" y="111" text-anchor="end" font-size="10">
+                $3,000
+              </text>
+              <text x="36" y="197" text-anchor="end" font-size="10">
+                $2,500
+              </text>
+              <text x="36" y="284" text-anchor="end" font-size="10">
+                $2,000
+              </text>
+              <text x="40" y="304" font-size="10">hace 90 días</text>
+              <text x="620" y="304" text-anchor="end" font-size="10">hoy</text>
+            </g>
+            <line
+              x1="40"
+              y1="228"
+              x2="620"
+              y2="228"
+              stroke="#22FF88"
+              stroke-width="1"
+              stroke-dasharray="4 5"
+              opacity="0.5"
+            ></line>
+            <polyline
+              points="40,228 120,226 200,229 280,227 340,228 394,228"
+              fill="none"
+              stroke="#22FF88"
+              stroke-width="2.5"
+            ></polyline>
+            <polyline
+              points="394,228 439,20 523,20"
+              fill="none"
+              stroke="#FF4D4D"
+              stroke-width="2.5"
+            ></polyline>
+            <polyline
+              points="523,20 529,142 620,142"
+              fill="none"
+              stroke="#FFB347"
+              stroke-width="2.5"
+            ></polyline>
+            <circle cx="394" cy="228" r="4" fill="#22FF88"></circle>
+            <circle cx="523" cy="20" r="4" fill="#FF4D4D"></circle>
+            <circle cx="620" cy="142" r="4" fill="#FFB347"></circle>
+            <g font-family="JetBrains Mono,monospace" font-size="11">
+              <text x="46" y="218" fill="#22FF88">precio real · $2,299</text>
+              <text x="514" y="42" text-anchor="end" fill="#FF4D4D">
+                inflado antes del evento · $3,499
+              </text>
+              <text x="614" y="130" text-anchor="end" fill="#FFB347">
+                el "descuento" · $2,799
+              </text>
+            </g>
+          </svg>
+          <div
+            style="
+              display: flex;
+              gap: 18px;
+              padding: 10px 14px;
+              border-top: 1px solid #1c2330;
+              font-family: &quot;JetBrains Mono&quot;, monospace;
+              font-size: 11px;
+              color: #5c6878;
+            "
+          >
+            <span style="color: #22ff88">— precio real</span>
+            <span style="color: #ff4d4d">— inflado</span>
+            <span style="color: #ffb347"
+              >— "descuento" (sigue arriba del real)</span
+            >
+          </div>
+        </figure>
+      </header>
+
+      <section
+        data-screen-label="Detectadas hoy"
+        style="max-width: 1120px; margin: 0 auto; padding: 40px 24px 64px"
+      >
+        <div
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px;
+          "
+        >
+          <h2
+            style="
+              margin: 0;
+              font-size: 28px;
+              font-weight: 700;
+              letter-spacing: -0.02em;
+              color: #e8edf3;
+            "
+          >
+            Detectadas hoy
+          </h2>
+          <span
+            id="updated-text"
+            style="
+              font-family: &quot;JetBrains Mono&quot;, monospace;
+              font-size: 12px;
+              color: #5c6878;
+            "
+            >consultando feed…</span
+          >
+        </div>
+        <div
+          id="store-chips"
+          style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px"
+        >
+          <button type="button" class="chip chip--active" data-store="Todas">
+            Todas
+          </button>
+          <button type="button" class="chip" data-store="Cyberpuerta">
+            Cyberpuerta
+          </button>
+          <button type="button" class="chip" data-store="Innovasport">
+            Innovasport
+          </button>
+          <button type="button" class="chip" data-store="Liverpool">
+            Liverpool
+          </button>
+          <button type="button" class="chip" data-store="MercadoLibre">
+            MercadoLibre
+          </button>
+        </div>
+
+        <!-- State 1: Loading (6 static skeletons) -->
+        <div
+          id="grid-loading"
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 14px;
+          "
+        >
+          <div
+            style="
+              height: 190px;
+              border: 1px solid #1c2330;
+              border-radius: 6px;
+              background: linear-gradient(
+                90deg,
+                #12161f 25%,
+                #1a2130 50%,
+                #12161f 75%
+              );
+              background-size: 200% 100%;
+              animation: scan 1.4s linear infinite;
+            "
+          ></div>
+          <div
+            style="
+              height: 190px;
+              border: 1px solid #1c2330;
+              border-radius: 6px;
+              background: linear-gradient(
+                90deg,
+                #12161f 25%,
+                #1a2130 50%,
+                #12161f 75%
+              );
+              background-size: 200% 100%;
+              animation: scan 1.4s linear infinite;
+            "
+          ></div>
+          <div
+            style="
+              height: 190px;
+              border: 1px solid #1c2330;
+              border-radius: 6px;
+              background: linear-gradient(
+                90deg,
+                #12161f 25%,
+                #1a2130 50%,
+                #12161f 75%
+              );
+              background-size: 200% 100%;
+              animation: scan 1.4s linear infinite;
+            "
+          ></div>
+          <div
+            style="
+              height: 190px;
+              border: 1px solid #1c2330;
+              border-radius: 6px;
+              background: linear-gradient(
+                90deg,
+                #12161f 25%,
+                #1a2130 50%,
+                #12161f 75%
+              );
+              background-size: 200% 100%;
+              animation: scan 1.4s linear infinite;
+            "
+          ></div>
+          <div
+            style="
+              height: 190px;
+              border: 1px solid #1c2330;
+              border-radius: 6px;
+              background: linear-gradient(
+                90deg,
+                #12161f 25%,
+                #1a2130 50%,
+                #12161f 75%
+              );
+              background-size: 200% 100%;
+              animation: scan 1.4s linear infinite;
+            "
+          ></div>
+          <div
+            style="
+              height: 190px;
+              border: 1px solid #1c2330;
+              border-radius: 6px;
+              background: linear-gradient(
+                90deg,
+                #12161f 25%,
+                #1a2130 50%,
+                #12161f 75%
+              );
+              background-size: 200% 100%;
+              animation: scan 1.4s linear infinite;
+            "
+          ></div>
+        </div>
+
+        <!-- State 2: Error -->
+        <div
+          id="grid-error"
+          hidden
+          style="
+            border: 1px solid #4a2020;
+            background: #1a1114;
+            border-radius: 6px;
+            padding: 32px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+          "
+        >
+          <span
+            style="
+              font-family: &quot;JetBrains Mono&quot;, monospace;
+              font-size: 13px;
+              color: #ff4d4d;
+            "
+            >ERR_FEED_UNAVAILABLE</span
+          >
+          <p style="margin: 0; color: #9aa6b5; font-size: 15px">
+            No pudimos cargar las ofertas. La red falló, no nosotros.
+          </p>
+          <button type="button" id="retry-btn" class="btn-retry">
+            Reintentar
+          </button>
+        </div>
+
+        <!-- State 3: Empty -->
+        <div
+          id="grid-empty"
+          hidden
+          style="
+            border: 1px solid #1c2330;
+            background: #12161f;
+            border-radius: 6px;
+            padding: 40px 32px;
+            text-align: center;
+          "
+        >
+          <p
+            style="
+              margin: 0;
+              color: #9aa6b5;
+              font-size: 15px;
+              text-wrap: pretty;
+            "
+          >
+            Sin ofertas verificadas ahora mismo — así se ve la honestidad.<br /><a
+              href="#suscribete"
+              >Suscríbete y te avisamos.</a
+            >
+          </p>
+        </div>
+
+        <!-- State 4: Deals Grid -->
+        <div
+          id="grid-deals"
+          hidden
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 14px;
+          "
+        ></div>
+
+        <!-- Template for Deal Card -->
+        <template id="deal-card-tpl">
+          <article
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+              background: #12161f;
+              border: 1px solid #1c2330;
+              border-radius: 6px;
+              padding: 18px;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+              "
+            >
+              <span
+                data-slot="store"
+                style="
+                  font-family: &quot;JetBrains Mono&quot;, monospace;
+                  font-size: 11px;
+                  color: #8b96a5;
+                  border: 1px solid #2a3342;
+                  padding: 3px 8px;
+                  border-radius: 3px;
+                "
+              ></span>
+              <span
+                data-slot="badge"
+                style="
+                  font-family: &quot;JetBrains Mono&quot;, monospace;
+                  font-size: 13px;
+                  font-weight: 700;
+                  color: #0b0e14;
+                  background: #22ff88;
+                  padding: 3px 8px;
+                  border-radius: 3px;
+                "
+              ></span>
+            </div>
+            <h3
+              data-slot="product"
+              style="
+                margin: 0;
+                font-size: 15px;
+                font-weight: 500;
+                line-height: 1.4;
+                color: #c9d1d9;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                min-height: 42px;
+              "
+            ></h3>
+            <div
+              style="
+                display: flex;
+                align-items: baseline;
+                gap: 10px;
+                flex-wrap: wrap;
+              "
+            >
+              <span
+                data-slot="priceNow"
+                style="
+                  font-family: &quot;JetBrains Mono&quot;, monospace;
+                  font-size: 22px;
+                  font-weight: 700;
+                  color: #22ff88;
+                "
+              ></span>
+              <span
+                data-slot="priceRef"
+                style="
+                  font-family: &quot;JetBrains Mono&quot;, monospace;
+                  font-size: 13px;
+                  color: #5c6878;
+                  text-decoration: line-through;
+                "
+              ></span>
+            </div>
+            <a
+              data-slot="url"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              class="card-cta"
+              >Ver en tienda →</a
+            >
+          </article>
+        </template>
+      </section>
+
+      <section
+        data-screen-label="Cómo funciona"
+        style="border-top: 1px solid #1c2330; background: #0d111a"
+      >
+        <div style="max-width: 1120px; margin: 0 auto; padding: 64px 24px">
+          <h2
+            style="
+              margin: 0 0 32px;
+              font-size: 28px;
+              font-weight: 700;
+              letter-spacing: -0.02em;
+              color: #e8edf3;
+            "
+          >
+            Cómo funciona
+          </h2>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+              gap: 14px;
+            "
+          >
+            <div
+              style="
+                position: relative;
+                background: #12161f;
+                border: 1px solid #1c2330;
+                border-radius: 6px;
+                padding: 22px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+              "
+            >
+              <div style="display: flex; align-items: center; gap: 10px">
+                <span
+                  style="
+                    font-family: &quot;JetBrains Mono&quot;, monospace;
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #22ff88;
+                    border: 1px solid #1f5c3d;
+                    padding: 3px 8px;
+                    border-radius: 3px;
+                  "
+                  >01</span
+                >
+                <span
+                  style="
+                    flex: 1;
+                    height: 1px;
+                    background: repeating-linear-gradient(
+                      90deg,
+                      #2a3342 0 6px,
+                      transparent 6px 12px
+                    );
+                  "
+                ></span>
+              </div>
+              <h3
+                style="
+                  margin: 0;
+                  font-size: 17px;
+                  font-weight: 600;
+                  color: #e8edf3;
+                "
+              >
+                Rastreamos 4 tiendas todos los días
+              </h3>
+              <p
+                style="
+                  margin: 0;
+                  font-size: 14px;
+                  color: #9aa6b5;
+                  text-wrap: pretty;
+                "
+              >
+                Miles de productos de hardware y tecnología en Cyberpuerta,
+                Innovasport, Liverpool y MercadoLibre.
+              </p>
+            </div>
+            <div
+              style="
+                position: relative;
+                background: #12161f;
+                border: 1px solid #1c2330;
+                border-radius: 6px;
+                padding: 22px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+              "
+            >
+              <div style="display: flex; align-items: center; gap: 10px">
+                <span
+                  style="
+                    font-family: &quot;JetBrains Mono&quot;, monospace;
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #22ff88;
+                    border: 1px solid #1f5c3d;
+                    padding: 3px 8px;
+                    border-radius: 3px;
+                  "
+                  >02</span
+                >
+                <span
+                  style="
+                    flex: 1;
+                    height: 1px;
+                    background: repeating-linear-gradient(
+                      90deg,
+                      #2a3342 0 6px,
+                      transparent 6px 12px
+                    );
+                  "
+                ></span>
+              </div>
+              <h3
+                style="
+                  margin: 0;
+                  font-size: 17px;
+                  font-weight: 600;
+                  color: #e8edf3;
+                "
+              >
+                Guardamos el historial de cada precio
+              </h3>
+              <p
+                style="
+                  margin: 0;
+                  font-size: 14px;
+                  color: #9aa6b5;
+                  text-wrap: pretty;
+                "
+              >
+                La serie completa, no el precio de hoy. Sabemos exactamente qué
+                costaba hace 90 días.
+              </p>
+            </div>
+            <div
+              style="
+                position: relative;
+                background: #12161f;
+                border: 1px solid #1c2330;
+                border-radius: 6px;
+                padding: 22px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+              "
+            >
+              <div style="display: flex; align-items: center; gap: 10px">
+                <span
+                  style="
+                    font-family: &quot;JetBrains Mono&quot;, monospace;
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #22ff88;
+                    border: 1px solid #1f5c3d;
+                    padding: 3px 8px;
+                    border-radius: 3px;
+                  "
+                  >03</span
+                >
+                <span
+                  style="
+                    flex: 1;
+                    height: 1px;
+                    background: repeating-linear-gradient(
+                      90deg,
+                      #2a3342 0 6px,
+                      transparent 6px 12px
+                    );
+                  "
+                ></span>
+              </div>
+              <h3
+                style="
+                  margin: 0;
+                  font-size: 17px;
+                  font-weight: 600;
+                  color: #e8edf3;
+                "
+              >
+                Detectamos el truco
+              </h3>
+              <p
+                style="
+                  margin: 0;
+                  font-size: 14px;
+                  color: #9aa6b5;
+                  text-wrap: pretty;
+                "
+              >
+                Si inflaron el precio antes de la "oferta", lo sabemos. Y te lo
+                decimos.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        data-screen-label="Contadores"
+        style="border-top: 1px solid #1c2330"
+      >
+        <div
+          style="
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              border-left: 1px solid #1f5c3d;
+              padding-left: 16px;
+            "
+          >
+            <span
+              style="
+                font-family: &quot;JetBrains Mono&quot;, monospace;
+                font-size: 26px;
+                font-weight: 700;
+                color: #22ff88;
+              "
+              >12,000+</span
+            >
+            <span style="font-size: 13px; color: #8b96a5"
+              >Productos monitoreados</span
+            >
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              border-left: 1px solid #1f5c3d;
+              padding-left: 16px;
+            "
+          >
+            <span
+              style="
+                font-family: &quot;JetBrains Mono&quot;, monospace;
+                font-size: 26px;
+                font-weight: 700;
+                color: #22ff88;
+              "
+              >4.2M+</span
+            >
+            <span style="font-size: 13px; color: #8b96a5"
+              >Observaciones de precio</span
+            >
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              border-left: 1px solid #1f5c3d;
+              padding-left: 16px;
+            "
+          >
+            <span
+              style="
+                font-family: &quot;JetBrains Mono&quot;, monospace;
+                font-size: 26px;
+                font-weight: 700;
+                color: #22ff88;
+              "
+              >4</span
+            >
+            <span style="font-size: 13px; color: #8b96a5">Tiendas</span>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              border-left: 1px solid #1f5c3d;
+              padding-left: 16px;
+            "
+          >
+            <span
+              style="
+                font-family: &quot;JetBrains Mono&quot;, monospace;
+                font-size: 26px;
+                font-weight: 700;
+                color: #22ff88;
+              "
+              >dic 2025</span
+            >
+            <span style="font-size: 13px; color: #8b96a5"
+              >Rastreando desde</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="suscribete"
+        data-screen-label="Captura de email"
+        style="border-top: 1px solid #1c2330; background: #0d111a"
+      >
+        <div
+          style="
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 72px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+          "
+        >
+          <h2
+            style="
+              margin: 0;
+              font-size: clamp(26px, 4vw, 36px);
+              font-weight: 700;
+              letter-spacing: -0.02em;
+              line-height: 1.15;
+              color: #e8edf3;
+              text-wrap: pretty;
+            "
+          >
+            Buen Fin 2026 se acerca.<br />Llega sabiendo los
+            <span style="color: #22ff88">precios reales</span>.
+          </h2>
+          <div
+            id="form-success-msg"
+            hidden
+            style="
+              border: 1px solid #1f5c3d;
+              background: #122419;
+              border-radius: 6px;
+              padding: 20px;
+              font-family: &quot;JetBrains Mono&quot;, monospace;
+              font-size: 15px;
+              color: #22ff88;
+            "
+          >
+            ✓ Listo. Estás dentro.
+          </div>
+          <form
+            id="subscribe-form"
+            style="display: flex; flex-wrap: wrap; gap: 10px"
+          >
+            <input
+              type="email"
+              id="email-input"
+              name="email"
+              autocomplete="email"
+              placeholder="tu@correo.com"
+              aria-label="Tu correo electrónico"
+              class="form-input"
+            />
+            <button type="submit" id="submit-btn" class="btn-primary">
+              Quiero ofertas verificadas
+            </button>
+          </form>
+          <p
+            id="form-invalid-msg"
+            hidden
+            style="
+              margin: -8px 0 0;
+              font-family: &quot;JetBrains Mono&quot;, monospace;
+              font-size: 13px;
+              color: #ff4d4d;
+            "
+          >
+            Ese correo no se ve válido. Revísalo.
+          </p>
+          <p
+            id="form-server-error-msg"
+            hidden
+            style="
+              margin: -8px 0 0;
+              font-family: &quot;JetBrains Mono&quot;, monospace;
+              font-size: 13px;
+              color: #ffb347;
+            "
+          >
+            Algo falló de nuestro lado. Intenta de nuevo en un momento.
+          </p>
+
+          <!-- Cloudflare Turnstile placeholder widget -->
+          <!-- Sustituir 0x4AAAAAAD7BRhFVMlXUzAkS por la clave real del sitio en producción -->
+          <div
+            class="cf-turnstile"
+            data-sitekey="0x4AAAAAAD7BRhFVMlXUzAkS"
+            data-theme="dark"
+          ></div>
+
+          <p style="margin: 0; font-size: 13px; color: #5c6878">
+            Sin spam. Solo ofertas que verificamos contra el historial. Date de
+            baja cuando quieras.
+          </p>
+        </div>
+      </section>
+
+      <section
+        data-screen-label="CTA Telegram"
+        style="border-top: 1px solid #1c2330"
+      >
+        <div
+          style="
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 56px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+          "
+        >
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <h2
+              style="
+                margin: 0;
+                font-size: 22px;
+                font-weight: 700;
+                color: #e8edf3;
+              "
+            >
+              Las ofertas también caen en vivo en Telegram
+            </h2>
+          </div>
+          <a
+            href="https://t.me/precioreal_mx"
+            target="_blank"
+            rel="noopener"
+            class="btn-telegram-section"
+            >Abrir @precioreal_mx →</a
+          >
+        </div>
+      </section>
+
+      <footer
+        data-screen-label="Footer"
+        style="border-top: 1px solid #1c2330; background: #0d111a"
+      >
+        <div
+          style="
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: space-between;
+              gap: 12px;
+              align-items: baseline;
+            "
+          >
+            <span style="font-size: 14px; color: #8b96a5"
+              >PrecioReal.mx — precios verificados con datos, no con
+              promesas.</span
+            >
+            <div
+              style="
+                display: flex;
+                gap: 20px;
+                font-family: &quot;JetBrains Mono&quot;, monospace;
+                font-size: 13px;
+              "
+            >
+              <a
+                href="https://t.me/precioreal_mx"
+                target="_blank"
+                rel="noopener"
+                >Telegram</a
+              >
+              <a href="mailto:hola@precioreal.mx">Contacto</a>
+            </div>
+          </div>
+          <p
+            style="
+              margin: 0;
+              font-size: 12px;
+              color: #4e5866;
+              text-wrap: pretty;
+            "
+          >
+            Los precios provienen de tiendas públicas. Las marcas y productos
+            mencionados pertenecen a sus respectivos dueños.
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer
+    ></script>
+    <script type="module" src="./js/main.js"></script>
   </body>
 </html>

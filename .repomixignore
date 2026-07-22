@@ -10,3 +10,6 @@ public/assets/*.jpg
 public/assets/*.webp
 public/assets/*.woff2
 public/assets/*.ico
+
+# Diseño fuente + runtime generado de Claude Design: referencia visual, no código a revisar
+design/

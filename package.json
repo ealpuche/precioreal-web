@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "dev": "wrangler pages dev public --kv SUBSCRIBERS",
     "fmt": "prettier --write .",
-    "check": "prettier --check . && vitest run --passWithNoTests"
+    "check": "prettier --check . && vitest run"
   },
   "repository": {
     "type": "git",

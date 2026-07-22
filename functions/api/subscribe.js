@@ -20,17 +20,26 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  if (!turnstileToken || typeof turnstileToken !== "string") {
+  const token = typeof turnstileToken === "string" ? turnstileToken.trim() : "";
+  if (!token) {
     return new Response(JSON.stringify({ ok: false, error: "missing_token" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });
   }
 
+  if (!env.TURNSTILE_SECRET) {
+    console.error("subscribe: TURNSTILE_SECRET binding is not configured");
+    return new Response(
+      JSON.stringify({ ok: false, error: "server_misconfigured" }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   try {
     const formData = new FormData();
     formData.append("secret", env.TURNSTILE_SECRET);
-    formData.append("response", turnstileToken);
+    formData.append("response", token);
 
     const res = await fetch(
       "https://challenges.cloudflare.com/turnstile/v0/siteverify",

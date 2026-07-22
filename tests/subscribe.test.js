@@ -37,6 +37,7 @@ describe("functions/api/subscribe.js", () => {
 
     const data = await res.json();
     expect(data.ok).toBe(false);
+    expect(data.error).toBe("invalid_json");
     expect(mockEnv.SUBSCRIBERS.put).not.toHaveBeenCalled();
   });
 
@@ -129,5 +130,43 @@ describe("functions/api/subscribe.js", () => {
     expect(data.ok).toBe(false);
     expect(data.error).toBe("upstream_error");
     expect(mockEnv.SUBSCRIBERS.put).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 missing_token when token is whitespace-only", async () => {
+    globalThis.fetch = vi.fn();
+    const request = createRequest({
+      email: "user@example.com",
+      turnstileToken: "   ",
+    });
+    const res = await onRequestPost({ request, env: mockEnv });
+    expect(res.status).toBe(400);
+
+    const data = await res.json();
+    expect(data.ok).toBe(false);
+    expect(data.error).toBe("missing_token");
+    expect(mockEnv.SUBSCRIBERS.put).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 server_misconfigured when TURNSTILE_SECRET is missing", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    globalThis.fetch = vi.fn();
+    const envNoSecret = {
+      SUBSCRIBERS: {
+        put: vi.fn().mockResolvedValue(undefined),
+      },
+    };
+    const request = createRequest({
+      email: "user@example.com",
+      turnstileToken: "valid-token",
+    });
+    const res = await onRequestPost({ request, env: envNoSecret });
+    expect(res.status).toBe(500);
+
+    const data = await res.json();
+    expect(data.ok).toBe(false);
+    expect(data.error).toBe("server_misconfigured");
+    expect(envNoSecret.SUBSCRIBERS.put).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 });

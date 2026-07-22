@@ -43,6 +43,8 @@ export function buildDeals(rawDeals, filter = "Todas") {
     .filter((d) => {
       if (!d || typeof d !== "object") return false;
       if (!d.url || typeof d.url !== "string") return false;
+      const u = d.url.trim();
+      if (!/^https?:\/\//i.test(u)) return false;
       if (d.product == null || d.store == null) return false;
 
       const priceNowNum = parseFloat(d.current_price);
@@ -65,7 +67,7 @@ export function buildDeals(rawDeals, filter = "Todas") {
       return {
         product: String(d.product),
         store: String(d.store),
-        url: String(d.url),
+        url: String(d.url).trim(),
         priceNow: fmtMXN.format(priceNowNum),
         priceRef: fmtMXN.format(priceRefNum),
         badge: "-" + Math.round(discountPctNum) + "%",

@@ -126,5 +126,58 @@ describe("logic.js", () => {
       const result = buildDeals(corruptDeals, "Todas");
       expect(result.length).toBe(3);
     });
+
+    it("rejects non-http(s) URLs from the feed", () => {
+      const mixedDeals = [
+        {
+          product: "JS",
+          store: "Cyberpuerta",
+          url: "javascript:alert(1)",
+          current_price: "100",
+          reference_price: "200",
+          discount_pct: 50,
+        },
+        {
+          product: "Data",
+          store: "Liverpool",
+          url: "data:text/html,x",
+          current_price: "100",
+          reference_price: "200",
+          discount_pct: 50,
+        },
+        {
+          product: "FTP",
+          store: "Cyberpuerta",
+          url: "ftp://x.com/a",
+          current_price: "100",
+          reference_price: "200",
+          discount_pct: 50,
+        },
+        {
+          product: "Valid",
+          store: "Cyberpuerta",
+          url: "https://valid.com",
+          current_price: "100",
+          reference_price: "200",
+          discount_pct: 50,
+        },
+        {
+          product: "Padded",
+          store: "Liverpool",
+          url: "  https://ok.com/x  ",
+          current_price: "100",
+          reference_price: "200",
+          discount_pct: 50,
+        },
+      ];
+
+      expect(() => buildDeals(mixedDeals, "Todas")).not.toThrow();
+      const result = buildDeals(mixedDeals, "Todas");
+      expect(result.length).toBe(2);
+      expect(result.map((d) => d.url)).toEqual([
+        "https://valid.com",
+        "https://ok.com/x",
+      ]);
+    });
   });
 });

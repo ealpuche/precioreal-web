@@ -1,0 +1,12 @@
+# El propio output — nunca auto-incluirse (bola de nieve entre generaciones)
+repomix-output.md
+
+# Lockfile: miles de líneas de hashes sin valor de contexto
+package-lock.json
+
+# Assets binarios/pesados cuando existan (el diseño traerá algunos)
+public/assets/*.png
+public/assets/*.jpg
+public/assets/*.webp
+public/assets/*.woff2
+public/assets/*.ico

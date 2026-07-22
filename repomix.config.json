@@ -1,0 +1,22 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "output": {
+    "filePath": "repomix-output.md",
+    "style": "markdown",
+    "fileSummary": true,
+    "directoryStructure": true,
+    "removeComments": false,
+    "removeEmptyLines": false,
+    "showLineNumbers": true,
+    "copyToClipboard": false
+  },
+  "include": [],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": []
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

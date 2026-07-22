@@ -2,15 +2,11 @@
   "name": "precioreal-web",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
-  },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "dev": "wrangler pages dev public --kv SUBSCRIBERS",
     "fmt": "prettier --write .",
-    "check": "prettier --check . && vitest run"
+    "check": "prettier --check . && vitest run --passWithNoTests"
   },
   "repository": {
     "type": "git",
@@ -18,7 +14,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/ealpuche/precioreal-web/issues"
@@ -28,5 +24,6 @@
     "prettier": "^3.9.6",
     "vitest": "^4.1.10",
     "wrangler": "^4.113.0"
-  }
+  },
+  "private": true
 }

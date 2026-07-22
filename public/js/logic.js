@@ -8,12 +8,11 @@ export const STORES = [
   "MercadoLibre",
 ];
 
-// TODO: sustituir por métricas reales de price_history
 export const COUNTERS = [
-  { value: "12,000+", label: "Productos monitoreados" },
-  { value: "4.2M+", label: "Observaciones de precio" },
+  { value: "200,000+", label: "Productos monitoreados" },
+  { value: "5.6M+", label: "Observaciones de precio" },
   { value: "4", label: "Tiendas" },
-  { value: "dic 2025", label: "Rastreando desde" },
+  { value: "marzo 2026", label: "Rastreando desde" },
 ];
 
 const fmtMXN = new Intl.NumberFormat("es-MX", {

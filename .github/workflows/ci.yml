@@ -1,0 +1,23 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run check
+  EOF
+
+# Placeholder mínimo para que Pages tenga qué servir desde el primer deploy
+cat > public/index.html << 'EOF'
+<!doctype html><html lang="es-MX"><head><meta charset="utf-8">
+<title>PrecioReal — próximamente</title></head>
+<body style="background:#0B0E14;color:#22FF88;font-family:monospace;display:grid;place-items:center;height:100vh;margin:0">
+<p>precioreal.mx_</p></body></html>

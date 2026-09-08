@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
     "test": "vitest run",
-    "dev": "wrangler pages dev public --kv SUBSCRIBERS",
     "fmt": "prettier --write .",
-    "check": "prettier --check . && vitest run"
+    "check": "prettier --check . && astro check && vitest run"
   },
   "repository": {
     "type": "git",
@@ -22,8 +24,15 @@
   "homepage": "https://github.com/ealpuche/precioreal-web#readme",
   "devDependencies": {
     "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
     "vitest": "^4.1.10",
-    "wrangler": "^4.113.0"
+    "wrangler": "^4.129.1"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/cloudflare": "^14.3.0",
+    "astro": "^7.3.1",
+    "typescript": "^6.0.3"
+  }
 }

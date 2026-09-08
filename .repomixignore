@@ -13,3 +13,7 @@ public/assets/*.ico
 
 # Diseño fuente + runtime generado de Claude Design: referencia visual, no código a revisar
 design/
+
+# Build artifacts y cache de Astro
+dist/
+.astro/

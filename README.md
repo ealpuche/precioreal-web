@@ -16,4 +16,16 @@ Frontend de PrecioReal.mx — estático en Cloudflare Pages + Pages Functions.
 
 ## Local
 
-npm ci && npm run dev # http://localhost:8788
+```bash
+npm ci && npm run dev
+```
+
+Nota: crear `.dev.vars` con `TURNSTILE_SECRET=...` para probar suscripción localmente.
+
+## Despliegue (Pages)
+
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Bindings (sin cambios):
+  - KV: `SUBSCRIBERS` → `precioreal-subscribers` (`d5841532f55d4718a5ab3c16845a83b3`)
+  - Secret: `TURNSTILE_SECRET`

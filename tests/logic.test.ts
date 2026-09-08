@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { isValidEmail, relTime, buildDeals } from "../public/js/logic.js";
+import { isValidEmail, relTime, buildDeals } from "../src/lib/logic";
 
-describe("logic.js", () => {
+describe("logic.ts", () => {
   describe("isValidEmail", () => {
     it("validates correct email addresses", () => {
       expect(isValidEmail("test@example.com")).toBe(true);

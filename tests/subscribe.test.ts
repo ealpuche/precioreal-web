@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { onRequestPost } from "../functions/api/subscribe.js";
+import { handleSubscribe } from "../src/lib/subscribe";
 
-describe("functions/api/subscribe.js", () => {
-  let originalFetch;
-  let mockEnv;
+describe("src/lib/subscribe.ts", () => {
+  let originalFetch: typeof globalThis.fetch;
+  let mockEnv: any;
 
   beforeEach(() => {
     originalFetch = globalThis.fetch;
@@ -20,19 +20,19 @@ describe("functions/api/subscribe.js", () => {
     vi.restoreAllMocks();
   });
 
-  function createRequest(body, isJson = true) {
+  function createRequest(body: unknown, isJson = true): Request {
     return {
       json: isJson
         ? async () => (typeof body === "string" ? JSON.parse(body) : body)
         : async () => {
             throw new SyntaxError("Unexpected token");
           },
-    };
+    } as unknown as Request;
   }
 
   it("returns 400 when body is not valid JSON", async () => {
     const request = createRequest("{bad-json", false);
-    const res = await onRequestPost({ request, env: mockEnv });
+    const res = await handleSubscribe(request, mockEnv);
     expect(res.status).toBe(400);
 
     const data = await res.json();
@@ -46,7 +46,7 @@ describe("functions/api/subscribe.js", () => {
       email: "not-an-email",
       turnstileToken: "valid-token",
     });
-    const res = await onRequestPost({ request, env: mockEnv });
+    const res = await handleSubscribe(request, mockEnv);
     expect(res.status).toBe(400);
 
     const data = await res.json();
@@ -60,7 +60,7 @@ describe("functions/api/subscribe.js", () => {
       email: "user@example.com",
       turnstileToken: "",
     });
-    const res = await onRequestPost({ request, env: mockEnv });
+    const res = await handleSubscribe(request, mockEnv);
     expect(res.status).toBe(400);
 
     const data = await res.json();
@@ -75,13 +75,13 @@ describe("functions/api/subscribe.js", () => {
         success: false,
         "error-codes": ["invalid-input-response"],
       }),
-    });
+    } as unknown as Response);
 
     const request = createRequest({
       email: "user@example.com",
       turnstileToken: "bad-token",
     });
-    const res = await onRequestPost({ request, env: mockEnv });
+    const res = await handleSubscribe(request, mockEnv);
     expect(res.status).toBe(400);
 
     const data = await res.json();
@@ -93,13 +93,13 @@ describe("functions/api/subscribe.js", () => {
   it("returns 200 and calls put with lowercased email key when siteverify succeeds", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       json: async () => ({ success: true }),
-    });
+    } as unknown as Response);
 
     const request = createRequest({
       email: "User.Name@Example.COM",
       turnstileToken: "good-token",
     });
-    const res = await onRequestPost({ request, env: mockEnv });
+    const res = await handleSubscribe(request, mockEnv);
     expect(res.status).toBe(200);
 
     const data = await res.json();
@@ -123,7 +123,7 @@ describe("functions/api/subscribe.js", () => {
       email: "user@example.com",
       turnstileToken: "good-token",
     });
-    const res = await onRequestPost({ request, env: mockEnv });
+    const res = await handleSubscribe(request, mockEnv);
     expect(res.status).toBe(500);
 
     const data = await res.json();
@@ -138,7 +138,7 @@ describe("functions/api/subscribe.js", () => {
       email: "user@example.com",
       turnstileToken: "   ",
     });
-    const res = await onRequestPost({ request, env: mockEnv });
+    const res = await handleSubscribe(request, mockEnv);
     expect(res.status).toBe(400);
 
     const data = await res.json();
@@ -160,7 +160,7 @@ describe("functions/api/subscribe.js", () => {
       email: "user@example.com",
       turnstileToken: "valid-token",
     });
-    const res = await onRequestPost({ request, env: envNoSecret });
+    const res = await handleSubscribe(request, envNoSecret as any);
     expect(res.status).toBe(500);
 
     const data = await res.json();

@@ -1,7 +1,10 @@
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export async function onRequestPost({ request, env }) {
-  let body;
+export async function handleSubscribe(
+  request: Request,
+  env: ENV,
+): Promise<Response> {
+  let body: { email?: unknown; turnstileToken?: unknown } | undefined;
   try {
     body = await request.json();
   } catch (err) {
@@ -28,7 +31,7 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  if (!env.TURNSTILE_SECRET) {
+  if (!env || !env.TURNSTILE_SECRET) {
     console.error("subscribe: TURNSTILE_SECRET binding is not configured");
     return new Response(
       JSON.stringify({ ok: false, error: "server_misconfigured" }),
@@ -49,7 +52,7 @@ export async function onRequestPost({ request, env }) {
       },
     );
 
-    const outcome = await res.json();
+    const outcome = (await res.json()) as { success?: boolean } | null;
     if (!outcome || !outcome.success) {
       return new Response(
         JSON.stringify({ ok: false, error: "captcha_failed" }),

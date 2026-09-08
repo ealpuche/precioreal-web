@@ -1,5 +1,9 @@
 import type { CatalogProduct } from "../contracts/catalog";
 
+// Sin centavos por decisión de diseño (mockup aprobado): el retail mexicano de hardware casi
+// nunca anuncia precios con centavos. El contrato SÍ entrega 2 decimales de precisión; esta
+// función es la única que los redondea para mostrar, y buildVerdict redondea el diff antes de
+// ramificar para que el texto y el número mostrado nunca se contradigan (CR PR #7, H6).
 const mxn = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
@@ -22,8 +26,9 @@ export interface Verdict {
 }
 
 /**
- * Frase honesta, no una calificación genérica. "Está $X por debajo" requiere current
- * typical; si current >= typical, el mensaje no debe insinuar una oferta que no existe.
+ * Frase honesta, no una calificación genérica. "Está $X por debajo" requiere
+ * current < typical; si current >= typical, el mensaje no debe insinuar una oferta que no
+ * existe.
  */
 export function buildVerdict(product: CatalogProduct): Verdict {
   const current = parsePrice(product.current.price);

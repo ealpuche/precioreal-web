@@ -5,7 +5,7 @@
   --line-strong: #2a3342;
   --text: #c9d1d9;
   --text-strong: #e8edf3;
-  --muted: #5c6878;
+  --muted: #7d8999; /* contraste >= 4.5:1 sobre --bg y --surface (CR PR #7 ronda 2, Copilot) */
   --green: #22ff88;
   --green-soft: #8cffc4;
   --green-dim: #1f5c3d;

@@ -18,7 +18,9 @@ if (!result.ok) {
 <Base
   title={result.ok
     ? `${result.product.name} — PrecioReal`
-    : "Producto no encontrado — PrecioReal"}
+    : result.reason === "not_found"
+      ? "Sin historial suficiente — PrecioReal"
+      : "Error temporal — PrecioReal"}
 >
   <div class="page">
     <nav class="crumbs"><a href="/">inicio</a> / {tienda}</nav>
@@ -26,10 +28,12 @@ if (!result.ok) {
     {
       !result.ok && result.reason === "not_found" && (
         <div class="notice">
-          <h1>Aún no hay suficiente historial para este producto.</h1>
+          <h1>
+            Sin datos suficientes para mostrar el historial de este producto.
+          </h1>
           <p>
-            Seguimos rastreando este producto. Vuelve pronto: la ficha aparece
-            en cuanto acumula el historial mínimo para mostrarse con confianza.
+            Puede ser que apenas empezamos a rastrearlo, o que no ha tenido
+            cambios de precio recientes. Vuelve a intentarlo más tarde.
           </p>
         </div>
       )
@@ -70,11 +74,16 @@ if (!result.ok) {
 
               <StatGrid
                 stats={[
-                  {
-                    label: "precio actual",
-                    value: formatMXN(p.current.price),
-                    tone: "green",
-                  },
+                  p.current.available
+                    ? {
+                        label: "precio actual",
+                        value: formatMXN(p.current.price),
+                        tone: "green",
+                      }
+                    : {
+                        label: "último precio visto",
+                        value: formatMXN(p.current.price),
+                      },
                   { label: "precio habitual", value: formatMXN(p.typical_90d) },
                   {
                     label: `mínimo ${p.window_days}d`,

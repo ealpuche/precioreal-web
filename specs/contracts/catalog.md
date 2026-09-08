@@ -40,6 +40,10 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   producido por el crawler — hoy los tests usan literales escritos a mano (`sampleProduct`,
   `makeProduct()`); el contrato sigue sin verificarse contra la forma real que emite el
   productor (CR PR #7, H1).
+- **Bloqueo conocido**: `is_from_price` existe en `index.json` pero no en `{sku}.json`
+  (verificado contra producción). El criterio de #3 de anteponer "desde" en la ficha depende
+  de este campo y hoy es irrealizable. Issue de seguimiento en price-crawler-saas para
+  agregarlo al recurso por producto.
 
 ## Recurso ausente (producto activo sin ficha en R2)
 

@@ -86,4 +86,12 @@ Contenido verificado en este PR:
       ]
     }
 
-Se revisa si el tráfico crece: una invocación por vista de landing cambiaría el modelo de coste.
+Lectura del resultado: **solo `/` y `/_astro/*` se sirven como estáticos**; cualquier otra ruta
+—incluidos los 404 y las páginas que llegan en los PRs 2 y 3 (`/hardware`,
+`/hardware/{categoria}`, `/{tienda}/{sku}`)— pasa por el worker. La frase "estático por
+defecto" de este ADR describe el modo de renderizado de Astro (`prerender` activo salvo
+declaración contraria), no cómo Pages sirve las rutas.
+
+Sin impacto hoy: el plan gratuito cubre 100.000 invocaciones de worker al día y el tráfico
+actual está muy por debajo. Se revisa cuando el hub de hardware esté publicado y haya cifras
+de tráfico reales; si hiciera falta, las páginas prerenderizadas pueden añadirse al `exclude`.

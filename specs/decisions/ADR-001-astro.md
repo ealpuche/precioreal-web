@@ -26,6 +26,9 @@ Adoptar **Astro** con el adaptador de Cloudflare (`@astrojs/cloudflare`) y TypeS
 - Migración 1:1 de la landing existente sin cambios visuales ni de funcionalidad observables.
 - Compatibilidad nativa con Cloudflare Pages y compatibilidad local mediante `wrangler` / Astro dev server.
 - Toolchain unificado de linting, formateo y pruebas con Prettier, Astro check y Vitest.
+- Tercera desviación del "1:1": `setupChips` ignora chips con `data-store` vacío en lugar de
+  vaciar la rejilla. Lo exige `strictNullChecks`; sin efecto observable con el HTML actual,
+  donde ningún chip tiene el atributo vacío.
 
 ## Configuración de Cloudflare Pages (2026-09-08)
 
@@ -65,3 +68,22 @@ Decisión: se acepta el aviso. Ninguna ruta usa sesiones hoy. **Condición: la p
 las use debe crear el binding KV `SESSION` en el proyecto de Pages antes de desplegarse**, o
 fallará en producción con "Invalid binding `SESSION`". Se revisa si el adaptador expone una
 forma de desactivarlas en una versión posterior (ver el issue de migración a Astro 7).
+
+## Rutas del worker y coste (2026-09-08)
+
+Con el adaptador, el despliegue pasa a modo avanzado (`dist/_worker.js`). El `_routes.json`
+generado determina si cada visita a la landing invoca el worker o se sirve como asset estático.
+Contenido verificado en este PR:
+
+    {
+      "version": 1,
+      "include": [
+        "/*"
+      ],
+      "exclude": [
+        "/",
+        "/_astro/*"
+      ]
+    }
+
+Se revisa si el tráfico crece: una invocación por vista de landing cambiaría el modelo de coste.

@@ -13,3 +13,6 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run check
+      # astro check no ejercita el renderizado de páginas ni el adaptador de Cloudflare: una
+      # regresión de build solo aparecía en el deploy (CR #4, Copilot).
+      - run: npm run build

@@ -5,6 +5,13 @@
   "name": "precioreal-web",
   "compatibility_date": "2026-09-01",
   "kv_namespaces": [
-    { "binding": "SUBSCRIBERS", "id": "d5841532f55d4718a5ab3c16845a83b3" },
+    {
+      // Namespace de DESARROLLO, nunca el de producción: una prueba local con un correo ya
+      // suscrito sobrescribiría su subscribed_at real. preview_id apunta al mismo para que
+      // ninguna ruta de ejecución resuelva al namespace productivo (CR #4, H2).
+      "binding": "SUBSCRIBERS",
+      "id": "336f084771d84a53878a09b5d5fffb1b",
+      "preview_id": "336f084771d84a53878a09b5d5fffb1b",
+    },
   ],
 }

@@ -17,7 +17,7 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
 
 - `sku`, `name`, `url`, `image_url`, `category`, `site`, `generated_at`
 - `current`: `{ price, since, available }`
-- `typical_90d`, `min_90d`, `max_90d`, `obs`
+- `typical_90d`, `min_90d`, `max_90d`, `obs`, `is_from_price`
 - `series[]`: `[first_seen_at, price, available]` — solo `is_available=true`, historial
   COMPLETO, orden ascendente
 
@@ -31,5 +31,8 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   (`load_price_levels` + `compute_typical_price`). Un número distinto en la UI y en Telegram
   es un bug.
 - Campos nuevos se agregan; nunca se renombran ni se quitan sin issue en ambos repos.
-- Tipos espejo en `src/contracts/catalog.ts`; un test valida un fixture producido por el
-  crawler.
+- `series` no está paginada. Si un SKU supera ~2000 puntos, el productor emite `series`
+  diezmada más `series_full_url`; issue coordinado en ambos repos antes de rebasar el umbral.
+  La ficha es la página de adquisición orgánica: su peso es el factor dominante de carga.
+- Pendiente (#3, PR 2): tipos espejo en `src/contracts/catalog.ts` y un test que valide un
+  fixture producido por el crawler. Hoy no existen: el contrato NO está verificado en código.

@@ -23,16 +23,16 @@
   },
   "homepage": "https://github.com/ealpuche/precioreal-web#readme",
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.10",
     "wrangler": "^4.129.1"
   },
   "private": true,
   "dependencies": {
-    "@astrojs/check": "^0.9.10",
     "@astrojs/cloudflare": "^12.6.13",
-    "astro": "^5.18.2",
-    "typescript": "^6.0.3"
+    "astro": "^5.18.2"
   }
 }

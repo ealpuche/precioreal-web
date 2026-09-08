@@ -24,8 +24,14 @@ Nota: crear `.dev.vars` con `TURNSTILE_SECRET=...` para probar suscripción loca
 
 ## Despliegue (Pages)
 
+> **Precondición de merge.** Actualizar la configuración del proyecto en el dashboard de Pages
+> ANTES de fusionar a `main`. La configuración anterior (output directory `public`, sin build
+> command) publica un directorio que ya no existe: la landing queda caída. Ocurrió en el primer
+> deploy de esta rama.
+
 - Build command: `npm run build`
 - Build output directory: `dist`
-- Bindings (sin cambios):
-  - KV: `SUBSCRIBERS` → `precioreal-subscribers` (`d5841532f55d4718a5ab3c16845a83b3`)
-  - Secret: `TURNSTILE_SECRET`
+- Variable de entorno: `NODE_VERSION=22`
+- Bindings (sin cambios): KV `SUBSCRIBERS` → `precioreal-subscribers`; secreto `TURNSTILE_SECRET`
+- El entorno **Preview** tiene su propia configuración: sin `TURNSTILE_SECRET` ahí, la
+  suscripción responde `server_misconfigured` en los previews de PR.

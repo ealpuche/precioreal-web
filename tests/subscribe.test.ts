@@ -169,4 +169,15 @@ describe("src/lib/subscribe.ts", () => {
     expect(envNoSecret.SUBSCRIBERS.put).not.toHaveBeenCalled();
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
+
+  it("returns 500 server_misconfigured when env is undefined", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const request = createRequest({
+      email: "user@example.com",
+      turnstileToken: "valid-token",
+    });
+    const res = await handleSubscribe(request, undefined as unknown as ENV);
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe("server_misconfigured");
+  });
 });

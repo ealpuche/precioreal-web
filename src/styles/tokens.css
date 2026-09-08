@@ -1,6 +1,7 @@
 :root {
   --bg: #0b0e14;
   --surface: #10151d;
+  --surface-raised: #161b22; /* superficies flotantes: tooltips, popovers */
   --line: #1c2330;
   --line-strong: #2a3342;
   --text: #c9d1d9;

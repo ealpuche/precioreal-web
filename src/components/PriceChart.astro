@@ -42,7 +42,11 @@ const gridValues = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + (yMax - yMin) * f);
 const typicalY = y(Number(typical));
 const lastPoint = series[series.length - 1];
 
-// Ticks de meses en el eje X
+// Ticks en fronteras de mes calendario, no "hasta 6 espaciados por índice" como especificaba
+// el PQ 05: con series de longitud irregular, el espaciado por índice deja etiquetas en
+// fechas arbitrarias ("14 jun") mientras que las fronteras de mes dan un eje legible y
+// estable. Desviación deliberada respecto a la especificación, declarada aquí para que no
+// parezca que ambas coinciden.
 const xTicks: { x: number; label: string }[] = [];
 if (dates.length > 1) {
   const dStart = new Date(xMin);
@@ -298,7 +302,7 @@ const hoverPoints = series.map(([d, p]) => {
     position: absolute;
     pointer-events: none;
     transform: translate(-50%, -120%);
-    background: var(--surface-raised, #161b22);
+    background: var(--surface-raised);
     border: 1px solid var(--line);
     border-radius: 4px;
     padding: 6px 10px;

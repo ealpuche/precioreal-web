@@ -41,54 +41,153 @@ series.forEach(([d, p], i) => {
 const gridValues = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + (yMax - yMin) * f);
 const typicalY = y(Number(typical));
 const lastPoint = series[series.length - 1];
+
+// Ticks de meses en el eje X
+const xTicks: { x: number; label: string }[] = [];
+if (dates.length > 1) {
+  const dStart = new Date(xMin);
+  const dEnd = new Date(xMax);
+  const cur = new Date(dStart.getFullYear(), dStart.getMonth() + 1, 1);
+  while (cur.getTime() <= dEnd.getTime()) {
+    const px = x(cur.getTime());
+    if (px >= L + 20 && px <= W - R - 20) {
+      const label = cur
+        .toLocaleDateString("es-MX", { month: "short" })
+        .replace(".", "");
+      xTicks.push({ x: px, label });
+    }
+    cur.setMonth(cur.getMonth() + 1);
+  }
+}
+
+// Puntos para interacción de hover
+const hoverPoints = series.map(([d, p]) => {
+  const dt = new Date(d);
+  const dateStr = dt.toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const priceNum = Number(p).toLocaleString("es-MX", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return {
+    px: x(dt.getTime()),
+    py: y(Number(p)),
+    date: dateStr,
+    price: `$${priceNum}`,
+  };
+});
 ---
 
 {
   series.length === 0 ? (
     <p class="empty">Sin puntos de historial disponibles.</p>
   ) : (
-    <div class="figure">
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        role="img"
-        aria-label="Historial de precio"
-      >
-        {gridValues.map((v) => (
-          <>
-            <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="var(--line)" />
-            <text
-              x={L - 10}
-              y={y(v) + 4}
-              text-anchor="end"
-              font-family="JetBrains Mono"
-              font-size="11"
-              fill="var(--muted)"
-            >
-              {Math.round(v).toLocaleString("es-MX")}
-            </text>
-          </>
-        ))}
-        <line
-          x1={L}
-          x2={W - R}
-          y1={typicalY}
-          y2={typicalY}
-          stroke="var(--muted)"
-          stroke-dasharray="5 5"
-          stroke-width="1.5"
-        />
-        <path d={stepPath} fill="none" stroke="var(--green)" stroke-width="2" />
-        {lastPoint && (
-          <circle
-            cx={x(new Date(lastPoint[0]).getTime())}
-            cy={y(Number(lastPoint[1]))}
-            r="5"
-            fill="var(--bg)"
+    <div class="figure" data-chart-container>
+      <div class="chart-wrapper">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          role="img"
+          aria-label="Historial de precio"
+          data-chart-points={JSON.stringify(hoverPoints)}
+        >
+          {gridValues.map((v) => (
+            <>
+              <line
+                x1={L}
+                x2={W - R}
+                y1={y(v)}
+                y2={y(v)}
+                stroke="var(--line)"
+              />
+              <text
+                x={L - 10}
+                y={y(v) + 4}
+                text-anchor="end"
+                font-family="JetBrains Mono"
+                font-size="11"
+                fill="var(--muted)"
+              >
+                {Math.round(v).toLocaleString("es-MX")}
+              </text>
+            </>
+          ))}
+          {xTicks.map((tick) => (
+            <>
+              <line
+                x1={tick.x}
+                x2={tick.x}
+                y1={T}
+                y2={H - B}
+                stroke="var(--line)"
+                stroke-dasharray="2 2"
+              />
+              <text
+                x={tick.x}
+                y={H - B + 16}
+                text-anchor="middle"
+                font-family="JetBrains Mono"
+                font-size="11"
+                fill="var(--muted)"
+              >
+                {tick.label}
+              </text>
+            </>
+          ))}
+          <line
+            x1={L}
+            x2={W - R}
+            y1={typicalY}
+            y2={typicalY}
+            stroke="var(--muted)"
+            stroke-dasharray="5 5"
+            stroke-width="1.5"
+          />
+          <path
+            d={stepPath}
+            fill="none"
             stroke="var(--green)"
             stroke-width="2"
           />
-        )}
-      </svg>
+          {lastPoint && (
+            <circle
+              cx={x(new Date(lastPoint[0]).getTime())}
+              cy={y(Number(lastPoint[1]))}
+              r="5"
+              fill="var(--bg)"
+              stroke="var(--green)"
+              stroke-width="2"
+            />
+          )}
+          <g class="hover-elements" style="display: none;">
+            <line
+              class="hover-line"
+              x1="0"
+              x2="0"
+              y1={T}
+              y2={H - B}
+              stroke="var(--muted)"
+              stroke-dasharray="3 3"
+              stroke-width="1"
+            />
+            <circle
+              class="hover-dot"
+              cx="0"
+              cy="0"
+              r="6"
+              fill="var(--green)"
+              stroke="var(--bg)"
+              stroke-width="2"
+            />
+          </g>
+        </svg>
+        <div class="chart-tooltip" style="display: none;">
+          <div class="tooltip-price" />
+          <div class="tooltip-date" />
+        </div>
+      </div>
       <div class="legend">
         <span>
           <i class="dot green" />
@@ -103,6 +202,82 @@ const lastPoint = series[series.length - 1];
   )
 }
 
+<script>
+  import { nearestPointIndex } from "../lib/chart-hover";
+
+  interface HoverPoint {
+    px: number;
+    py: number;
+    date: string;
+    price: string;
+  }
+
+  const container = document.querySelector("[data-chart-container]");
+  if (container) {
+    const svg = container.querySelector("svg");
+    const tooltip = container.querySelector(
+      ".chart-tooltip",
+    ) as HTMLElement | null;
+    const hoverGroup = container.querySelector(
+      ".hover-elements",
+    ) as SVGElement | null;
+    const hoverLine = container.querySelector(
+      ".hover-line",
+    ) as SVGLineElement | null;
+    const hoverDot = container.querySelector(
+      ".hover-dot",
+    ) as SVGCircleElement | null;
+    const tooltipPrice = container.querySelector(
+      ".tooltip-price",
+    ) as HTMLElement | null;
+    const tooltipDate = container.querySelector(
+      ".tooltip-date",
+    ) as HTMLElement | null;
+
+    if (
+      svg &&
+      tooltip &&
+      hoverGroup &&
+      hoverLine &&
+      hoverDot &&
+      tooltipPrice &&
+      tooltipDate
+    ) {
+      const rawPoints = svg.getAttribute("data-chart-points");
+      const points: HoverPoint[] = rawPoints ? JSON.parse(rawPoints) : [];
+
+      if (points.length > 0) {
+        svg.addEventListener("mousemove", (e) => {
+          const rect = svg.getBoundingClientRect();
+          const svgX = ((e.clientX - rect.left) / rect.width) * 1000;
+          const idx = nearestPointIndex(points, svgX);
+          const pt = points[idx];
+
+          hoverGroup.style.display = "block";
+          hoverLine.setAttribute("x1", String(pt.px));
+          hoverLine.setAttribute("x2", String(pt.px));
+          hoverDot.setAttribute("cx", String(pt.px));
+          hoverDot.setAttribute("cy", String(pt.py));
+
+          tooltipPrice.textContent = pt.price;
+          tooltipDate.textContent = pt.date;
+          tooltip.style.display = "block";
+
+          const pctX = (pt.px / 1000) * 100;
+          const pctY = (pt.py / 320) * 100;
+          tooltip.style.left = `${pctX}%`;
+          tooltip.style.top = `${pctY}%`;
+        });
+
+        svg.addEventListener("mouseleave", () => {
+          hoverGroup.style.display = "none";
+          tooltip.style.display = "none";
+        });
+      }
+    }
+  }
+</script>
+
 <style>
   .figure {
     border: 1px solid var(--line);
@@ -110,10 +285,37 @@ const lastPoint = series[series.length - 1];
     border-radius: 4px;
     padding: 20px 20px 12px;
   }
+  .chart-wrapper {
+    position: relative;
+    width: 100%;
+  }
   .figure svg {
     width: 100%;
     height: 320px;
     display: block;
+  }
+  .chart-tooltip {
+    position: absolute;
+    pointer-events: none;
+    transform: translate(-50%, -120%);
+    background: var(--surface-raised, #161b22);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: var(--mono);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 10;
+    white-space: nowrap;
+  }
+  .tooltip-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green);
+  }
+  .tooltip-date {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
   }
   .legend {
     display: flex;

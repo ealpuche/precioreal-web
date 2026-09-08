@@ -1,0 +1,110 @@
+---
+import Base from "../layouts/Base.astro";
+import "../styles/tokens.css";
+---
+
+<Base title="Buscar producto — PrecioReal">
+  <div class="page">
+    <h1>Buscar producto</h1>
+    <p class="sub">
+      Escribe el código SKU de un producto de Cyberpuerta para ver su historial
+      de precio.
+    </p>
+    <form id="buscar-form" class="form">
+      <input
+        type="text"
+        id="sku-input"
+        name="sku"
+        placeholder="ej. 010-02551-01"
+        autocomplete="off"
+      />
+      <button type="submit" class="btn-primary">Buscar</button>
+    </form>
+    <p id="buscar-error" class="error" hidden></p>
+    <p class="note">
+      Por ahora solo aceptamos el código SKU. Pronto podrás pegar el enlace del
+      producto directamente.
+    </p>
+  </div>
+</Base>
+
+<script>
+  // Solo acepta el charset de sku que el backend valida (src/lib/catalog.ts, SKU_RE). Pegar
+  // una URL completa se rechaza explícitamente en vez de intentar adivinar una extracción no
+  // verificada (PQ 04: evidencia insuficiente sobre la forma real de las URLs de Cyberpuerta).
+  const SKU_RE = /^[A-Za-z0-9._-]{1,64}$/;
+
+  const form = document.getElementById("buscar-form") as HTMLFormElement | null;
+  const input = document.getElementById("sku-input") as HTMLInputElement | null;
+  const errorEl = document.getElementById("buscar-error");
+
+  form?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const value = (input?.value || "").trim();
+    if (!SKU_RE.test(value)) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = value.includes("http")
+          ? "Por ahora no aceptamos enlaces, solo el código SKU."
+          : "Ese código no tiene un formato válido.";
+      }
+      return;
+    }
+    window.location.href = `/cyberpuerta/${encodeURIComponent(value)}`;
+  });
+</script>
+
+<style>
+  .page {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 60px 24px;
+    font-family: var(--sans);
+    color: var(--text);
+  }
+  h1 {
+    color: var(--text-strong);
+    font-size: 26px;
+    margin: 0 0 8px;
+  }
+  .sub {
+    color: var(--muted);
+    margin: 0 0 24px;
+  }
+  .form {
+    display: flex;
+    gap: 10px;
+  }
+  .form input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    padding: 12px 14px;
+    color: var(--text-strong);
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .btn-primary {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 14px;
+    background: var(--green);
+    color: var(--bg);
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .error {
+    margin-top: 12px;
+    color: var(--amber);
+    font-size: 13px;
+    font-family: var(--mono);
+  }
+  .note {
+    margin-top: 24px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+</style>

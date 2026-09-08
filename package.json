@@ -31,8 +31,8 @@
   "private": true,
   "dependencies": {
     "@astrojs/check": "^0.9.10",
-    "@astrojs/cloudflare": "^14.3.0",
-    "astro": "^7.3.1",
+    "@astrojs/cloudflare": "^12.6.13",
+    "astro": "^5.18.2",
     "typescript": "^6.0.3"
   }
 }

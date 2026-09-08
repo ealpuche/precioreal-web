@@ -1,0 +1,55 @@
+---
+interface Stat {
+  label: string;
+  value: string;
+  tone?: "default" | "green" | "amber";
+}
+interface Props {
+  stats: Stat[];
+}
+const { stats } = Astro.props;
+---
+
+<div class="stats">
+  {
+    stats.map((s) => (
+      <div class="stat">
+        <div class="k">{s.label}</div>
+        <div class={`v ${s.tone ?? "default"}`}>{s.value}</div>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .stat {
+    background: var(--bg);
+    padding: 14px 16px;
+  }
+  .k {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .v {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--text-strong);
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+  .v.green {
+    color: var(--green);
+  }
+  .v.amber {
+    color: var(--amber);
+  }
+</style>

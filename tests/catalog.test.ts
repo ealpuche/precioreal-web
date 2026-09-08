@@ -1,0 +1,98 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { fetchProduct } from "../src/lib/catalog";
+import type { CatalogProduct } from "../src/contracts/catalog";
+
+describe("fetchProduct", () => {
+  let originalFetch: typeof globalThis.fetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
+  const sampleProduct: CatalogProduct = {
+    sku: "SKU123",
+    name: "Mouse Óptico Inalámbrico",
+    url: "https://cyberpuerta.mx/p/SKU123",
+    image_url: null,
+    category: "Accesorios",
+    site: "cyberpuerta",
+    generated_at: "2026-09-08T12:00:00Z",
+    window_days: 90,
+    current: {
+      price: "350.00",
+      since: "2026-09-01T00:00:00Z",
+      available: true,
+    },
+    typical_90d: "400.00",
+    min_90d: "300.00",
+    max_90d: "450.00",
+    obs: 30,
+    series: [
+      ["2026-06-01T00:00:00Z", "400.00", true],
+      ["2026-09-01T00:00:00Z", "350.00", true],
+    ],
+  };
+
+  it("returns { ok: true, product } when fetch succeeds with valid JSON", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => sampleProduct,
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.product).toEqual(sampleProduct);
+    }
+  });
+
+  it("returns { ok: false, reason: 'not_found' } when upstream returns 404", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({}),
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "NONEXISTENT");
+    expect(result).toEqual({ ok: false, reason: "not_found" });
+  });
+
+  it("returns { ok: false, reason: 'upstream_error' } when upstream returns 500", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+    expect(result).toEqual({ ok: false, reason: "upstream_error" });
+  });
+
+  it("returns { ok: false, reason: 'upstream_error' } when fetch throws an error", async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockRejectedValue(new Error("Network connection failed"));
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+    expect(result).toEqual({ ok: false, reason: "upstream_error" });
+  });
+
+  it("returns { ok: false, reason: 'upstream_error' } when JSON parsing fails", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new SyntaxError("Unexpected token in JSON");
+      },
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+    expect(result).toEqual({ ok: false, reason: "upstream_error" });
+  });
+});

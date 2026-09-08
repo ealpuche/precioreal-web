@@ -1,0 +1,180 @@
+---
+export const prerender = false;
+
+import Base from "../../layouts/Base.astro";
+import StatGrid from "../../components/StatGrid.astro";
+import PriceChart from "../../components/PriceChart.astro";
+import { fetchProduct } from "../../lib/catalog";
+import { formatMXN, buildVerdict } from "../../lib/format";
+import "../../styles/tokens.css";
+
+const { tienda, sku } = Astro.params;
+const result = await fetchProduct(tienda!, sku!);
+
+if (!result.ok) {
+  Astro.response.status = result.reason === "not_found" ? 404 : 502;
+}
+---
+
+<Base
+  title={result.ok
+    ? `${result.product.name} — PrecioReal`
+    : "Producto no encontrado — PrecioReal"}
+>
+  <div class="page">
+    <nav class="crumbs"><a href="/">inicio</a> / {tienda}</nav>
+
+    {
+      !result.ok && result.reason === "not_found" && (
+        <div class="notice">
+          <h1>Aún no hay suficiente historial para este producto.</h1>
+          <p>
+            Seguimos rastreando este producto. Vuelve pronto: la ficha aparece
+            en cuanto acumula el historial mínimo para mostrarse con confianza.
+          </p>
+        </div>
+      )
+    }
+
+    {
+      !result.ok && result.reason === "upstream_error" && (
+        <div class="notice">
+          <h1>No pudimos cargar este producto.</h1>
+          <p>Puede ser un problema temporal. Intenta de nuevo en un momento.</p>
+        </div>
+      )
+    }
+
+    {
+      result.ok &&
+        (() => {
+          const p = result.product;
+          const verdict = buildVerdict(p);
+          return (
+            <>
+              <div class="head">
+                <h1>{p.name}</h1>
+                <div class="sub">
+                  {p.sku} · {p.site} · {p.obs} observaciones
+                </div>
+              </div>
+
+              <p class={`verdict ${verdict.tone}`}>{verdict.headline}</p>
+              <p class="verdict-sub">{verdict.detail}</p>
+
+              <PriceChart
+                series={p.series}
+                typical={p.typical_90d}
+                min={p.min_90d}
+                max={p.max_90d}
+              />
+
+              <StatGrid
+                stats={[
+                  {
+                    label: "precio actual",
+                    value: formatMXN(p.current.price),
+                    tone: "green",
+                  },
+                  { label: "precio habitual", value: formatMXN(p.typical_90d) },
+                  {
+                    label: `mínimo ${p.window_days}d`,
+                    value: formatMXN(p.min_90d),
+                  },
+                  {
+                    label: `máximo ${p.window_days}d`,
+                    value: formatMXN(p.max_90d),
+                  },
+                ]}
+              />
+
+              <div class="actions">
+                <a
+                  class="btn-primary"
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Ver en {p.site}
+                </a>
+              </div>
+            </>
+          );
+        })()
+    }
+  </div>
+</Base>
+
+<style>
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px 56px;
+    font-family: var(--sans);
+    color: var(--text);
+  }
+  .crumbs {
+    padding: 24px 0 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .crumbs a {
+    color: var(--muted);
+  }
+  .head h1 {
+    font-size: 26px;
+    color: var(--text-strong);
+    margin: 8px 0 4px;
+  }
+  .sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .verdict {
+    font-size: 22px;
+    color: var(--text-strong);
+    margin: 24px 0 4px;
+  }
+  .verdict.good b,
+  .verdict.good {
+    color: var(--green);
+  }
+  .verdict.warn {
+    color: var(--amber);
+  }
+  .verdict-sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+    max-width: 60ch;
+  }
+  .actions {
+    margin-top: 28px;
+  }
+  .btn-primary {
+    display: inline-block;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 14px;
+    background: var(--green);
+    color: var(--bg);
+    padding: 13px 22px;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+  .notice {
+    padding: 60px 0;
+    text-align: center;
+  }
+  .notice h1 {
+    font-size: 22px;
+    color: var(--text-strong);
+  }
+  .notice p {
+    color: var(--muted);
+    max-width: 50ch;
+    margin: 8px auto 0;
+  }
+</style>

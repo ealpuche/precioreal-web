@@ -1,0 +1,17 @@
+:root {
+  --bg: #0b0e14;
+  --surface: #10151d;
+  --line: #1c2330;
+  --line-strong: #2a3342;
+  --text: #c9d1d9;
+  --text-strong: #e8edf3;
+  --muted: #5c6878;
+  --green: #22ff88;
+  --green-soft: #8cffc4;
+  --green-dim: #1f5c3d;
+  --green-wash: #122419;
+  --amber: #ffb454;
+  --amber-wash: #2a2114;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --sans: "Space Grotesk", -apple-system, "Segoe UI", system-ui, sans-serif;
+}

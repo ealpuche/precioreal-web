@@ -1,5 +1,7 @@
 ---
 import type { CatalogSeriesPoint } from "../contracts/catalog";
+import { TZ } from "../lib/tz";
+import { monthTicks } from "../lib/chart-ticks";
 
 interface Props {
   series: CatalogSeriesPoint[];
@@ -42,29 +44,17 @@ const gridValues = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + (yMax - yMin) * f);
 const typicalY = y(Number(typical));
 const lastPoint = series[series.length - 1];
 
-const TZ = "America/Mexico_City";
-
 // Ticks en fronteras de mes calendario, no "hasta 6 espaciados por índice" como especificaba
 // el PQ 05: con series de longitud irregular, el espaciado por índice deja etiquetas en
 // fechas arbitrarias ("14 jun") mientras que las fronteras de mes dan un eje legible y
 // estable. Desviación deliberada respecto a la especificación, declarada aquí para que no
 // parezca que ambas coinciden.
-const xTicks: { x: number; label: string }[] = [];
-if (dates.length > 1) {
-  const dStart = new Date(xMin);
-  const dEnd = new Date(xMax);
-  const cur = new Date(dStart.getFullYear(), dStart.getMonth() + 1, 1);
-  while (cur.getTime() <= dEnd.getTime()) {
-    const px = x(cur.getTime());
-    if (px >= L + 20 && px <= W - R - 20) {
-      const label = cur
-        .toLocaleDateString("es-MX", { month: "short", timeZone: TZ })
-        .replace(".", "");
-      xTicks.push({ x: px, label });
-    }
-    cur.setMonth(cur.getMonth() + 1);
-  }
-}
+const xTicks =
+  dates.length > 1
+    ? monthTicks(xMin, xMax)
+        .map((tick) => ({ x: x(tick.t), label: tick.label }))
+        .filter((tick) => tick.x >= L + 20 && tick.x <= W - R - 20)
+    : [];
 
 // Puntos para interacción de hover
 const hoverPoints = series.map(([d, p]) => {

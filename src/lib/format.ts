@@ -1,8 +1,5 @@
 import type { CatalogProduct } from "../contracts/catalog";
-
-// El runtime del edge corre en UTC: sin esto, una observación de las 03:00Z se muestra con la
-// fecha del día siguiente al que fue en México (CR PR #7, H7).
-const TZ = "America/Mexico_City";
+import { TZ } from "./tz";
 
 // Sin centavos por decisión de diseño (mockup aprobado): el retail mexicano de hardware casi
 // nunca anuncia precios con centavos. El contrato SÍ entrega 2 decimales de precisión; esta

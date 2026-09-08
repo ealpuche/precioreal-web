@@ -46,7 +46,8 @@ function hasExpectedShape(value: unknown): value is CatalogProduct {
     ) &&
     typeof current?.price === "string" &&
     typeof current?.since === "string" &&
-    typeof current?.available === "boolean"
+    typeof current?.available === "boolean" &&
+    (v.is_from_price === undefined || typeof v.is_from_price === "boolean")
   );
 }
 

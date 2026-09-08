@@ -188,4 +188,15 @@ describe("fetchProduct", () => {
     const result = await fetchProduct("cyberpuerta", "SKU123");
     expect(result).toEqual({ ok: false, reason: "upstream_error" });
   });
+
+  it("returns upstream_error when is_from_price is present with the wrong type", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ ...sampleProduct, is_from_price: "true" }),
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+    expect(result).toEqual({ ok: false, reason: "upstream_error" });
+  });
 });

@@ -189,6 +189,11 @@ const hoverPoints = series.map(([d, p]) => {
             />
           </g>
         </svg>
+        {/* Los div internos van self-closing porque prettier-plugin-astro colapsa así todo
+            elemento sin hijos dentro de una expresión JSX, y `npm run check` corre
+            `prettier --check`: escribirlos con cierre explícito rompe el CI. Astro compila
+            ambos a `<div ...></div>` en el bundle, verificado en dist/_worker.js (CR PR #7
+            ronda 4, Copilot). */}
         <div class="chart-tooltip" style="display: none;">
           <div class="tooltip-price" />
           <div class="tooltip-date" />

@@ -1,0 +1,17 @@
+// Solo para desarrollo local (platformProxy). NO añadir "pages_build_output_dir":
+// eso haría que Pages use esta configuración en producción en vez de la del dashboard,
+// donde viven TURNSTILE_SECRET y el binding real de SUBSCRIBERS. Ver ADR-001.
+{
+  "name": "precioreal-web",
+  "compatibility_date": "2026-09-01",
+  "kv_namespaces": [
+    {
+      // Namespace de DESARROLLO, nunca el de producción: una prueba local con un correo ya
+      // suscrito sobrescribiría su subscribed_at real. preview_id apunta al mismo para que
+      // ninguna ruta de ejecución resuelva al namespace productivo (CR #4, H2).
+      "binding": "SUBSCRIBERS",
+      "id": "336f084771d84a53878a09b5d5fffb1b",
+      "preview_id": "336f084771d84a53878a09b5d5fffb1b",
+    },
+  ],
+}

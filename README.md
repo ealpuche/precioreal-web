@@ -16,4 +16,22 @@ Frontend de PrecioReal.mx — estático en Cloudflare Pages + Pages Functions.
 
 ## Local
 
-npm ci && npm run dev # http://localhost:8788
+```bash
+npm ci && npm run dev
+```
+
+Nota: crear `.dev.vars` con `TURNSTILE_SECRET=...` para probar suscripción localmente.
+
+## Despliegue (Pages)
+
+> **Precondición de merge.** Actualizar la configuración del proyecto en el dashboard de Pages
+> ANTES de fusionar a `main`. La configuración anterior (output directory `public`, sin build
+> command) publica un directorio que ya no existe: la landing queda caída. Ocurrió en el primer
+> deploy de esta rama.
+
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Variable de entorno: `NODE_VERSION=22`
+- Bindings (sin cambios): KV `SUBSCRIBERS` → `precioreal-subscribers`; secreto `TURNSTILE_SECRET`
+- El entorno **Preview** tiene su propia configuración: sin `TURNSTILE_SECRET` ahí, la
+  suscripción responde `server_misconfigured` en los previews de PR.

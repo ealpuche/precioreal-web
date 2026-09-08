@@ -1,6 +1,22 @@
-import { FEED_URL, isValidEmail, relTime, buildDeals } from "./logic.js";
+import {
+  FEED_URL,
+  isValidEmail,
+  relTime,
+  buildDeals,
+  type FormattedDeal,
+  type RawDeal,
+} from "../lib/logic";
 
-let rawDealsCache = [];
+declare global {
+  interface Window {
+    turnstile?: {
+      getResponse: () => string;
+      reset: () => void;
+    };
+  }
+}
+
+let rawDealsCache: RawDeal[] = [];
 let activeFilter = "Todas";
 
 const gridLoadingEl = document.getElementById("grid-loading");
@@ -9,23 +25,31 @@ const gridEmptyEl = document.getElementById("grid-empty");
 const gridDealsEl = document.getElementById("grid-deals");
 const updatedTextEl = document.getElementById("updated-text");
 const retryBtnEl = document.getElementById("retry-btn");
-const dealCardTpl = document.getElementById("deal-card-tpl");
+const dealCardTpl = document.getElementById(
+  "deal-card-tpl",
+) as HTMLTemplateElement | null;
 
-const subscribeForm = document.getElementById("subscribe-form");
-const emailInput = document.getElementById("email-input");
-const submitBtn = document.getElementById("submit-btn");
+const subscribeForm = document.getElementById(
+  "subscribe-form",
+) as HTMLFormElement | null;
+const emailInput = document.getElementById(
+  "email-input",
+) as HTMLInputElement | null;
+const submitBtn = document.getElementById(
+  "submit-btn",
+) as HTMLButtonElement | null;
 const formInvalidMsg = document.getElementById("form-invalid-msg");
 const formServerErrorMsg = document.getElementById("form-server-error-msg");
 const formSuccessMsg = document.getElementById("form-success-msg");
 
-function setGridState(state) {
+function setGridState(state: "loading" | "error" | "empty" | "deals") {
   if (gridLoadingEl) gridLoadingEl.hidden = state !== "loading";
   if (gridErrorEl) gridErrorEl.hidden = state !== "error";
   if (gridEmptyEl) gridEmptyEl.hidden = state !== "empty";
   if (gridDealsEl) gridDealsEl.hidden = state !== "deals";
 }
 
-function renderDeals(deals) {
+function renderDeals(deals: FormattedDeal[]) {
   if (!gridDealsEl || !dealCardTpl) return;
 
   gridDealsEl.replaceChildren();
@@ -38,7 +62,7 @@ function renderDeals(deals) {
   setGridState("deals");
 
   for (const deal of deals) {
-    const clone = dealCardTpl.content.cloneNode(true);
+    const clone = dealCardTpl.content.cloneNode(true) as DocumentFragment;
 
     const storeSlot = clone.querySelector('[data-slot="store"]');
     const badgeSlot = clone.querySelector('[data-slot="badge"]');
@@ -89,6 +113,7 @@ function setupChips() {
   chips.forEach((chip) => {
     chip.addEventListener("click", () => {
       const store = chip.getAttribute("data-store");
+      if (!store) return;
       activeFilter = store;
 
       chips.forEach((c) => {

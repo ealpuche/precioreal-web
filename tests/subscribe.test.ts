@@ -3,7 +3,7 @@ import { handleSubscribe } from "../src/lib/subscribe";
 
 describe("src/lib/subscribe.ts", () => {
   let originalFetch: typeof globalThis.fetch;
-  let mockEnv: any;
+  let mockEnv: ENV;
 
   beforeEach(() => {
     originalFetch = globalThis.fetch;
@@ -11,7 +11,7 @@ describe("src/lib/subscribe.ts", () => {
       TURNSTILE_SECRET: "test-secret",
       SUBSCRIBERS: {
         put: vi.fn().mockResolvedValue(undefined),
-      },
+      } as unknown as ENV["SUBSCRIBERS"],
     };
   });
 
@@ -151,16 +151,17 @@ describe("src/lib/subscribe.ts", () => {
   it("returns 500 server_misconfigured when TURNSTILE_SECRET is missing", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     globalThis.fetch = vi.fn();
-    const envNoSecret = {
+    const envNoSecret: ENV = {
+      TURNSTILE_SECRET: "",
       SUBSCRIBERS: {
         put: vi.fn().mockResolvedValue(undefined),
-      },
+      } as unknown as ENV["SUBSCRIBERS"],
     };
     const request = createRequest({
       email: "user@example.com",
       turnstileToken: "valid-token",
     });
-    const res = await handleSubscribe(request, envNoSecret as any);
+    const res = await handleSubscribe(request, envNoSecret);
     expect(res.status).toBe(500);
 
     const data = await res.json();
@@ -176,7 +177,7 @@ describe("src/lib/subscribe.ts", () => {
       email: "user@example.com",
       turnstileToken: "valid-token",
     });
-    const res = await handleSubscribe(request, undefined as unknown as ENV);
+    const res = await handleSubscribe(request, undefined);
     expect(res.status).toBe(500);
     expect((await res.json()).error).toBe("server_misconfigured");
   });

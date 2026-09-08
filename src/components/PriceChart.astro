@@ -271,7 +271,11 @@ const hoverPoints = series.map(([d, p]) => {
       if (points.length > 0) {
         svg.addEventListener("mousemove", (e) => {
           const rect = svg.getBoundingClientRect();
-          const svgX = ((e.clientX - rect.left) / rect.width) * 1000;
+          // Del viewBox real y no de constantes: el servidor calcula las coordenadas con W/H
+          // del frontmatter, y un cambio ahí desalineaba el tooltip en silencio porque el
+          // cliente seguía dividiendo entre los valores viejos (CR PR #7 ronda 4, Copilot).
+          const vb = svg.viewBox.baseVal;
+          const svgX = ((e.clientX - rect.left) / rect.width) * vb.width;
           const idx = nearestPointIndex(points, svgX);
           const pt = points[idx];
 
@@ -285,10 +289,8 @@ const hoverPoints = series.map(([d, p]) => {
           tooltipDate.textContent = pt.date;
           tooltip.style.display = "block";
 
-          const pctX = (pt.px / 1000) * 100;
-          const pctY = (pt.py / 320) * 100;
-          tooltip.style.left = `${pctX}%`;
-          tooltip.style.top = `${pctY}%`;
+          tooltip.style.left = `${(pt.px / vb.width) * 100}%`;
+          tooltip.style.top = `${(pt.py / vb.height) * 100}%`;
         });
 
         svg.addEventListener("mouseleave", () => {

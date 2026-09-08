@@ -18,14 +18,19 @@ export type FetchProductResult =
 
 /**
  * Valida los campos que la página realmente consume. No es una validación completa del
- * contrato, pero sí cubre todo lo que produciría basura renderizada con un 200: sin `max_90d`
- * las coordenadas del SVG salen NaN y la gráfica queda vacía sin lanzar (CR PR #7, H3).
+ * contrato —los strings de precio y fecha no se comprueban parseables, eso exigiría una
+ * librería de esquemas (issue #6)— pero sí cubre todo lo que produciría basura visible bajo
+ * un 200: sin `max_90d` las coordenadas del SVG salen NaN y la gráfica queda vacía; sin `sku`,
+ * `site` u `obs` la cabecera imprime "undefined" (CR PR #7, H3 y ronda 4).
  */
 function hasExpectedShape(value: unknown): value is CatalogProduct {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   const current = v.current as Record<string, unknown> | undefined;
   return (
+    typeof v.sku === "string" &&
+    typeof v.site === "string" &&
+    typeof v.obs === "number" &&
     typeof v.name === "string" &&
     typeof v.url === "string" &&
     typeof v.typical_90d === "string" &&

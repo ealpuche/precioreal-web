@@ -176,4 +176,16 @@ describe("fetchProduct", () => {
       expect(result.product.is_from_price).toBe(true);
     }
   });
+
+  it("returns upstream_error when a field the header prints is missing", async () => {
+    const { obs: _omit, ...partial } = sampleProduct;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => partial,
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+    expect(result).toEqual({ ok: false, reason: "upstream_error" });
+  });
 });

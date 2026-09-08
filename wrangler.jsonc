@@ -1,3 +1,6 @@
+// Solo para desarrollo local (platformProxy). NO añadir "pages_build_output_dir":
+// eso haría que Pages use esta configuración en producción en vez de la del dashboard,
+// donde viven TURNSTILE_SECRET y el binding real de SUBSCRIBERS. Ver ADR-001.
 {
   "name": "precioreal-web",
   "compatibility_date": "2026-09-01",

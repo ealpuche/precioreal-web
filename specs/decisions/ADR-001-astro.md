@@ -26,3 +26,19 @@ Adoptar **Astro** con el adaptador de Cloudflare (`@astrojs/cloudflare`) y TypeS
 - Migración 1:1 de la landing existente sin cambios visuales ni de funcionalidad observables.
 - Compatibilidad nativa con Cloudflare Pages y compatibilidad local mediante `wrangler` / Astro dev server.
 - Toolchain unificado de linting, formateo y pruebas con Prettier, Astro check y Vitest.
+
+## Configuración de Cloudflare Pages (2026-09-08)
+
+`wrangler.jsonc` existe **solo para desarrollo local** (bindings vía `platformProxy`) y
+deliberadamente NO lleva `pages_build_output_dir`. La documentación de Pages advierte que
+añadir esa clave hace que el despliegue tome la configuración del archivo — pensada para
+local — en lugar de la del dashboard, donde viven el secreto `TURNSTILE_SECRET` y el binding
+`SUBSCRIBERS` de producción.
+
+Consecuencia: en el log de build de Pages aparece "A Wrangler configuration file was found
+but it does not appear to be valid". Es el aviso esperado de que el archivo se ignora para
+producción, no un error.
+
+La configuración de build vive en el dashboard: build command `npm run build`, output
+directory `dist`, `NODE_VERSION=22`. Se migrará al archivo el día que los bindings de
+producción se declaren ahí y se verifique que la suscripción sigue funcionando.

@@ -1,5 +1,9 @@
 import type { CatalogProduct } from "../contracts/catalog";
 
+// El runtime del edge corre en UTC: sin esto, una observación de las 03:00Z se muestra con la
+// fecha del día siguiente al que fue en México (CR PR #7, H7).
+const TZ = "America/Mexico_City";
+
 // Sin centavos por decisión de diseño (mockup aprobado): el retail mexicano de hardware casi
 // nunca anuncia precios con centavos. El contrato SÍ entrega 2 decimales de precisión; esta
 // función es la única que los redondea para mostrar, y buildVerdict redondea el diff antes de
@@ -43,7 +47,7 @@ export function buildVerdict(product: CatalogProduct): Verdict {
   if (!product.current.available) {
     return {
       headline: "Este producto no está disponible actualmente.",
-      detail: `El último precio visto fue ${formatMXN(product.current.price)}, el ${new Date(product.current.since).toLocaleDateString("es-MX")}.`,
+      detail: `El último precio visto fue ${formatMXN(product.current.price)}, el ${new Date(product.current.since).toLocaleDateString("es-MX", { timeZone: TZ })}.`,
       tone: "neutral",
     };
   }

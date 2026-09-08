@@ -1,50 +1,69 @@
 import type { CatalogProduct } from "../contracts/catalog";
+import { SKU_RE } from "./sku";
 
 const FEED_BASE = "https://feed.precioreal.mx";
 
 // Único slug real hoy (catalog.md: ddtech, pcel después). Sin esta guarda, cualquier ruta de
 // dos segmentos —incluido el ruido de escáneres contra /wp-admin, /.env, etc.— disparaba una
-// invocación de worker más una lectura a R2 antes de responder 404 (CR PR #7, H3).
+// invocación de worker más una lectura a R2 antes de responder 404 (CR PR #7, H3 ronda 1).
 const TIENDAS_VALIDAS = new Set(["cyberpuerta"]);
-const SKU_RE = /^[A-Za-z0-9._-]{1,64}$/;
+
+// Sin esto, un upstream que se cuelga (no responde ni falla) deja la respuesta bloqueada hasta
+// que el runtime corte la invocación: el usuario no ve ni el 502 ni contenido (CR PR #7, H2).
+const UPSTREAM_TIMEOUT_MS = 5000;
 
 export type FetchProductResult =
   | { ok: true; product: CatalogProduct }
-  | { ok: false; reason: "not_found" | "upstream_error" };
+  | { ok: false; reason: "not_found" | "invalid_route" | "upstream_error" };
 
-/** Forma mínima que buildVerdict y PriceChart necesitan sin lanzar. No es una validación
- * completa del contrato, solo la guarda contra un JSON con forma inesperada (CR PR #7, H5). */
+/**
+ * Valida los campos que la página realmente consume. No es una validación completa del
+ * contrato, pero sí cubre todo lo que produciría basura renderizada con un 200: sin `max_90d`
+ * las coordenadas del SVG salen NaN y la gráfica queda vacía sin lanzar (CR PR #7, H3).
+ */
 function hasExpectedShape(value: unknown): value is CatalogProduct {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   const current = v.current as Record<string, unknown> | undefined;
   return (
+    typeof v.name === "string" &&
+    typeof v.url === "string" &&
     typeof v.typical_90d === "string" &&
     typeof v.min_90d === "string" &&
+    typeof v.max_90d === "string" &&
     typeof v.window_days === "number" &&
     Array.isArray(v.series) &&
+    v.series.every(
+      (pt) =>
+        Array.isArray(pt) &&
+        typeof pt[0] === "string" &&
+        typeof pt[1] === "string",
+    ) &&
     typeof current?.price === "string" &&
+    typeof current?.since === "string" &&
     typeof current?.available === "boolean"
   );
 }
 
 /**
- * Trae la ficha de un producto desde R2. No lanza: los dos casos de fallo (recurso
- * ausente vs. error de red/servidor/forma inesperada) se distinguen porque el mensaje al
- * usuario debe ser distinto — "no encontrado" es un 404 legítimo, "upstream_error" es un
- * problema nuestro.
+ * Trae la ficha de un producto desde R2. No lanza. Tres casos de fallo, cada uno con su
+ * mensaje: `invalid_route` (tienda o sku que no pueden existir — información local, no hace
+ * falta preguntarle a R2), `not_found` (404 real del feed) y `upstream_error` (red, 5xx,
+ * JSON inválido o forma inesperada).
  */
 export async function fetchProduct(
   tienda: string,
   sku: string,
 ): Promise<FetchProductResult> {
   if (!TIENDAS_VALIDAS.has(tienda) || !SKU_RE.test(sku)) {
-    return { ok: false, reason: "not_found" };
+    return { ok: false, reason: "invalid_route" };
   }
   const url = `${FEED_BASE}/${encodeURIComponent(tienda)}/products/${encodeURIComponent(sku)}.json`;
   let res: Response;
   try {
-    res = await fetch(url);
+    res = await fetch(url, {
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
   } catch {
     return { ok: false, reason: "upstream_error" };
   }

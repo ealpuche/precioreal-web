@@ -98,9 +98,11 @@ de tráfico reales; si hiciera falta, las páginas prerenderizadas pueden añadi
 
 ## Estilos: sin inline en código nuevo (2026-09-08)
 
-Regla que se venía aplicando desde el scaffold (tokens.css, componentes con `<style>` scoped)
-pero que nunca quedó escrita aquí — un PR la citó como si ya estuviera en este ADR y no lo
-estaba (CR PR #7, H9). Queda formalizada: código nuevo no usa el atributo `style=` inline; usa
+Regla introducida en PR #7 junto con `src/styles/tokens.css` y los primeros componentes
+(`PriceChart`, `StatGrid`) — antes de ese PR no existía ninguno de los dos y la landing usa
+solo estilos inline. La descripción del PR la citó como si ya estuviera en este ADR y no lo
+estaba (CR PR #7, H9), y el intento de corregirlo introdujo a su vez una afirmación falsa
+sobre el estado previo del código (CR PR #7 ronda 3, H1). Queda formalizada: código nuevo no usa el atributo `style=` inline; usa
 variables CSS de `src/styles/tokens.css` y bloques `<style>` scoped por componente. La landing
 heredada (`src/pages/index.astro`) es la única excepción, y es deliberada: migrarla es
 refactor, no parte de ningún PR de feature (ver la sección de Consecuencias arriba).

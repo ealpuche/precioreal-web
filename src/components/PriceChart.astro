@@ -42,6 +42,8 @@ const gridValues = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + (yMax - yMin) * f);
 const typicalY = y(Number(typical));
 const lastPoint = series[series.length - 1];
 
+const TZ = "America/Mexico_City";
+
 // Ticks en fronteras de mes calendario, no "hasta 6 espaciados por índice" como especificaba
 // el PQ 05: con series de longitud irregular, el espaciado por índice deja etiquetas en
 // fechas arbitrarias ("14 jun") mientras que las fronteras de mes dan un eje legible y
@@ -56,7 +58,7 @@ if (dates.length > 1) {
     const px = x(cur.getTime());
     if (px >= L + 20 && px <= W - R - 20) {
       const label = cur
-        .toLocaleDateString("es-MX", { month: "short" })
+        .toLocaleDateString("es-MX", { month: "short", timeZone: TZ })
         .replace(".", "");
       xTicks.push({ x: px, label });
     }
@@ -71,6 +73,7 @@ const hoverPoints = series.map(([d, p]) => {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: TZ,
   });
   const priceNum = Number(p).toLocaleString("es-MX", {
     minimumFractionDigits: 2,
@@ -95,7 +98,6 @@ const hoverPoints = series.map(([d, p]) => {
           viewBox={`0 0 ${W} ${H}`}
           role="img"
           aria-label="Historial de precio"
-          data-chart-points={JSON.stringify(hoverPoints)}
         >
           {gridValues.map((v) => (
             <>
@@ -191,6 +193,13 @@ const hoverPoints = series.map(([d, p]) => {
           <div class="tooltip-price" />
           <div class="tooltip-date" />
         </div>
+        <script
+          type="application/json"
+          data-chart-points
+          set:html={JSON.stringify(
+            hoverPoints.map((h) => [h.px, h.py, h.date, h.price]),
+          )}
+        />
       </div>
       <div class="legend">
         <span>
@@ -247,8 +256,17 @@ const hoverPoints = series.map(([d, p]) => {
       tooltipPrice &&
       tooltipDate
     ) {
-      const rawPoints = svg.getAttribute("data-chart-points");
-      const points: HoverPoint[] = rawPoints ? JSON.parse(rawPoints) : [];
+      // Tuplas en un bloque JSON, no un atributo: en un atributo cada comilla se escapa a
+      // &quot; (6 bytes por 1), y con el umbral de ~2000 puntos del contrato eso son cientos
+      // de KB extra en la página de adquisición orgánica (CR PR #7, H6).
+      const rawPoints = container.querySelector(
+        "[data-chart-points]",
+      )?.textContent;
+      const points: HoverPoint[] = rawPoints
+        ? (JSON.parse(rawPoints) as [number, number, string, string][]).map(
+            ([px, py, date, price]) => ({ px, py, date, price }),
+          )
+        : [];
 
       if (points.length > 0) {
         svg.addEventListener("mousemove", (e) => {

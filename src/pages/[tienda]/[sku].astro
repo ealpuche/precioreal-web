@@ -11,7 +11,7 @@ const { tienda, sku } = Astro.params;
 const result = await fetchProduct(tienda!, sku!);
 
 if (!result.ok) {
-  Astro.response.status = result.reason === "not_found" ? 404 : 502;
+  Astro.response.status = result.reason === "upstream_error" ? 502 : 404;
 }
 ---
 
@@ -19,12 +19,21 @@ if (!result.ok) {
   showNav
   title={result.ok
     ? `${result.product.name} — PrecioReal`
-    : result.reason === "not_found"
-      ? "Sin historial suficiente — PrecioReal"
-      : "Error temporal — PrecioReal"}
+    : result.reason === "upstream_error"
+      ? "Error temporal — PrecioReal"
+      : "Producto no encontrado — PrecioReal"}
 >
   <div class="page">
     <nav class="crumbs"><a href="/">inicio</a> / {tienda}</nav>
+
+    {
+      !result.ok && result.reason === "invalid_route" && (
+        <div class="notice">
+          <h1>No existe esa tienda o ese código.</h1>
+          <p>Revisa el enlace. Hoy solo tenemos historial de Cyberpuerta.</p>
+        </div>
+      )
+    }
 
     {
       !result.ok && result.reason === "not_found" && (

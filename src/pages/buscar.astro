@@ -29,10 +29,7 @@ import "../styles/tokens.css";
 </Base>
 
 <script>
-  // Solo acepta el charset de sku que el backend valida (src/lib/catalog.ts, SKU_RE). Pegar
-  // una URL completa se rechaza explícitamente en vez de intentar adivinar una extracción no
-  // verificada (PQ 04: evidencia insuficiente sobre la forma real de las URLs de Cyberpuerta).
-  const SKU_RE = /^[A-Za-z0-9._-]{1,64}$/;
+  import { SKU_RE } from "../lib/sku";
 
   const form = document.getElementById("buscar-form") as HTMLFormElement | null;
   const input = document.getElementById("sku-input") as HTMLInputElement | null;

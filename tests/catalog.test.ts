@@ -48,6 +48,7 @@ describe("fetchProduct", () => {
     const result = await fetchProduct("cyberpuerta", "SKU123");
     expect(globalThis.fetch).toHaveBeenCalledWith(
       "https://feed.precioreal.mx/cyberpuerta/products/SKU123.json",
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -99,14 +100,36 @@ describe("fetchProduct", () => {
     expect(result).toEqual({ ok: false, reason: "upstream_error" });
   });
 
-  it("returns not_found without calling fetch when the tienda is not in the allowlist", async () => {
+  it("returns invalid_route without calling fetch when the tienda is not in the allowlist", async () => {
     const fetchMock = vi.fn();
     globalThis.fetch = fetchMock;
 
     const result = await fetchProduct("wp-admin", "x");
 
-    expect(result).toEqual({ ok: false, reason: "not_found" });
+    expect(result).toEqual({ ok: false, reason: "invalid_route" });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("returns invalid_route without calling fetch when the sku fails the charset guard", async () => {
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock;
+
+    const result = await fetchProduct("cyberpuerta", "a b/../x");
+
+    expect(result).toEqual({ ok: false, reason: "invalid_route" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("returns upstream_error when a field the page renders is missing", async () => {
+    const { max_90d: _omit, ...partial } = sampleProduct;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => partial,
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+    expect(result).toEqual({ ok: false, reason: "upstream_error" });
   });
 
   it("returns upstream_error when the JSON has an unexpected shape", async () => {

@@ -18,7 +18,7 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
 
 - `sku`, `name`, `url`, `image_url`, `category`, `site`, `generated_at`, `window_days` (int)
 - `current`: `{ price, since, available }`
-- `typical_90d`, `min_90d`, `max_90d`, `obs`
+- `typical_90d`, `min_90d`, `max_90d`, `obs`, `is_from_price` (bool, opcional)
 - `series[]`: `[first_seen_at, price, available]` — solo `is_available=true`, historial
   COMPLETO, orden ascendente
 
@@ -40,10 +40,11 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   producido por el crawler — hoy los tests usan literales escritos a mano (`sampleProduct`,
   `makeProduct()`); el contrato sigue sin verificarse contra la forma real que emite el
   productor (CR PR #7, H1).
-- **Bloqueo conocido**: `is_from_price` existe en `index.json` pero no en `{sku}.json`
-  (verificado contra producción). El criterio de #3 de anteponer "desde" en la ficha depende
-  de este campo y hoy es irrealizable. Issue de seguimiento en price-crawler-saas para
-  agregarlo al recurso por producto.
+- `is_from_price` en `{sku}.json` es **opcional para el consumidor**: lo agrega
+  price-crawler-saas#132, pero las fichas publicadas antes de ese cambio no lo traen hasta que
+  el backfill diario las reescriba. La UI trata su ausencia como `false`, nunca como un error
+  de forma: exigirlo convertiría cada ficha vieja en un 502 por un campo que solo antepone una
+  palabra al precio.
 
 ## Recurso ausente (producto activo sin ficha en R2)
 

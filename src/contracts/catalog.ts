@@ -46,5 +46,7 @@ export interface CatalogProduct {
   min_90d: string;
   max_90d: string;
   obs: number;
+  /** Opcional: las fichas publicadas antes de price-crawler-saas#132 no lo traen. */
+  is_from_price?: boolean;
   series: CatalogSeriesPoint[];
 }

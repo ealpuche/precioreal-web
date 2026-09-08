@@ -142,4 +142,38 @@ describe("fetchProduct", () => {
     const result = await fetchProduct("cyberpuerta", "SKU123");
     expect(result).toEqual({ ok: false, reason: "upstream_error" });
   });
+
+  it("accepts a payload without is_from_price, since older fichas predate it", async () => {
+    const { is_from_price: _omit, ...withoutField } = {
+      ...sampleProduct,
+      is_from_price: true,
+    };
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => withoutField,
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.product.is_from_price).toBeUndefined();
+    }
+  });
+
+  it("passes is_from_price through when the producer sends it", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ ...sampleProduct, is_from_price: true }),
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.product.is_from_price).toBe(true);
+    }
+  });
 });

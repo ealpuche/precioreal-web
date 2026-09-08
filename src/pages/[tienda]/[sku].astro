@@ -63,6 +63,10 @@ if (!result.ok) {
         (() => {
           const p = result.product;
           const verdict = buildVerdict(p);
+          // Productos multi-variante (tallas, colores) publican el precio de la variante más
+          // barata: decir "$X" a secas afirmaría un precio único que no existe. El campo es
+          // opcional en fichas anteriores a price-crawler-saas#132; su ausencia es `false`.
+          const pricePrefix = p.is_from_price ? "desde " : "";
           return (
             <>
               <div class="head">
@@ -87,12 +91,12 @@ if (!result.ok) {
                   p.current.available
                     ? {
                         label: "precio actual",
-                        value: formatMXN(p.current.price),
+                        value: `${pricePrefix}${formatMXN(p.current.price)}`,
                         tone: "green",
                       }
                     : {
                         label: "último precio visto",
-                        value: formatMXN(p.current.price),
+                        value: `${pricePrefix}${formatMXN(p.current.price)}`,
                       },
                   { label: "precio habitual", value: formatMXN(p.typical_90d) },
                   {

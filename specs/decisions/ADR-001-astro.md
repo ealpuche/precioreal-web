@@ -95,3 +95,12 @@ declaración contraria), no cómo Pages sirve las rutas.
 Sin impacto hoy: el plan gratuito cubre 100.000 invocaciones de worker al día y el tráfico
 actual está muy por debajo. Se revisa cuando el hub de hardware esté publicado y haya cifras
 de tráfico reales; si hiciera falta, las páginas prerenderizadas pueden añadirse al `exclude`.
+
+## Estilos: sin inline en código nuevo (2026-09-08)
+
+Regla que se venía aplicando desde el scaffold (tokens.css, componentes con `<style>` scoped)
+pero que nunca quedó escrita aquí — un PR la citó como si ya estuviera en este ADR y no lo
+estaba (CR PR #7, H9). Queda formalizada: código nuevo no usa el atributo `style=` inline; usa
+variables CSS de `src/styles/tokens.css` y bloques `<style>` scoped por componente. La landing
+heredada (`src/pages/index.astro`) es la única excepción, y es deliberada: migrarla es
+refactor, no parte de ningún PR de feature (ver la sección de Consecuencias arriba).

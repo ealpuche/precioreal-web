@@ -36,8 +36,10 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
 - Campos nuevos se agregan; nunca se renombran ni se quitan sin issue en ambos repos.
 - `series` no está paginada. Si un SKU supera ~2000 puntos, el productor emite `series`
   diezmada más `series_full_url`; issue coordinado en ambos repos antes de rebasar el umbral.
-- Tipos espejo en `src/contracts/catalog.ts`; un test valida un fixture producido por el
-  crawler.
+- Tipos espejo en `src/contracts/catalog.ts`. Pendiente: test que valide un fixture real
+  producido por el crawler — hoy los tests usan literales escritos a mano (`sampleProduct`,
+  `makeProduct()`); el contrato sigue sin verificarse contra la forma real que emite el
+  productor (CR PR #7, H1).
 
 ## Recurso ausente (producto activo sin ficha en R2)
 

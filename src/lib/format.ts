@@ -29,7 +29,11 @@ export function buildVerdict(product: CatalogProduct): Verdict {
   const current = parsePrice(product.current.price);
   const typical = parsePrice(product.typical_90d);
   const min = parsePrice(product.min_90d);
-  const diff = typical - current;
+  // Redondeado a lo que el usuario ve: con maximumFractionDigits: 0, una diferencia de
+  // $0.40 mostraría "Está $0 por debajo", contradiciendo el propio propósito de esta función
+  // (CR PR #7, H6). isLowest se mantiene con la comparación exacta (current <= min): ahí no
+  // se muestra el número, solo se decide una rama de texto.
+  const diff = Math.round(typical - current);
 
   if (!product.current.available) {
     return {

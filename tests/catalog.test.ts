@@ -46,6 +46,9 @@ describe("fetchProduct", () => {
     } as unknown as Response);
 
     const result = await fetchProduct("cyberpuerta", "SKU123");
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "https://feed.precioreal.mx/cyberpuerta/products/SKU123.json",
+    );
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.product).toEqual(sampleProduct);
@@ -90,6 +93,27 @@ describe("fetchProduct", () => {
       json: async () => {
         throw new SyntaxError("Unexpected token in JSON");
       },
+    } as unknown as Response);
+
+    const result = await fetchProduct("cyberpuerta", "SKU123");
+    expect(result).toEqual({ ok: false, reason: "upstream_error" });
+  });
+
+  it("returns not_found without calling fetch when the tienda is not in the allowlist", async () => {
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock;
+
+    const result = await fetchProduct("wp-admin", "x");
+
+    expect(result).toEqual({ ok: false, reason: "not_found" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("returns upstream_error when the JSON has an unexpected shape", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ hello: "world" }),
     } as unknown as Response);
 
     const result = await fetchProduct("cyberpuerta", "SKU123");

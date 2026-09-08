@@ -139,4 +139,21 @@ describe("buildVerdict", () => {
       "Sin cambios frente al promedio de los últimos 90 días.",
     );
   });
+
+  it("treats sub-peso differences as no change, not as a false deal", () => {
+    const p = makeProduct({
+      current: {
+        price: "1499.60",
+        since: "2026-09-01T00:00:00Z",
+        available: true,
+      },
+      typical_90d: "1500.00",
+      min_90d: "1100.00",
+      window_days: 90,
+    });
+
+    const v = buildVerdict(p);
+    expect(v.tone).toBe("neutral");
+    expect(v.headline).toBe("Está en su precio habitual.");
+  });
 });

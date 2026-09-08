@@ -6,7 +6,6 @@ import StatGrid from "../../components/StatGrid.astro";
 import PriceChart from "../../components/PriceChart.astro";
 import { fetchProduct } from "../../lib/catalog";
 import { formatMXN, buildVerdict } from "../../lib/format";
-import "../../styles/tokens.css";
 
 const { tienda, sku } = Astro.params;
 const result = await fetchProduct(tienda!, sku!);

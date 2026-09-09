@@ -1,4 +1,5 @@
-import type { CatalogProduct } from "../contracts/catalog";
+import type { CatalogIndex, CatalogProduct } from "../contracts/catalog";
+import { normalizeProductUrl } from "./product-url";
 import { SKU_RE } from "./sku";
 
 const FEED_BASE = "https://feed.precioreal.mx";
@@ -109,4 +110,82 @@ export async function fetchProduct(
     return { ok: false, reason: "upstream_error" };
   }
   return { ok: true, product: parsed };
+}
+
+/**
+ * Índice cacheado por isolate, no por request: en Cloudflare el módulo sobrevive entre
+ * invocaciones. Un fallo NO se cachea — la versión anterior guardaba la promesa resuelta a
+ * `null`, y como toda Promise es truthy, un timeout de 5 s o un 5xx puntual de R2 dejaba la
+ * búsqueda por URL rota hasta que el isolate se reciclara, sin límite observable
+ * (CR PR #11, H1 y Copilot).
+ *
+ * Va por tienda aunque hoy solo exista cyberpuerta: la firma recibe `tienda`, así que un
+ * caché global haría que la primera en llegar fijara el índice de todas.
+ */
+const indexCache = new Map<string, Promise<CatalogIndex | null>>();
+
+async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
+  const cached = indexCache.get(tienda);
+  if (cached) return cached;
+
+  const pending = (async () => {
+    try {
+      const res = await fetch(
+        `${FEED_BASE}/${encodeURIComponent(tienda)}/products/index.json`,
+        { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) },
+      );
+      if (!res.ok) return null;
+      const parsed = (await res.json()) as CatalogIndex;
+      return Array.isArray(parsed?.products) ? parsed : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  // Se cachea la promesa en vuelo para que dos búsquedas simultáneas no pidan el índice dos
+  // veces, y se descarta si resultó fallida: el siguiente intento vuelve a preguntar.
+  indexCache.set(tienda, pending);
+  const result = await pending;
+  if (result === null) indexCache.delete(tienda);
+  return result;
+}
+
+export type ResolveUrlResult =
+  | { ok: true; sku: string }
+  | { ok: false; reason: "not_found" | "upstream_error" };
+
+/**
+ * Encuentra el sku cuyo `url` en el índice coincide con la que pegó el usuario.
+ *
+ * Corre en el worker y no en el navegador a propósito: el índice pesa ~2.7 MB gzip y le llega
+ * al worker desde el caché de borde (verificado: cf-cache-status HIT). Resolverlo aquí hace
+ * que el usuario reciba un redirect en vez de esos megabytes, que en móvil con datos serían
+ * el coste de cada búsqueda.
+ */
+export async function resolveProductUrl(
+  tienda: string,
+  normalizedUrl: string,
+): Promise<ResolveUrlResult> {
+  if (!TIENDAS_VALIDAS.has(tienda)) {
+    return { ok: false, reason: "not_found" };
+  }
+  const index = await fetchIndex(tienda);
+  if (!index) return { ok: false, reason: "upstream_error" };
+
+  for (const p of index.products) {
+    // `Array.isArray(products)` no dice nada de sus elementos: `products: [null]` lanzaba al
+    // leer `p.url`, y una entrada con `sku` no-string redirigía a `/cyberpuerta/undefined`
+    // (CR PR #11, Copilot).
+    if (
+      typeof p?.url !== "string" ||
+      typeof p?.sku !== "string" ||
+      p.sku === ""
+    ) {
+      continue;
+    }
+    if (normalizeProductUrl(p.url) === normalizedUrl) {
+      return { ok: true, sku: p.sku };
+    }
+  }
+  return { ok: false, reason: "not_found" };
 }

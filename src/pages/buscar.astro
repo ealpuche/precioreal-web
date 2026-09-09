@@ -1,55 +1,113 @@
 ---
+export const prerender = false;
+
 import Base from "../layouts/Base.astro";
+import { resolveProductUrl } from "../lib/catalog";
+import {
+  hostPertenece,
+  normalizeProductUrl,
+  tiendaNoPublicada,
+} from "../lib/product-url";
+import { SKU_RE } from "../lib/sku";
 import "../styles/tokens.css";
+
+const q = (Astro.url.searchParams.get("q") ?? "").trim();
+let error: string | null = null;
+
+if (q) {
+  // Una línea por búsqueda, visible en `wrangler tail` y en Workers Logs. Sin esto, el issue
+  // que difiere la optimización de la resolución por URL tendría un disparador imposible de
+  // comprobar: "cuando haya dato de uso" no llega solo. Se registran el modo, el desenlace y
+  // el tiempo — nunca lo que el usuario pegó, que no aporta a la decisión y sí crearía una
+  // retención que habría que justificar.
+  const t0 = Date.now();
+  let modo = "sku";
+  let resultado = "redirigido";
+
+  try {
+    // Sin `!looksLikeUrl(q)`: SKU_RE ya excluye `/` y `:`, así que era condición muerta
+    // (CR PR #11, H5).
+    if (SKU_RE.test(q)) {
+      return Astro.redirect(`/cyberpuerta/${encodeURIComponent(q)}`, 302);
+    }
+    modo = "url";
+    const normalized = normalizeProductUrl(q);
+    if (!normalized) {
+      resultado = "ilegible";
+      error =
+        "Eso no parece un código de producto ni un enlace. Revisa lo que pegaste.";
+    } else {
+      const tiendaPendiente = tiendaNoPublicada(normalized);
+      if (tiendaPendiente) {
+        resultado = "tienda_no_publicada";
+        error = `Rastreamos ${tiendaPendiente}, pero su historial todavía no está disponible en el sitio. Por ahora solo puedes consultar Cyberpuerta.`;
+      } else if (!hostPertenece(normalized, "cyberpuerta.mx")) {
+        resultado = "tienda_desconocida";
+        error = "Por ahora solo tenemos historial de Cyberpuerta.";
+      } else if (!normalized.includes("/")) {
+        resultado = "sin_ruta";
+        error =
+          "Ese es el enlace de la portada de Cyberpuerta. Pega el de un producto.";
+      } else {
+        const resolved = await resolveProductUrl("cyberpuerta", normalized);
+        if (resolved.ok) {
+          return Astro.redirect(
+            `/cyberpuerta/${encodeURIComponent(resolved.sku)}`,
+            302,
+          );
+        }
+        resultado =
+          resolved.reason === "upstream_error"
+            ? "error_upstream"
+            : "no_encontrado";
+        error =
+          resolved.reason === "upstream_error"
+            ? "No pudimos consultar el catálogo en este momento. Intenta de nuevo en un momento."
+            : "No encontramos ese producto en nuestro catálogo de Cyberpuerta.";
+      }
+    }
+  } finally {
+    // En `finally` porque los caminos exitosos salen por `return Astro.redirect(...)`: sin
+    // esto, justo las búsquedas que funcionan serían las que no se registran.
+    console.log(
+      JSON.stringify({
+        evento: "buscar",
+        modo,
+        resultado,
+        ms: Date.now() - t0,
+      }),
+    );
+  }
+}
 ---
 
 <Base title="Buscar producto — PrecioReal" showNav>
   <div class="page">
     <h1>Buscar producto</h1>
     <p class="sub">
-      Escribe el código SKU de un producto de Cyberpuerta para ver su historial
-      de precio.
+      Escribe el código de un producto o pega el enlace de su página en
+      Cyberpuerta.
     </p>
-    <form id="buscar-form" class="form">
+    <form id="buscar-form" class="form" method="get">
       <input
         type="text"
         id="sku-input"
-        name="sku"
-        placeholder="ej. 010-02551-01"
+        name="q"
+        value={q}
+        placeholder="ej. 010-02551-01 o pega el enlace del producto"
         autocomplete="off"
       />
       <button type="submit" class="btn-primary">Buscar</button>
     </form>
-    <p id="buscar-error" class="error" hidden></p>
-    <p class="note">
-      Por ahora solo aceptamos el código SKU. Pronto podrás pegar el enlace del
-      producto directamente.
-    </p>
+    {
+      error && (
+        <p id="buscar-error" class="error">
+          {error}
+        </p>
+      )
+    }
   </div>
 </Base>
-
-<script>
-  import { SKU_RE } from "../lib/sku";
-
-  const form = document.getElementById("buscar-form") as HTMLFormElement | null;
-  const input = document.getElementById("sku-input") as HTMLInputElement | null;
-  const errorEl = document.getElementById("buscar-error");
-
-  form?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const value = (input?.value || "").trim();
-    if (!SKU_RE.test(value)) {
-      if (errorEl) {
-        errorEl.hidden = false;
-        errorEl.textContent = value.includes("http")
-          ? "Por ahora no aceptamos enlaces, solo el código SKU."
-          : "Ese código no tiene un formato válido.";
-      }
-      return;
-    }
-    window.location.href = `/cyberpuerta/${encodeURIComponent(value)}`;
-  });
-</script>
 
 <style>
   .page {

@@ -318,6 +318,7 @@ describe("fetchProduct", () => {
       products: [
         {
           sku: "SKU-001",
+          slug: "SKU-001",
           name: "Producto Uno",
           url: "https://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-1.html",
           image_url: null,
@@ -330,6 +331,7 @@ describe("fetchProduct", () => {
         },
         {
           sku: "SKU-002",
+          slug: "SKU-002",
           name: "Producto Dos",
           url: "https://www.cyberpuerta.mx/Computadoras/Accesorios/Mouse-2.html",
           image_url: null,
@@ -481,6 +483,52 @@ describe("fetchProduct", () => {
             sampleIndex.products[0],
           ],
         }),
+      } as unknown as Response);
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const result = await resolveProductUrl(
+        "cyberpuerta",
+        "cyberpuerta.mx/Computadoras/Laptops/Laptop-1.html",
+      );
+
+      expect(result).toEqual({ ok: true, sku: "SKU-001" });
+    });
+
+    it("returns the slug, not the sku, when they differ", async () => {
+      // Regresión #13: la ficha de un producto cuyo sku lleva espacios vive bajo su slug.
+      // Devolver el sku producía /cyberpuerta/B840M%20GAMING%20WIFI6E, que da 404 —
+      // verificado en producción antes de este cambio.
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ...sampleIndex,
+          products: [
+            {
+              ...sampleIndex.products[0],
+              sku: "B840M GAMING WIFI6E",
+              slug: "B840M-GAMING-WIFI6E",
+              url: "https://www.cyberpuerta.mx/Tarjetas-Madre/MSI-B840M-Gaming.html",
+            },
+          ],
+        }),
+      } as unknown as Response);
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const result = await resolveProductUrl(
+        "cyberpuerta",
+        "cyberpuerta.mx/Tarjetas-Madre/MSI-B840M-Gaming.html",
+      );
+
+      expect(result).toEqual({ ok: true, sku: "B840M-GAMING-WIFI6E" });
+    });
+
+    it("falls back to the sku when the entry predates the slug field", async () => {
+      const { slug: _sinSlug, ...sinSlug } = sampleIndex.products[0];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ ...sampleIndex, products: [sinSlug] }),
       } as unknown as Response);
 
       const { resolveProductUrl } = await import("../src/lib/catalog");

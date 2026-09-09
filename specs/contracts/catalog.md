@@ -10,7 +10,7 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
 `{tienda}/products/index.json`
 
 - `generated_at`, `site`, `window_days` (int), `count`
-- `products[]`: `sku`, `name`, `url`, `image_url` (null|string), `category` (null|string),
+- `products[]`: `sku`, `slug` (clave de R2 bajo la que vive la ficha; opcional mientras el backfill propaga), `name`, `url`, `image_url` (null|string), `category` (null|string),
   `price`, `obs` (int), `since` (ISO), `available` (bool), `is_from_price` (bool),
   `status` (opcional, mismo dominio que en `{sku}.json`), `first_seen_at` (ISO, opcional)
   - `typical_90d`, `min_90d` — **solo cuando `status` es `"ok"`**
@@ -56,6 +56,12 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   `min_90d` ni `max_90d`. Fabricar una estadística de ventana para un producto con dos
   observaciones es justo lo que el productor evita; el consumidor no debe derivarla del precio
   actual para rellenar el hueco.
+- La ruta de una ficha se construye con `slug`, **nunca** con `sku`: 3,377 productos activos
+  tienen un sku con espacios o caracteres que no pueden ir en una clave, y su ficha vive bajo
+  un slug derivado. `slug == sku` en el caso común pero no es un invariante — el productor
+  recorta guiones de los extremos y omite nombres reservados. Es opcional para el consumidor
+  mientras el backfill propaga; ausente, usar `sku` es el comportamiento anterior y sigue
+  siendo correcto para los skus que ya podían ir en una ruta.
 
 ## Recurso ausente (producto sin ficha en R2)
 

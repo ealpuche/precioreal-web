@@ -218,5 +218,42 @@ describe("buildVerdict", () => {
         "Necesitamos más historial para comparar. Ya lo estamos rastreando.",
       );
     });
+
+    it("says the product is unavailable even when it also lacks history", () => {
+      // Regresión CR PR #10, H1: con la rama de historial insuficiente primero, esta ficha
+      // decía "llevamos N días rastreándolo" sobre un precio que la propia página marca como
+      // el último visto, no el actual.
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+        current: {
+          price: "1500.00",
+          since: "2026-09-01T10:00:00Z",
+          available: false,
+        },
+      });
+
+      const v = buildVerdict(p);
+      expect(v.headline).toBe("Este producto no está disponible actualmente.");
+    });
+
+    it("falls back to the generic message when first_seen_at is unparseable", () => {
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: "no-es-una-fecha",
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+      });
+
+      const v = buildVerdict(p);
+      expect(v.detail).toBe(
+        "Necesitamos más historial para comparar. Ya lo estamos rastreando.",
+      );
+      expect(v.detail).not.toContain("NaN");
+    });
   });
 });

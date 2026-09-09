@@ -52,11 +52,18 @@ function hasExpectedShape(value: unknown): value is CatalogProduct {
       v.status === "insufficient_history");
   if (!baseOk) return false;
 
-  // Las estadísticas de ventana se exigen solo cuando el productor dice tenerlas. Ausente
-  // equivale a "ok" porque las fichas anteriores a #131 solo se publicaban con historial
-  // suficiente. Sin esta condición, un producto "ok" al que le falte max_90d pasaría la guarda
-  // y la gráfica saldría con coordenadas NaN bajo un 200 (CR PR #7, H3).
-  if (v.status === "insufficient_history") return true;
+  // Ausentes o strings, nunca otra cosa: el contrato dice que el productor no las emite con
+  // este estado, pero la guarda existe justamente para no confiar en eso. Un número truthy
+  // pasaría a la ficha y de ahí al SVG (CR PR #10, H4 y Copilot).
+  const optionalString = (x: unknown) =>
+    x === undefined || typeof x === "string";
+  if (v.status === "insufficient_history") {
+    return (
+      optionalString(v.typical_90d) &&
+      optionalString(v.min_90d) &&
+      optionalString(v.max_90d)
+    );
+  }
   return (
     typeof v.typical_90d === "string" &&
     typeof v.min_90d === "string" &&

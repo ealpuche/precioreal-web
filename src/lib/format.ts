@@ -32,18 +32,29 @@ export interface Verdict {
  * existe.
  */
 export function buildVerdict(product: CatalogProduct): Verdict {
+  // Antes que cualquier otra rama: si el producto no está disponible, no hay precio vigente
+  // que evaluar, tenga o no historial. Con este chequeo después del de historial insuficiente,
+  // un producto agotado y recién rastreado decía "llevamos N días rastreándolo" mientras la
+  // grilla de la misma ficha mostraba "último precio visto" (CR PR #10, H1).
+  if (!product.current.available) {
+    return {
+      headline: "Este producto no está disponible actualmente.",
+      detail: `El último precio visto fue ${formatMXN(product.current.price)}, el ${new Date(product.current.since).toLocaleDateString("es-MX", { timeZone: TZ })}.`,
+      tone: "neutral",
+    };
+  }
+
   // Un producto sin estadísticas de ventana no tiene "precio habitual" contra el que
   // comparar: cualquier veredicto sería inventado. Lo honesto es decir qué falta y cuánto
   // llevamos observándolo (#131).
   if (product.status === "insufficient_history" || !product.typical_90d) {
-    const dias = product.first_seen_at
-      ? Math.max(
-          0,
-          Math.floor(
-            (Date.now() - new Date(product.first_seen_at).getTime()) /
-              86_400_000,
-          ),
-        )
+    // Date.parse y no new Date().getTime(): una fecha con forma de string pero no parseable
+    // pasa la guarda de forma (que no valida fechas a propósito, issue #6) y produciría
+    // "Llevamos NaN días" en el texto visible. Ilegible es lo mismo que ausente
+    // (CR PR #10, H6 y Copilot).
+    const t = product.first_seen_at ? Date.parse(product.first_seen_at) : NaN;
+    const dias = Number.isFinite(t)
+      ? Math.max(0, Math.floor((Date.now() - t) / 86_400_000))
       : null;
     return {
       headline: "Todavía no podemos decir si este precio es bueno.",
@@ -63,14 +74,6 @@ export function buildVerdict(product: CatalogProduct): Verdict {
   // (CR PR #7, H6). isLowest se mantiene con la comparación exacta (current <= min): ahí no
   // se muestra el número, solo se decide una rama de texto.
   const diff = Math.round(typical - current);
-
-  if (!product.current.available) {
-    return {
-      headline: "Este producto no está disponible actualmente.",
-      detail: `El último precio visto fue ${formatMXN(product.current.price)}, el ${new Date(product.current.since).toLocaleDateString("es-MX", { timeZone: TZ })}.`,
-      tone: "neutral",
-    };
-  }
 
   if (diff > 0) {
     const isLowest = current <= min;

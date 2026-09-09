@@ -38,12 +38,10 @@ if (!result.ok) {
     {
       !result.ok && result.reason === "not_found" && (
         <div class="notice">
-          <h1>
-            Sin datos suficientes para mostrar el historial de este producto.
-          </h1>
+          <h1>No encontramos este producto.</h1>
           <p>
-            Puede ser que apenas empezamos a rastrearlo, o que no ha tenido
-            cambios de precio recientes. Vuelve a intentarlo más tarde.
+            Puede que ya no esté en el catálogo de la tienda o que el enlace sea
+            incorrecto.
           </p>
         </div>
       )
@@ -122,7 +120,6 @@ if (!result.ok) {
                         },
                       ]
                     : []),
-                  { label: "observaciones", value: String(p.obs) },
                 ]}
               />
 

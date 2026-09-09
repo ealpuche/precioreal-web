@@ -280,5 +280,20 @@ describe("fetchProduct", () => {
       const result = await fetchProduct("cyberpuerta", "SKU123");
       expect(result).toEqual({ ok: false, reason: "upstream_error" });
     });
+
+    it("rejects an insufficient_history payload whose stats are not strings", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ...sampleProduct,
+          status: "insufficient_history",
+          typical_90d: 400,
+        }),
+      } as unknown as Response);
+
+      const result = await fetchProduct("cyberpuerta", "SKU123");
+      expect(result).toEqual({ ok: false, reason: "upstream_error" });
+    });
   });
 });

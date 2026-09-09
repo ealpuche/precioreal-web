@@ -11,15 +11,17 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
 
 - `generated_at`, `site`, `window_days` (int), `count`
 - `products[]`: `sku`, `name`, `url`, `image_url` (null|string), `category` (null|string),
-  `price`, `typical_90d`, `min_90d`, `obs` (int), `since` (ISO), `available` (bool),
-  `is_from_price` (bool)
+  `price`, `obs` (int), `since` (ISO), `available` (bool), `is_from_price` (bool),
+  `status` (opcional, mismo dominio que en `{sku}.json`), `first_seen_at` (ISO, opcional)
+- `typical_90d`, `min_90d` — **solo cuando `status` es `"ok"`**
 
 `{tienda}/products/{sku}.json`
 
 - `sku`, `name`, `url`, `image_url`, `category`, `site`, `generated_at`, `window_days` (int)
 - `current`: `{ price, since, available }`
 - `status`: `"ok"` | `"insufficient_history"` (opcional; ausente equivale a `"ok"`)
-- `obs`, `first_seen_at` (ISO), `is_from_price` (bool, opcional)
+- `obs`, `first_seen_at` (ISO, opcional — las fichas anteriores a #131 no lo traen),
+  `is_from_price` (bool, opcional)
 - `typical_90d`, `min_90d`, `max_90d` — **solo cuando `status` es `"ok"`**
 - `series[]`: `[first_seen_at, price, available]` — solo `is_available=true`, historial
   COMPLETO, orden ascendente

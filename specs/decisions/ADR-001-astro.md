@@ -95,3 +95,28 @@ declaración contraria), no cómo Pages sirve las rutas.
 Sin impacto hoy: el plan gratuito cubre 100.000 invocaciones de worker al día y el tráfico
 actual está muy por debajo. Se revisa cuando el hub de hardware esté publicado y haya cifras
 de tráfico reales; si hiciera falta, las páginas prerenderizadas pueden añadirse al `exclude`.
+
+## Estilos: sin inline en código nuevo (2026-09-08)
+
+Regla introducida en PR #7 junto con `src/styles/tokens.css` y los primeros componentes
+(`PriceChart`, `StatGrid`) — antes de ese PR no existía ninguno de los dos y la landing usa
+solo estilos inline. La descripción del PR la citó como si ya estuviera en este ADR y no lo
+estaba (CR PR #7, H9), y el intento de corregirlo introdujo a su vez una afirmación falsa
+sobre el estado previo del código (CR PR #7 ronda 3, H1). Queda formalizada: código nuevo no usa el atributo `style=` inline; usa
+variables CSS de `src/styles/tokens.css` y bloques `<style>` scoped por componente. La landing
+heredada (`src/pages/index.astro`) es la única excepción, y es deliberada: migrarla es
+refactor, no parte de ningún PR de feature (ver la sección de Consecuencias arriba).
+
+## Corrección: JS de cliente en gráficas (2026-09-08)
+
+El PR de la ficha de producto (#7) prohibió "JavaScript de cliente ni hidratación" en
+`PriceChart`. Esa prohibición era demasiado amplia: el objetivo real nunca fue "cero JS", fue
+evitar frameworks e hidratación de componentes.
+
+Regla corregida: **sin frameworks de UI ni hidratación de componentes; JavaScript vainilla
+permitido cuando aporta interactividad real**, con dos condiciones: (1) el servidor calcula
+todo lo que pueda calcularse en build/request time — el cliente solo lee y reacciona, nunca
+recalcula lógica de negocio ni escalas; (2) la lógica pura (sin DOM) se extrae a un módulo
+`.ts` normal con su propio test, igual que `format.ts` y `catalog.ts`; solo el pegamento de
+eventos/DOM se queda dentro del `<script>` del componente, porque eso sí requiere navegador
+para probarse (issue #6 — Playwright pendiente).

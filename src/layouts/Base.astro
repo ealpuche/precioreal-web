@@ -1,14 +1,17 @@
 ---
+import "../styles/tokens.css";
 import "../styles/global.css";
 
 interface Props {
   title?: string;
   description?: string;
+  showNav?: boolean;
 }
 
 const {
   title = "PrecioReal — ¿Ese descuento es real?",
   description = "Rastreamos los precios de hardware en México y detectamos descuentos falsos antes de Buen Fin.",
+  showNav = false,
 } = Astro.props;
 ---
 
@@ -34,6 +37,52 @@ const {
     />
   </head>
   <body>
+    {
+      showNav && (
+        <nav class="site-nav">
+          <a href="/" class="site-nav-brand">
+            PrecioReal<span class="cursor">_</span>
+          </a>
+          <a href="/buscar" class="site-nav-link">
+            Buscar producto
+          </a>
+        </nav>
+      )
+    }
     <slot />
   </body>
 </html>
+
+<style>
+  .site-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--sans);
+  }
+  .site-nav-brand {
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -0.02em;
+    color: var(--text-strong);
+    text-decoration: none;
+  }
+  .site-nav-brand .cursor {
+    color: var(--green);
+    font-family: var(--mono);
+  }
+  .site-nav-link {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green);
+    text-decoration: none;
+  }
+  .site-nav-link:hover {
+    text-decoration: underline;
+  }
+</style>

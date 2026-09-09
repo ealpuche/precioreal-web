@@ -192,6 +192,14 @@ export async function resolveProductUrl(
       // sigue siendo correcto para los que ya podían ir en una ruta.
       const clave =
         typeof p.slug === "string" && p.slug !== "" ? p.slug : p.sku;
+      // Sin slug y con un sku que no cabe en una ruta no hay destino posible: mejor "no
+      // encontramos ese producto" en /buscar que un redirect a un 404 garantizado, que además
+      // gasta una invocación de worker y muestra el mensaje equivocado (CR PR #14, H2 y
+      // Copilot). Pasa durante la propagación del backfill, cuando una ficha aún no reescrita
+      // no trae `slug`.
+      if (!SKU_RE.test(clave)) {
+        return { ok: false, reason: "not_found" };
+      }
       return { ok: true, sku: clave };
     }
   }

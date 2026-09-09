@@ -15,9 +15,10 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   `status` (opcional, mismo dominio que en `{sku}.json`), `first_seen_at` (ISO, opcional)
   - `typical_90d`, `min_90d` — **solo cuando `status` es `"ok"`**
 
-`{tienda}/products/{sku}.json`
+`{tienda}/products/{slug}.json`
 
-- `sku`, `name`, `url`, `image_url`, `category`, `site`, `generated_at`, `window_days` (int)
+- `sku`, `slug` (la clave de este mismo recurso; opcional mientras el backfill propaga),
+  `name`, `url`, `image_url`, `category`, `site`, `generated_at`, `window_days` (int)
 - `current`: `{ price, since, available }`
 - `status`: `"ok"` | `"insufficient_history"` (opcional; ausente equivale a `"ok"`)
 - `obs`, `first_seen_at` (ISO, opcional — las fichas anteriores a #131 no lo traen),
@@ -56,15 +57,20 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   `min_90d` ni `max_90d`. Fabricar una estadística de ventana para un producto con dos
   observaciones es justo lo que el productor evita; el consumidor no debe derivarla del precio
   actual para rellenar el hueco.
-- La ruta de una ficha se construye con `slug`, **nunca** con `sku`: 3,377 productos activos
-  tienen un sku con espacios o caracteres que no pueden ir en una clave, y su ficha vive bajo
-  un slug derivado. `slug == sku` en el caso común pero no es un invariante — el productor
-  recorta guiones de los extremos y omite nombres reservados. Es opcional para el consumidor
-  mientras el backfill propaga; ausente, usar `sku` es el comportamiento anterior y sigue
-  siendo correcto para los skus que ya podían ir en una ruta.
+- **Cuando la ruta se deriva del índice**, se construye con `slug` y no con `sku`: miles de
+  productos activos tienen un sku con espacios o caracteres que no pueden ir en una clave, y su
+  ficha vive bajo un slug derivado. `slug` es opcional para el consumidor mientras el backfill
+  propaga; ausente, se cae a `sku`, que **solo** es correcto cuando `slug == sku`. Eso no es un
+  invariante: el productor recorta guiones de los extremos y omite nombres reservados, así que
+  un sku como `-ABC-` pasa el charset de ruta pero su ficha vive en `ABC` (medido 2026-09-09:
+  cero skus activos en ese caso, pero el catálogo cambia).
+- **Excepción conocida**: `/buscar` con un código tecleado construye la ruta directamente con
+  lo que escribió el usuario, sin consultar el índice, así que ahí no hay slug que usar. Para
+  un sku cuyo slug difiera, ese camino da 404; hoy no ocurre y resolverlo exigiría consultar el
+  índice también en la búsqueda por código.
 
 ## Recurso ausente (producto sin ficha en R2)
 
-Con price-crawler-saas#131 desplegado, un 404 en `{sku}.json` solo significa que el producto no
+Con price-crawler-saas#131 desplegado, un 404 en `{slug}.json` solo significa que el producto no
 existe en el catálogo o no está activo en la tienda. Los productos activos con historial
 insuficiente ahora se publican con `status: "insufficient_history"`.

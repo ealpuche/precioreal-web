@@ -539,5 +539,65 @@ describe("fetchProduct", () => {
 
       expect(result).toEqual({ ok: true, sku: "SKU-001" });
     });
+
+    it("reports not_found when the entry has no slug and its sku cannot go in a route", async () => {
+      // Durante la propagación del backfill una ficha puede no traer slug todavía. Redirigir
+      // con un sku que lleva espacios produce un 404 garantizado y el mensaje equivocado
+      // (CR PR #14, H2).
+      const { slug: _sin, ...sinSlug } = sampleIndex.products[0];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ...sampleIndex,
+          products: [
+            {
+              ...sinSlug,
+              sku: "B840M GAMING WIFI6E",
+              url: "https://www.cyberpuerta.mx/Tarjetas-Madre/MSI-B840M-Gaming.html",
+            },
+          ],
+        }),
+      } as unknown as Response);
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const result = await resolveProductUrl(
+        "cyberpuerta",
+        "cyberpuerta.mx/Tarjetas-Madre/MSI-B840M-Gaming.html",
+      );
+
+      expect(result).toEqual({ ok: false, reason: "not_found" });
+    });
+
+    it("falls back to the sku when slug is empty or not a string", async () => {
+      // La condición tiene tres ramas y solo dos tenían test: un refactor a `p.slug ?? p.sku`
+      // pasaba los 96 y redirigía a /cyberpuerta/ con slug: "" (CR PR #14, H3).
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ...sampleIndex,
+          products: [
+            { ...sampleIndex.products[0], slug: "" },
+            { ...sampleIndex.products[1], slug: 42 },
+          ],
+        }),
+      } as unknown as Response);
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+
+      expect(
+        await resolveProductUrl(
+          "cyberpuerta",
+          "cyberpuerta.mx/Computadoras/Laptops/Laptop-1.html",
+        ),
+      ).toEqual({ ok: true, sku: "SKU-001" });
+      expect(
+        await resolveProductUrl(
+          "cyberpuerta",
+          "cyberpuerta.mx/Computadoras/Accesorios/Mouse-2.html",
+        ),
+      ).toEqual({ ok: true, sku: "SKU-002" });
+    });
   });
 });

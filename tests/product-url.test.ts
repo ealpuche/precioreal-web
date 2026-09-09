@@ -104,6 +104,10 @@ describe("tiendaNoPublicada", () => {
       "Liverpool",
     );
     expect(tiendaNoPublicada("www.liverpool.com.mx/algo")).toBe("Liverpool");
+    // El corchete de un enlace markdown pegado por error hacía pasar este caso por accidente:
+    // endsWith(".liverpool.com.mx") acierta aunque el host empiece por "[".
+    expect(tiendaNoPublicada("tienda.liverpool.com.mx/algo")).toBe("Liverpool");
+    expect(tiendaNoPublicada("liverpool.com.mx.attacker.test/algo")).toBeNull();
   });
 
   it("identifies MercadoLibre", () => {

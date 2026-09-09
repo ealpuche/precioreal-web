@@ -13,7 +13,7 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
 - `products[]`: `sku`, `name`, `url`, `image_url` (null|string), `category` (null|string),
   `price`, `obs` (int), `since` (ISO), `available` (bool), `is_from_price` (bool),
   `status` (opcional, mismo dominio que en `{sku}.json`), `first_seen_at` (ISO, opcional)
-- `typical_90d`, `min_90d` — **solo cuando `status` es `"ok"`**
+  - `typical_90d`, `min_90d` — **solo cuando `status` es `"ok"`**
 
 `{tienda}/products/{sku}.json`
 

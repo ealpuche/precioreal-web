@@ -48,10 +48,10 @@ export function buildVerdict(product: CatalogProduct): Verdict {
   // comparar: cualquier veredicto sería inventado. Lo honesto es decir qué falta y cuánto
   // llevamos observándolo (#131).
   if (product.status === "insufficient_history" || !product.typical_90d) {
-    // Date.parse y no new Date().getTime(): una fecha con forma de string pero no parseable
-    // pasa la guarda de forma (que no valida fechas a propósito, issue #6) y produciría
-    // "Llevamos NaN días" en el texto visible. Ilegible es lo mismo que ausente
-    // (CR PR #10, H6 y Copilot).
+    // Number.isFinite, no el parseo: `Date.parse` y `new Date().getTime()` devuelven NaN por
+    // igual ante una fecha ilegible. La guarda de forma acepta cualquier string como fecha a
+    // propósito (issue #6), así que es aquí donde un NaN dejaría de llegar al texto visible
+    // como "Llevamos NaN días". Ilegible es lo mismo que ausente (CR PR #10, H6 y H8).
     const t = product.first_seen_at ? Date.parse(product.first_seen_at) : NaN;
     const dias = Number.isFinite(t)
       ? Math.max(0, Math.floor((Date.now() - t) / 86_400_000))

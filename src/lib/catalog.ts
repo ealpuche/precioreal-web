@@ -112,12 +112,23 @@ export async function fetchProduct(
   return { ok: true, product: parsed };
 }
 
-/** Índice cacheado por invocación: dos búsquedas en la misma request no lo piden dos veces. */
-let indexPromise: Promise<CatalogIndex | null> | null = null;
+/**
+ * Índice cacheado por isolate, no por request: en Cloudflare el módulo sobrevive entre
+ * invocaciones. Un fallo NO se cachea — la versión anterior guardaba la promesa resuelta a
+ * `null`, y como toda Promise es truthy, un timeout de 5 s o un 5xx puntual de R2 dejaba la
+ * búsqueda por URL rota hasta que el isolate se reciclara, sin límite observable
+ * (CR PR #11, H1 y Copilot).
+ *
+ * Va por tienda aunque hoy solo exista cyberpuerta: la firma recibe `tienda`, así que un
+ * caché global haría que la primera en llegar fijara el índice de todas.
+ */
+const indexCache = new Map<string, Promise<CatalogIndex | null>>();
 
 async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
-  if (indexPromise) return indexPromise;
-  indexPromise = (async () => {
+  const cached = indexCache.get(tienda);
+  if (cached) return cached;
+
+  const pending = (async () => {
     try {
       const res = await fetch(
         `${FEED_BASE}/${encodeURIComponent(tienda)}/products/index.json`,
@@ -130,7 +141,13 @@ async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
       return null;
     }
   })();
-  return indexPromise;
+
+  // Se cachea la promesa en vuelo para que dos búsquedas simultáneas no pidan el índice dos
+  // veces, y se descarta si resultó fallida: el siguiente intento vuelve a preguntar.
+  indexCache.set(tienda, pending);
+  const result = await pending;
+  if (result === null) indexCache.delete(tienda);
+  return result;
 }
 
 export type ResolveUrlResult =
@@ -156,10 +173,17 @@ export async function resolveProductUrl(
   if (!index) return { ok: false, reason: "upstream_error" };
 
   for (const p of index.products) {
+    // `Array.isArray(products)` no dice nada de sus elementos: `products: [null]` lanzaba al
+    // leer `p.url`, y una entrada con `sku` no-string redirigía a `/cyberpuerta/undefined`
+    // (CR PR #11, Copilot).
     if (
-      typeof p.url === "string" &&
-      normalizeProductUrl(p.url) === normalizedUrl
+      typeof p?.url !== "string" ||
+      typeof p?.sku !== "string" ||
+      p.sku === ""
     ) {
+      continue;
+    }
+    if (normalizeProductUrl(p.url) === normalizedUrl) {
       return { ok: true, sku: p.sku };
     }
   }

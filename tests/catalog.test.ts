@@ -416,5 +416,80 @@ describe("fetchProduct", () => {
       expect(result).toEqual({ ok: false, reason: "not_found" });
       expect(fetchMock).not.toHaveBeenCalled();
     });
+
+    it("retries the index fetch after a failed attempt", async () => {
+      // Regresión CR PR #11, H1: la versión anterior cacheaba la promesa resuelta a null, así
+      // que un fallo transitorio dejaba la búsqueda rota durante toda la vida del isolate.
+      const fetchMock = vi
+        .fn()
+        .mockRejectedValueOnce(new Error("timeout"))
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => sampleIndex,
+        } as unknown as Response);
+      globalThis.fetch = fetchMock;
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const url = "cyberpuerta.mx/Computadoras/Laptops/Laptop-1.html";
+
+      expect(await resolveProductUrl("cyberpuerta", url)).toEqual({
+        ok: false,
+        reason: "upstream_error",
+      });
+      expect(await resolveProductUrl("cyberpuerta", url)).toEqual({
+        ok: true,
+        sku: "SKU-001",
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("reuses the index across calls once it loaded", async () => {
+      // La única propiedad que justifica que el caché exista, y que ningún test cubría:
+      // vi.resetModules() en beforeEach lo destruía antes de cada caso.
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => sampleIndex,
+      } as unknown as Response);
+      globalThis.fetch = fetchMock;
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+
+      await resolveProductUrl(
+        "cyberpuerta",
+        "cyberpuerta.mx/Computadoras/Laptops/Laptop-1.html",
+      );
+      await resolveProductUrl(
+        "cyberpuerta",
+        "cyberpuerta.mx/Computadoras/Accesorios/Mouse-2.html",
+      );
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips malformed index entries instead of throwing", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ...sampleIndex,
+          products: [
+            null,
+            { url: 123, sku: "SKU-RARO" },
+            { url: "https://www.cyberpuerta.mx/x/Bueno.html", sku: 42 },
+            sampleIndex.products[0],
+          ],
+        }),
+      } as unknown as Response);
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const result = await resolveProductUrl(
+        "cyberpuerta",
+        "cyberpuerta.mx/Computadoras/Laptops/Laptop-1.html",
+      );
+
+      expect(result).toEqual({ ok: true, sku: "SKU-001" });
+    });
   });
 });

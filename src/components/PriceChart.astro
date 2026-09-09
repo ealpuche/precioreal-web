@@ -8,8 +8,10 @@ interface Props {
   typical?: string;
   min?: string;
   max?: string;
+  /** `generated_at` de la ficha. Opcional: sin él se cae al momento del render. */
+  generatedAt?: string;
 }
-const { series, typical, min, max } = Astro.props;
+const { series, typical, min, max, generatedAt } = Astro.props;
 
 const W = 1000,
   H = 320,
@@ -82,9 +84,16 @@ const hoverPoints = series.map(([d, p]) => {
   };
 });
 
-// La captura de una gráfica circula meses después de tomarse; sin fecha, quien la ve no sabe
-// si el precio es de hoy o de febrero.
-const generadoEl = new Date().toLocaleDateString("es-MX", {
+// La fecha del DATO, no la de la visita: `[sku].astro` es prerender = false, así que un
+// `new Date()` aquí estampa el momento en que alguien abre la página. Si el crawler se
+// detuviera unos días, la captura diría "hoy" sobre una serie que termina antes — una
+// afirmación falsa justo en la imagen que queremos que circule (CR PR #14 ronda 2, H1).
+// Ilegible se trata como ausente, igual que `first_seen_at` en format.ts: la guarda de forma
+// no valida que `generated_at` parsee.
+const tDato = generatedAt ? Date.parse(generatedAt) : NaN;
+const generadoEl = new Date(
+  Number.isFinite(tDato) ? tDato : Date.now(),
+).toLocaleDateString("es-MX", {
   day: "numeric",
   month: "short",
   year: "numeric",

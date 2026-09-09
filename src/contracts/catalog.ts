@@ -4,6 +4,8 @@ export type CatalogStatus = "ok" | "insufficient_history";
 
 export interface CatalogIndexProduct {
   sku: string;
+  /** Clave de R2 de la ficha. Opcional: las entradas anteriores a #137 no lo traen. */
+  slug?: string;
   name: string;
   url: string;
   image_url: string | null;
@@ -38,6 +40,8 @@ export type CatalogSeriesPoint = [string, string, boolean];
 
 export interface CatalogProduct {
   sku: string;
+  /** Clave de R2 de la ficha. Opcional: las entradas anteriores a #137 no lo traen. */
+  slug?: string;
   name: string;
   url: string;
   image_url: string | null;

@@ -184,7 +184,23 @@ export async function resolveProductUrl(
       continue;
     }
     if (normalizeProductUrl(p.url) === normalizedUrl) {
-      return { ok: true, sku: p.sku };
+      // El slug y no el sku: la ficha vive bajo la clave que el productor publica, que para
+      // los skus con espacios o caracteres sustituidos no es el sku. Devolver el sku daba un
+      // 404 en 3,377 productos —el 65% de las tarjetas madre— porque los fabricantes de
+      // componentes usan nombres comerciales con espacios como identificador (#13).
+      // Opcional mientras el backfill propaga: sin él, el sku es lo que se usaba antes y
+      // sigue siendo correcto para los que ya podían ir en una ruta.
+      const clave =
+        typeof p.slug === "string" && p.slug !== "" ? p.slug : p.sku;
+      // Sin slug y con un sku que no cabe en una ruta no hay destino posible: mejor "no
+      // encontramos ese producto" en /buscar que un redirect a un 404 garantizado, que además
+      // gasta una invocación de worker y muestra el mensaje equivocado (CR PR #14, H2 y
+      // Copilot). Pasa durante la propagación del backfill, cuando una ficha aún no reescrita
+      // no trae `slug`.
+      if (!SKU_RE.test(clave)) {
+        return { ok: false, reason: "not_found" };
+      }
+      return { ok: true, sku: clave };
     }
   }
   return { ok: false, reason: "not_found" };

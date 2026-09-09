@@ -8,8 +8,10 @@ interface Props {
   typical?: string;
   min?: string;
   max?: string;
+  /** `generated_at` de la ficha. Opcional: sin él se cae al momento del render. */
+  generatedAt?: string;
 }
-const { series, typical, min, max } = Astro.props;
+const { series, typical, min, max, generatedAt } = Astro.props;
 
 const W = 1000,
   H = 320,
@@ -81,6 +83,22 @@ const hoverPoints = series.map(([d, p]) => {
     price: `$${priceNum}`,
   };
 });
+
+// La fecha del DATO, no la de la visita: `[sku].astro` es prerender = false, así que un
+// `new Date()` aquí estampa el momento en que alguien abre la página. Si el crawler se
+// detuviera unos días, la captura diría "hoy" sobre una serie que termina antes — una
+// afirmación falsa justo en la imagen que queremos que circule (CR PR #14 ronda 2, H1).
+// Ilegible se trata como ausente, igual que `first_seen_at` en format.ts: la guarda de forma
+// no valida que `generated_at` parsee.
+const tDato = generatedAt ? Date.parse(generatedAt) : NaN;
+const generadoEl = new Date(
+  Number.isFinite(tDato) ? tDato : Date.now(),
+).toLocaleDateString("es-MX", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: TZ,
+});
 ---
 
 {
@@ -148,6 +166,27 @@ const hoverPoints = series.map(([d, p]) => {
               stroke-width="1.5"
             />
           )}
+          {/* En la franja baja y no en el centro: verificado en el preview que ahí la línea
+              de precio la atravesaba, compitiendo con lo que hay que leer y perdiéndose entre
+              los trazos a la vez. Sigue siendo irrecortable — recortarla implica cortar el eje
+              X y las etiquetas de mes. La posición es una fracción fija, no calculada: en una
+              serie que suba hacia el final la línea pasará por aquí. Si eso estorba en varias
+              formas de gráfica, la alternativa es una franja diagonal repetida que no dependa
+              de los datos. */}
+          <text
+            x={(L + W - R) / 2}
+            y={T + (H - T - B) * 0.78}
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-family="JetBrains Mono"
+            font-size="42"
+            font-weight="700"
+            fill="var(--green)"
+            opacity="0.1"
+            style="pointer-events: none; user-select: none;"
+          >
+            precioreal.mx
+          </text>
           <path
             d={stepPath}
             fill="none"
@@ -164,6 +203,18 @@ const hoverPoints = series.map(([d, p]) => {
               stroke-width="2"
             />
           )}
+          <text
+            x={W - R}
+            y={T + 12}
+            text-anchor="end"
+            font-family="JetBrains Mono"
+            font-size="11"
+            fill="var(--muted)"
+            opacity="0.6"
+            style="pointer-events: none; user-select: none;"
+          >
+            precioreal.mx · {generadoEl}
+          </text>
           <g class="hover-elements" style="display: none;">
             <line
               class="hover-line"

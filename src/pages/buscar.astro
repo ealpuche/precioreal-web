@@ -4,7 +4,7 @@ export const prerender = false;
 import Base from "../layouts/Base.astro";
 import { resolveProductUrl } from "../lib/catalog";
 import {
-  looksLikeUrl,
+  hostPertenece,
   normalizeProductUrl,
   tiendaNoPublicada,
 } from "../lib/product-url";
@@ -25,7 +25,9 @@ if (q) {
   let resultado = "redirigido";
 
   try {
-    if (SKU_RE.test(q) && !looksLikeUrl(q)) {
+    // Sin `!looksLikeUrl(q)`: SKU_RE ya excluye `/` y `:`, así que era condición muerta
+    // (CR PR #11, H5).
+    if (SKU_RE.test(q)) {
       return Astro.redirect(`/cyberpuerta/${encodeURIComponent(q)}`, 302);
     }
     modo = "url";
@@ -39,9 +41,13 @@ if (q) {
       if (tiendaPendiente) {
         resultado = "tienda_no_publicada";
         error = `Rastreamos ${tiendaPendiente}, pero su historial todavía no está disponible en el sitio. Por ahora solo puedes consultar Cyberpuerta.`;
-      } else if (!normalized.startsWith("cyberpuerta.mx/")) {
+      } else if (!hostPertenece(normalized, "cyberpuerta.mx")) {
         resultado = "tienda_desconocida";
         error = "Por ahora solo tenemos historial de Cyberpuerta.";
+      } else if (!normalized.includes("/")) {
+        resultado = "sin_ruta";
+        error =
+          "Ese es el enlace de la portada de Cyberpuerta. Pega el de un producto.";
       } else {
         const resolved = await resolveProductUrl("cyberpuerta", normalized);
         if (resolved.ok) {

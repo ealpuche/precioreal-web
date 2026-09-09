@@ -3,6 +3,7 @@ import {
   normalizeProductUrl,
   looksLikeUrl,
   tiendaNoPublicada,
+  hostPertenece,
 } from "../src/lib/product-url";
 
 describe("normalizeProductUrl", () => {
@@ -128,5 +129,24 @@ describe("tiendaNoPublicada", () => {
   it("returns null for Cyberpuerta and unknown stores", () => {
     expect(tiendaNoPublicada("cyberpuerta.mx/prod")).toBeNull();
     expect(tiendaNoPublicada("amazon.com.mx/dp/123")).toBeNull();
+  });
+});
+
+describe("hostPertenece", () => {
+  it("accepts the root domain and its subdomains", () => {
+    expect(
+      hostPertenece("cyberpuerta.mx/algo/producto.html", "cyberpuerta.mx"),
+    ).toBe(true);
+    expect(hostPertenece("cyberpuerta.mx", "cyberpuerta.mx")).toBe(true);
+    expect(
+      hostPertenece("m.cyberpuerta.mx/producto.html", "cyberpuerta.mx"),
+    ).toBe(true);
+  });
+
+  it("rejects a lookalike domain that merely contains the name", () => {
+    expect(
+      hostPertenece("cyberpuerta.mx.attacker.test/x", "cyberpuerta.mx"),
+    ).toBe(false);
+    expect(hostPertenece("nocyberpuerta.mx/x", "cyberpuerta.mx")).toBe(false);
   });
 });

@@ -1,7 +1,7 @@
 /**
  * Normalización de URLs de producto para compararlas contra el índice del catálogo.
  *
- * Medido contra el índice en producción (2026-09-09): sus 22,762 URLs comparten host
+ * Medido contra el índice en producción (2026-09-09): sus 31,520 URLs comparten host
  * (`https://www.cyberpuerta.mx`) y ninguna lleva query string. Así que normalizar es tratar lo
  * que el usuario pega —parámetros de campaña, `http`, `www` ausente, barra final, mayúsculas
  * de host— no variantes del propio índice.
@@ -45,11 +45,23 @@ const TIENDAS_CONOCIDAS_NO_PUBLICADAS: Record<string, string> = {
 
 /** Nombre de la tienda si la reconocemos pero no está publicada; null en cualquier otro caso. */
 export function tiendaNoPublicada(normalizedUrl: string): string | null {
-  const host = normalizedUrl.split("/")[0];
   for (const [dominio, nombre] of Object.entries(
     TIENDAS_CONOCIDAS_NO_PUBLICADAS,
   )) {
-    if (host === dominio || host.endsWith(`.${dominio}`)) return nombre;
+    if (hostPertenece(normalizedUrl, dominio)) return nombre;
   }
   return null;
+}
+
+/**
+ * ¿El host de una URL ya normalizada pertenece a este dominio, como raíz o como subdominio?
+ *
+ * Existe porque `/buscar` comparaba Cyberpuerta con `startsWith("cyberpuerta.mx/")` mientras
+ * `tiendaNoPublicada`, en este mismo archivo, aceptaba subdominios: una URL sin ruta o de un
+ * subdominio recibía "solo tenemos historial de Cyberpuerta" siendo justo esa la tienda
+ * pegada (CR PR #11, H5).
+ */
+export function hostPertenece(normalizedUrl: string, dominio: string): boolean {
+  const host = normalizedUrl.split("/")[0];
+  return host === dominio || host.endsWith(`.${dominio}`);
 }

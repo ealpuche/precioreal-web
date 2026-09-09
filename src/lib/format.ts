@@ -27,6 +27,16 @@ export interface Verdict {
 }
 
 /**
+ * "desde " cuando el precio publicado es el de la variante más barata de un producto
+ * multi-talla o multi-color. Vive aquí y no en la página porque el veredicto también imprime
+ * precios: tenerlo en dos sitios ya produjo que la grilla dijera "desde $1,500" y el veredicto
+ * "El último precio visto fue $1,500" en la misma ficha (CR PR #10 ronda 3, Copilot).
+ */
+export function pricePrefix(product: CatalogProduct): string {
+  return product.is_from_price ? "desde " : "";
+}
+
+/**
  * Frase honesta, no una calificación genérica. "Está $X por debajo" requiere
  * current < typical; si current >= typical, el mensaje no debe insinuar una oferta que no
  * existe.
@@ -39,7 +49,7 @@ export function buildVerdict(product: CatalogProduct): Verdict {
   if (!product.current.available) {
     return {
       headline: "Este producto no está disponible actualmente.",
-      detail: `El último precio visto fue ${formatMXN(product.current.price)}, el ${new Date(product.current.since).toLocaleDateString("es-MX", { timeZone: TZ })}.`,
+      detail: `El último precio visto fue ${pricePrefix(product)}${formatMXN(product.current.price)}, el ${new Date(product.current.since).toLocaleDateString("es-MX", { timeZone: TZ })}.`,
       tone: "neutral",
     };
   }

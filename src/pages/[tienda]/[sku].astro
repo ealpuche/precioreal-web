@@ -5,7 +5,7 @@ import Base from "../../layouts/Base.astro";
 import StatGrid from "../../components/StatGrid.astro";
 import PriceChart from "../../components/PriceChart.astro";
 import { fetchProduct } from "../../lib/catalog";
-import { formatMXN, buildVerdict } from "../../lib/format";
+import { formatMXN, buildVerdict, pricePrefix } from "../../lib/format";
 
 const { tienda, sku } = Astro.params;
 const result = await fetchProduct(tienda!, sku!);
@@ -61,10 +61,6 @@ if (!result.ok) {
         (() => {
           const p = result.product;
           const verdict = buildVerdict(p);
-          // Productos multi-variante (tallas, colores) publican el precio de la variante más
-          // barata: decir "$X" a secas afirmaría un precio único que no existe. El campo es
-          // opcional en fichas anteriores a price-crawler-saas#132; su ausencia es `false`.
-          const pricePrefix = p.is_from_price ? "desde " : "";
           return (
             <>
               <div class="head">
@@ -89,12 +85,12 @@ if (!result.ok) {
                   p.current.available
                     ? {
                         label: "precio actual",
-                        value: `${pricePrefix}${formatMXN(p.current.price)}`,
+                        value: `${pricePrefix(p)}${formatMXN(p.current.price)}`,
                         tone: "green",
                       }
                     : {
                         label: "último precio visto",
-                        value: `${pricePrefix}${formatMXN(p.current.price)}`,
+                        value: `${pricePrefix(p)}${formatMXN(p.current.price)}`,
                       },
                   ...(p.typical_90d
                     ? [

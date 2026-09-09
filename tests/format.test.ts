@@ -256,4 +256,34 @@ describe("buildVerdict", () => {
       expect(v.detail).not.toContain("NaN");
     });
   });
+
+  it("prefixes the unavailable verdict with 'desde' for multi-variant products", () => {
+    // Regresión CR PR #10 ronda 3: la grilla anteponía "desde" y el veredicto no, así que la
+    // misma ficha afirmaba un precio único y un mínimo de variantes a la vez.
+    const p = makeProduct({
+      is_from_price: true,
+      current: {
+        price: "1500.00",
+        since: "2026-09-01T10:00:00Z",
+        available: false,
+      },
+    });
+
+    const v = buildVerdict(p);
+    expect(v.detail).toContain(`desde ${formatMXN("1500.00")}`);
+  });
+
+  it("omits the prefix when the product is not multi-variant", () => {
+    const p = makeProduct({
+      is_from_price: false,
+      current: {
+        price: "1500.00",
+        since: "2026-09-01T10:00:00Z",
+        available: false,
+      },
+    });
+
+    const v = buildVerdict(p);
+    expect(v.detail).not.toContain("desde");
+  });
 });

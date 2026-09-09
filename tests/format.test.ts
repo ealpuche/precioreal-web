@@ -156,4 +156,134 @@ describe("buildVerdict", () => {
     expect(v.tone).toBe("neutral");
     expect(v.headline).toBe("Está en su precio habitual.");
   });
+
+  describe("insufficient history products", () => {
+    it("returns neutral verdict with day count when first_seen_at is present", () => {
+      const fiveDaysAgo = new Date(Date.now() - 5 * 86_400_000).toISOString();
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: fiveDaysAgo,
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+      });
+
+      const v = buildVerdict(p);
+      expect(v.tone).toBe("neutral");
+      expect(v.headline).toBe(
+        "Todavía no podemos decir si este precio es bueno.",
+      );
+      expect(v.detail).toBe(
+        "Llevamos 5 días rastreándolo y aún no hay suficientes cambios de precio para comparar.",
+      );
+    });
+
+    it("returns neutral verdict with 1 día singular when first_seen_at is 1 day ago", () => {
+      const oneDayAgo = new Date(
+        Date.now() - 1 * 86_400_000 - 1000,
+      ).toISOString();
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: oneDayAgo,
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+      });
+
+      const v = buildVerdict(p);
+      expect(v.tone).toBe("neutral");
+      expect(v.headline).toBe(
+        "Todavía no podemos decir si este precio es bueno.",
+      );
+      expect(v.detail).toBe(
+        "Llevamos 1 día rastreándolo y aún no hay suficientes cambios de precio para comparar.",
+      );
+    });
+
+    it("returns neutral verdict with generic message when first_seen_at is missing", () => {
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: undefined,
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+      });
+
+      const v = buildVerdict(p);
+      expect(v.tone).toBe("neutral");
+      expect(v.headline).toBe(
+        "Todavía no podemos decir si este precio es bueno.",
+      );
+      expect(v.detail).toBe(
+        "Necesitamos más historial para comparar. Ya lo estamos rastreando.",
+      );
+    });
+
+    it("says the product is unavailable even when it also lacks history", () => {
+      // Regresión CR PR #10, H1: con la rama de historial insuficiente primero, esta ficha
+      // decía "llevamos N días rastreándolo" sobre un precio que la propia página marca como
+      // el último visto, no el actual.
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+        current: {
+          price: "1500.00",
+          since: "2026-09-01T10:00:00Z",
+          available: false,
+        },
+      });
+
+      const v = buildVerdict(p);
+      expect(v.headline).toBe("Este producto no está disponible actualmente.");
+    });
+
+    it("falls back to the generic message when first_seen_at is unparseable", () => {
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: "no-es-una-fecha",
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+      });
+
+      const v = buildVerdict(p);
+      expect(v.detail).toBe(
+        "Necesitamos más historial para comparar. Ya lo estamos rastreando.",
+      );
+      expect(v.detail).not.toContain("NaN");
+    });
+  });
+
+  it("prefixes the unavailable verdict with 'desde' for multi-variant products", () => {
+    // Regresión CR PR #10 ronda 3: la grilla anteponía "desde" y el veredicto no, así que la
+    // misma ficha afirmaba un precio único y un mínimo de variantes a la vez.
+    const p = makeProduct({
+      is_from_price: true,
+      current: {
+        price: "1500.00",
+        since: "2026-09-01T10:00:00Z",
+        available: false,
+      },
+    });
+
+    const v = buildVerdict(p);
+    expect(v.detail).toContain(`desde ${formatMXN("1500.00")}`);
+  });
+
+  it("omits the prefix when the product is not multi-variant", () => {
+    const p = makeProduct({
+      is_from_price: false,
+      current: {
+        price: "1500.00",
+        since: "2026-09-01T10:00:00Z",
+        available: false,
+      },
+    });
+
+    const v = buildVerdict(p);
+    expect(v.detail).not.toContain("desde");
+  });
 });

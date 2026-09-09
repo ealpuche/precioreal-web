@@ -5,7 +5,7 @@ import Base from "../../layouts/Base.astro";
 import StatGrid from "../../components/StatGrid.astro";
 import PriceChart from "../../components/PriceChart.astro";
 import { fetchProduct } from "../../lib/catalog";
-import { formatMXN, buildVerdict } from "../../lib/format";
+import { formatMXN, buildVerdict, pricePrefix } from "../../lib/format";
 
 const { tienda, sku } = Astro.params;
 const result = await fetchProduct(tienda!, sku!);
@@ -38,12 +38,10 @@ if (!result.ok) {
     {
       !result.ok && result.reason === "not_found" && (
         <div class="notice">
-          <h1>
-            Sin datos suficientes para mostrar el historial de este producto.
-          </h1>
+          <h1>No encontramos este producto.</h1>
           <p>
-            Puede ser que apenas empezamos a rastrearlo, o que no ha tenido
-            cambios de precio recientes. Vuelve a intentarlo más tarde.
+            Puede que ya no esté en el catálogo de la tienda o que el enlace sea
+            incorrecto.
           </p>
         </div>
       )
@@ -63,10 +61,6 @@ if (!result.ok) {
         (() => {
           const p = result.product;
           const verdict = buildVerdict(p);
-          // Productos multi-variante (tallas, colores) publican el precio de la variante más
-          // barata: decir "$X" a secas afirmaría un precio único que no existe. El campo es
-          // opcional en fichas anteriores a price-crawler-saas#132; su ausencia es `false`.
-          const pricePrefix = p.is_from_price ? "desde " : "";
           return (
             <>
               <div class="head">
@@ -91,22 +85,37 @@ if (!result.ok) {
                   p.current.available
                     ? {
                         label: "precio actual",
-                        value: `${pricePrefix}${formatMXN(p.current.price)}`,
+                        value: `${pricePrefix(p)}${formatMXN(p.current.price)}`,
                         tone: "green",
                       }
                     : {
                         label: "último precio visto",
-                        value: `${pricePrefix}${formatMXN(p.current.price)}`,
+                        value: `${pricePrefix(p)}${formatMXN(p.current.price)}`,
                       },
-                  { label: "precio habitual", value: formatMXN(p.typical_90d) },
-                  {
-                    label: `mínimo ${p.window_days}d`,
-                    value: formatMXN(p.min_90d),
-                  },
-                  {
-                    label: `máximo ${p.window_days}d`,
-                    value: formatMXN(p.max_90d),
-                  },
+                  ...(p.typical_90d
+                    ? [
+                        {
+                          label: "precio habitual",
+                          value: formatMXN(p.typical_90d),
+                        },
+                      ]
+                    : []),
+                  ...(p.min_90d
+                    ? [
+                        {
+                          label: `mínimo ${p.window_days}d`,
+                          value: formatMXN(p.min_90d),
+                        },
+                      ]
+                    : []),
+                  ...(p.max_90d
+                    ? [
+                        {
+                          label: `máximo ${p.window_days}d`,
+                          value: formatMXN(p.max_90d),
+                        },
+                      ]
+                    : []),
                 ]}
               />
 

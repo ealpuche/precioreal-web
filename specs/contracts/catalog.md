@@ -11,14 +11,18 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
 
 - `generated_at`, `site`, `window_days` (int), `count`
 - `products[]`: `sku`, `name`, `url`, `image_url` (null|string), `category` (null|string),
-  `price`, `typical_90d`, `min_90d`, `obs` (int), `since` (ISO), `available` (bool),
-  `is_from_price` (bool)
+  `price`, `obs` (int), `since` (ISO), `available` (bool), `is_from_price` (bool),
+  `status` (opcional, mismo dominio que en `{sku}.json`), `first_seen_at` (ISO, opcional)
+  - `typical_90d`, `min_90d` — **solo cuando `status` es `"ok"`**
 
 `{tienda}/products/{sku}.json`
 
 - `sku`, `name`, `url`, `image_url`, `category`, `site`, `generated_at`, `window_days` (int)
 - `current`: `{ price, since, available }`
-- `typical_90d`, `min_90d`, `max_90d`, `obs`, `is_from_price` (bool, opcional)
+- `status`: `"ok"` | `"insufficient_history"` (opcional; ausente equivale a `"ok"`)
+- `obs`, `first_seen_at` (ISO, opcional — las fichas anteriores a #131 no lo traen),
+  `is_from_price` (bool, opcional)
+- `typical_90d`, `min_90d`, `max_90d` — **solo cuando `status` es `"ok"`**
 - `series[]`: `[first_seen_at, price, available]` — solo `is_available=true`, historial
   COMPLETO, orden ascendente
 
@@ -45,20 +49,16 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   el backfill diario las reescriba. La UI trata su ausencia como `false`, nunca como un error
   de forma: exigirlo convertiría cada ficha vieja en un 502 por un campo que solo antepone una
   palabra al precio.
+- `status` es **opcional para el consumidor**: lo agrega price-crawler-saas#131, y las fichas
+  publicadas antes no lo traen hasta que el backfill las reescriba. Ausente equivale a `"ok"`,
+  que es lo que esas fichas son: solo se publicaban productos con historial suficiente.
+- Cuando `status` es `"insufficient_history"` el productor **no** emite `typical_90d`,
+  `min_90d` ni `max_90d`. Fabricar una estadística de ventana para un producto con dos
+  observaciones es justo lo que el productor evita; el consumidor no debe derivarla del precio
+  actual para rellenar el hueco.
 
-## Recurso ausente (producto activo sin ficha en R2)
+## Recurso ausente (producto sin ficha en R2)
 
-Medido en Cyberpuerta (2026-09-08, 32,151 productos activos): un producto puede no tener
-`{sku}.json` en R2 por dos razones y merecen mensajes distintos en la UI:
-
-1. **Historial insuficiente** (menos de 5 observaciones, o menos de 14 días desde la
-   primera): ~6,758 productos (21%). Mensaje: "Aún no hay suficiente historial para
-   mostrar — llevamos poco tiempo rastreándolo."
-2. **Sin actividad reciente dentro de la ventana**: cumple antigüedad y volumen mínimo, pero
-   ninguna observación cae en los últimos `window_days` días. ~2,751 productos (12% de los
-   elegibles). Mensaje: "Sin cambios de precio recientes."
-
-El contrato hoy NO distingue estos dos casos para un producto sin recurso: ambos dan 404 en
-R2. Diferenciarlos en la UI requiere que el productor exponga una señal adicional (issue
-futuro en #128); mientras tanto, esta ficha usa un mensaje genérico honesto para el 404, sin
-inventar cuál de los dos casos aplica.
+Con price-crawler-saas#131 desplegado, un 404 en `{sku}.json` solo significa que el producto no
+existe en el catálogo o no está activo en la tienda. Los productos activos con historial
+insuficiente ahora se publican con `status: "insufficient_history"`.

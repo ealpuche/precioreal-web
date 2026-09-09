@@ -27,15 +27,13 @@ function hasExpectedShape(value: unknown): value is CatalogProduct {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   const current = v.current as Record<string, unknown> | undefined;
-  return (
+
+  const baseOk =
     typeof v.sku === "string" &&
     typeof v.site === "string" &&
-    typeof v.obs === "number" &&
     typeof v.name === "string" &&
     typeof v.url === "string" &&
-    typeof v.typical_90d === "string" &&
-    typeof v.min_90d === "string" &&
-    typeof v.max_90d === "string" &&
+    typeof v.obs === "number" &&
     typeof v.window_days === "number" &&
     Array.isArray(v.series) &&
     v.series.every(
@@ -47,7 +45,29 @@ function hasExpectedShape(value: unknown): value is CatalogProduct {
     typeof current?.price === "string" &&
     typeof current?.since === "string" &&
     typeof current?.available === "boolean" &&
-    (v.is_from_price === undefined || typeof v.is_from_price === "boolean")
+    (v.is_from_price === undefined || typeof v.is_from_price === "boolean") &&
+    (v.first_seen_at === undefined || typeof v.first_seen_at === "string") &&
+    (v.status === undefined ||
+      v.status === "ok" ||
+      v.status === "insufficient_history");
+  if (!baseOk) return false;
+
+  // Ausentes o strings, nunca otra cosa: el contrato dice que el productor no las emite con
+  // este estado, pero la guarda existe justamente para no confiar en eso. Un número truthy
+  // pasaría a la ficha y de ahí al SVG (CR PR #10, H4 y Copilot).
+  const optionalString = (x: unknown) =>
+    x === undefined || typeof x === "string";
+  if (v.status === "insufficient_history") {
+    return (
+      optionalString(v.typical_90d) &&
+      optionalString(v.min_90d) &&
+      optionalString(v.max_90d)
+    );
+  }
+  return (
+    typeof v.typical_90d === "string" &&
+    typeof v.min_90d === "string" &&
+    typeof v.max_90d === "string"
   );
 }
 

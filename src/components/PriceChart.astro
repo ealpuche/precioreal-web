@@ -5,9 +5,9 @@ import { monthTicks } from "../lib/chart-ticks";
 
 interface Props {
   series: CatalogSeriesPoint[];
-  typical: string;
-  min: string;
-  max: string;
+  typical?: string;
+  min?: string;
+  max?: string;
 }
 const { series, typical, min, max } = Astro.props;
 
@@ -20,8 +20,13 @@ const W = 1000,
 const prices = series.map(([, p]) => Number(p));
 const dates = series.map(([d]) => new Date(d).getTime());
 
-const yMinRaw = Math.min(...prices, Number(min));
-const yMaxRaw = Math.max(...prices, Number(max));
+const yMinCandidates = [...prices];
+if (min !== undefined) yMinCandidates.push(Number(min));
+const yMaxCandidates = [...prices];
+if (max !== undefined) yMaxCandidates.push(Number(max));
+
+const yMinRaw = Math.min(...yMinCandidates);
+const yMaxRaw = Math.max(...yMaxCandidates);
 const pad = (yMaxRaw - yMinRaw) * 0.08 || yMaxRaw * 0.1 || 1;
 const yMin = Math.max(0, yMinRaw - pad);
 const yMax = yMaxRaw + pad;
@@ -41,7 +46,7 @@ series.forEach(([d, p], i) => {
 });
 
 const gridValues = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + (yMax - yMin) * f);
-const typicalY = y(Number(typical));
+const typicalY = typical !== undefined ? y(Number(typical)) : null;
 const lastPoint = series[series.length - 1];
 
 // Ticks en fronteras de mes calendario, no "hasta 6 espaciados por índice" como especificaba
@@ -132,15 +137,17 @@ const hoverPoints = series.map(([d, p]) => {
               </text>
             </>
           ))}
-          <line
-            x1={L}
-            x2={W - R}
-            y1={typicalY}
-            y2={typicalY}
-            stroke="var(--muted)"
-            stroke-dasharray="5 5"
-            stroke-width="1.5"
-          />
+          {typicalY !== null && (
+            <line
+              x1={L}
+              x2={W - R}
+              y1={typicalY}
+              y2={typicalY}
+              stroke="var(--muted)"
+              stroke-dasharray="5 5"
+              stroke-width="1.5"
+            />
+          )}
           <path
             d={stepPath}
             fill="none"
@@ -201,10 +208,12 @@ const hoverPoints = series.map(([d, p]) => {
           <i class="dot green" />
           precio observado
         </span>
-        <span>
-          <i class="dot dashed" />
-          precio habitual
-        </span>
+        {typical !== undefined && (
+          <span>
+            <i class="dot dashed" />
+            precio habitual
+          </span>
+        )}
       </div>
     </div>
   )

@@ -157,20 +157,23 @@ const generadoEl = new Date().toLocaleDateString("es-MX", {
               stroke-width="1.5"
             />
           )}
-          {/* Detrás de la serie y en el centro del área de trazado: recortarla obliga a
-              cortar la gráfica por la mitad, que es justo lo que quien la comparte quiere
-              mostrar. Opacidad al límite de lo perceptible — sube si la compresión de
-              WhatsApp o Twitter se la come. */}
+          {/* En la franja baja y no en el centro: verificado en el preview que ahí la línea
+              de precio la atravesaba, compitiendo con lo que hay que leer y perdiéndose entre
+              los trazos a la vez. Sigue siendo irrecortable — recortarla implica cortar el eje
+              X y las etiquetas de mes. La posición es una fracción fija, no calculada: en una
+              serie que suba hacia el final la línea pasará por aquí. Si eso estorba en varias
+              formas de gráfica, la alternativa es una franja diagonal repetida que no dependa
+              de los datos. */}
           <text
             x={(L + W - R) / 2}
-            y={(T + H - B) / 2}
+            y={T + (H - T - B) * 0.78}
             text-anchor="middle"
             dominant-baseline="middle"
             font-family="JetBrains Mono"
             font-size="42"
             font-weight="700"
             fill="var(--green)"
-            opacity="0.07"
+            opacity="0.1"
             style="pointer-events: none; user-select: none;"
           >
             precioreal.mx

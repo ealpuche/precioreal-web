@@ -296,4 +296,125 @@ describe("fetchProduct", () => {
       expect(result).toEqual({ ok: false, reason: "upstream_error" });
     });
   });
+
+  describe("resolveProductUrl", () => {
+    let originalFetch: typeof globalThis.fetch;
+
+    beforeEach(() => {
+      originalFetch = globalThis.fetch;
+      vi.resetModules();
+    });
+
+    afterEach(() => {
+      globalThis.fetch = originalFetch;
+      vi.restoreAllMocks();
+    });
+
+    const sampleIndex = {
+      generated_at: "2026-09-08T12:00:00Z",
+      site: "cyberpuerta",
+      window_days: 90,
+      count: 2,
+      products: [
+        {
+          sku: "SKU-001",
+          name: "Producto Uno",
+          url: "https://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-1.html",
+          image_url: null,
+          category: "Laptops",
+          price: "15000.00",
+          obs: 30,
+          since: "2026-09-01T00:00:00Z",
+          available: true,
+          is_from_price: false,
+        },
+        {
+          sku: "SKU-002",
+          name: "Producto Dos",
+          url: "https://www.cyberpuerta.mx/Computadoras/Accesorios/Mouse-2.html",
+          image_url: null,
+          category: "Accesorios",
+          price: "350.00",
+          obs: 30,
+          since: "2026-09-01T00:00:00Z",
+          available: true,
+          is_from_price: false,
+        },
+      ],
+    };
+
+    it("returns sku on exact match", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => sampleIndex,
+      } as unknown as Response);
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const result = await resolveProductUrl(
+        "cyberpuerta",
+        "cyberpuerta.mx/Computadoras/Laptops/Laptop-1.html",
+      );
+
+      expect(result).toEqual({ ok: true, sku: "SKU-001" });
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        "https://feed.precioreal.mx/cyberpuerta/products/index.json",
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      );
+    });
+
+    it("returns sku when user url had utm_source (normalizedUrl matches index url)", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => sampleIndex,
+      } as unknown as Response);
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const { normalizeProductUrl } = await import("../src/lib/product-url");
+      const normalizedUserUrl = normalizeProductUrl(
+        "https://www.cyberpuerta.mx/Computadoras/Accesorios/Mouse-2.html?utm_source=google&utm_campaign=sale",
+      );
+      expect(normalizedUserUrl).not.toBeNull();
+
+      const result = await resolveProductUrl("cyberpuerta", normalizedUserUrl!);
+      expect(result).toEqual({ ok: true, sku: "SKU-002" });
+    });
+
+    it("returns not_found when url is not in the index", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => sampleIndex,
+      } as unknown as Response);
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const result = await resolveProductUrl(
+        "cyberpuerta",
+        "cyberpuerta.mx/NoExiste/Producto.html",
+      );
+      expect(result).toEqual({ ok: false, reason: "not_found" });
+    });
+
+    it("returns upstream_error when fetch rejects", async () => {
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const result = await resolveProductUrl(
+        "cyberpuerta",
+        "cyberpuerta.mx/Computadoras/Laptops/Laptop-1.html",
+      );
+      expect(result).toEqual({ ok: false, reason: "upstream_error" });
+    });
+
+    it("returns not_found without calling fetch when tienda is not allowed", async () => {
+      const fetchMock = vi.fn();
+      globalThis.fetch = fetchMock;
+
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const result = await resolveProductUrl("otra_tienda", "algo");
+      expect(result).toEqual({ ok: false, reason: "not_found" });
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
 });

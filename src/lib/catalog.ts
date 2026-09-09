@@ -1,4 +1,5 @@
-import type { CatalogProduct } from "../contracts/catalog";
+import type { CatalogIndex, CatalogProduct } from "../contracts/catalog";
+import { normalizeProductUrl } from "./product-url";
 import { SKU_RE } from "./sku";
 
 const FEED_BASE = "https://feed.precioreal.mx";
@@ -109,4 +110,58 @@ export async function fetchProduct(
     return { ok: false, reason: "upstream_error" };
   }
   return { ok: true, product: parsed };
+}
+
+/** Índice cacheado por invocación: dos búsquedas en la misma request no lo piden dos veces. */
+let indexPromise: Promise<CatalogIndex | null> | null = null;
+
+async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
+  if (indexPromise) return indexPromise;
+  indexPromise = (async () => {
+    try {
+      const res = await fetch(
+        `${FEED_BASE}/${encodeURIComponent(tienda)}/products/index.json`,
+        { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) },
+      );
+      if (!res.ok) return null;
+      const parsed = (await res.json()) as CatalogIndex;
+      return Array.isArray(parsed?.products) ? parsed : null;
+    } catch {
+      return null;
+    }
+  })();
+  return indexPromise;
+}
+
+export type ResolveUrlResult =
+  | { ok: true; sku: string }
+  | { ok: false; reason: "not_found" | "upstream_error" };
+
+/**
+ * Encuentra el sku cuyo `url` en el índice coincide con la que pegó el usuario.
+ *
+ * Corre en el worker y no en el navegador a propósito: el índice pesa ~2.7 MB gzip y le llega
+ * al worker desde el caché de borde (verificado: cf-cache-status HIT). Resolverlo aquí hace
+ * que el usuario reciba un redirect en vez de esos megabytes, que en móvil con datos serían
+ * el coste de cada búsqueda.
+ */
+export async function resolveProductUrl(
+  tienda: string,
+  normalizedUrl: string,
+): Promise<ResolveUrlResult> {
+  if (!TIENDAS_VALIDAS.has(tienda)) {
+    return { ok: false, reason: "not_found" };
+  }
+  const index = await fetchIndex(tienda);
+  if (!index) return { ok: false, reason: "upstream_error" };
+
+  for (const p of index.products) {
+    if (
+      typeof p.url === "string" &&
+      normalizeProductUrl(p.url) === normalizedUrl
+    ) {
+      return { ok: true, sku: p.sku };
+    }
+  }
+  return { ok: false, reason: "not_found" };
 }

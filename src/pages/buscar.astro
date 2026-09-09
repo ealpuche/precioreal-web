@@ -1,6 +1,48 @@
 ---
+export const prerender = false;
+
 import Base from "../layouts/Base.astro";
+import { resolveProductUrl } from "../lib/catalog";
+import {
+  looksLikeUrl,
+  normalizeProductUrl,
+  tiendaNoPublicada,
+} from "../lib/product-url";
+import { SKU_RE } from "../lib/sku";
 import "../styles/tokens.css";
+
+const q = (Astro.url.searchParams.get("q") ?? "").trim();
+let error: string | null = null;
+
+if (q) {
+  if (SKU_RE.test(q) && !looksLikeUrl(q)) {
+    return Astro.redirect(`/cyberpuerta/${encodeURIComponent(q)}`, 302);
+  }
+  const normalized = normalizeProductUrl(q);
+  if (!normalized) {
+    error =
+      "Eso no parece un código de producto ni un enlace. Revisa lo que pegaste.";
+  } else {
+    const tiendaPendiente = tiendaNoPublicada(normalized);
+    if (tiendaPendiente) {
+      error = `Rastreamos ${tiendaPendiente}, pero su historial todavía no está disponible en el sitio. Por ahora solo puedes consultar Cyberpuerta.`;
+    } else if (!normalized.startsWith("cyberpuerta.mx/")) {
+      error = "Por ahora solo tenemos historial de Cyberpuerta.";
+    } else {
+      const resolved = await resolveProductUrl("cyberpuerta", normalized);
+      if (resolved.ok) {
+        return Astro.redirect(
+          `/cyberpuerta/${encodeURIComponent(resolved.sku)}`,
+          302,
+        );
+      }
+      error =
+        resolved.reason === "upstream_error"
+          ? "No pudimos consultar el catálogo en este momento. Intenta de nuevo en un momento."
+          : "No encontramos ese producto en nuestro catálogo de Cyberpuerta.";
+    }
+  }
+}
 ---
 
 <Base title="Buscar producto — PrecioReal" showNav>
@@ -10,46 +52,30 @@ import "../styles/tokens.css";
       Escribe el código SKU de un producto de Cyberpuerta para ver su historial
       de precio.
     </p>
-    <form id="buscar-form" class="form">
+    <form id="buscar-form" class="form" method="get">
       <input
         type="text"
         id="sku-input"
-        name="sku"
-        placeholder="ej. 010-02551-01"
+        name="q"
+        value={q}
+        placeholder="ej. 010-02551-01 o pega el enlace del producto"
         autocomplete="off"
       />
       <button type="submit" class="btn-primary">Buscar</button>
     </form>
-    <p id="buscar-error" class="error" hidden></p>
+    {
+      error && (
+        <p id="buscar-error" class="error">
+          {error}
+        </p>
+      )
+    }
     <p class="note">
-      Por ahora solo aceptamos el código SKU. Pronto podrás pegar el enlace del
-      producto directamente.
+      Puedes escribir el código SKU del producto o pegar el enlace de su página
+      en Cyberpuerta.
     </p>
   </div>
 </Base>
-
-<script>
-  import { SKU_RE } from "../lib/sku";
-
-  const form = document.getElementById("buscar-form") as HTMLFormElement | null;
-  const input = document.getElementById("sku-input") as HTMLInputElement | null;
-  const errorEl = document.getElementById("buscar-error");
-
-  form?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const value = (input?.value || "").trim();
-    if (!SKU_RE.test(value)) {
-      if (errorEl) {
-        errorEl.hidden = false;
-        errorEl.textContent = value.includes("http")
-          ? "Por ahora no aceptamos enlaces, solo el código SKU."
-          : "Ese código no tiene un formato válido.";
-      }
-      return;
-    }
-    window.location.href = `/cyberpuerta/${encodeURIComponent(value)}`;
-  });
-</script>
 
 <style>
   .page {

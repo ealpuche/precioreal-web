@@ -46,7 +46,7 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   producido por el crawler — hoy los tests usan literales escritos a mano (`sampleProduct`,
   `makeProduct()`); el contrato sigue sin verificarse contra la forma real que emite el
   productor (CR PR #7, H1).
-- `is_from_price` en `{sku}.json` es **opcional para el consumidor**: lo agrega
+- `is_from_price` en `{slug}.json` es **opcional para el consumidor**: lo agrega
   price-crawler-saas#132, pero las fichas publicadas antes de ese cambio no lo traen hasta que
   el backfill diario las reescriba. La UI trata su ausencia como `false`, nunca como un error
   de forma: exigirlo convertiría cada ficha vieja en un 502 por un campo que solo antepone una

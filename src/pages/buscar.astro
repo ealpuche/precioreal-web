@@ -15,32 +15,62 @@ const q = (Astro.url.searchParams.get("q") ?? "").trim();
 let error: string | null = null;
 
 if (q) {
-  if (SKU_RE.test(q) && !looksLikeUrl(q)) {
-    return Astro.redirect(`/cyberpuerta/${encodeURIComponent(q)}`, 302);
-  }
-  const normalized = normalizeProductUrl(q);
-  if (!normalized) {
-    error =
-      "Eso no parece un código de producto ni un enlace. Revisa lo que pegaste.";
-  } else {
-    const tiendaPendiente = tiendaNoPublicada(normalized);
-    if (tiendaPendiente) {
-      error = `Rastreamos ${tiendaPendiente}, pero su historial todavía no está disponible en el sitio. Por ahora solo puedes consultar Cyberpuerta.`;
-    } else if (!normalized.startsWith("cyberpuerta.mx/")) {
-      error = "Por ahora solo tenemos historial de Cyberpuerta.";
-    } else {
-      const resolved = await resolveProductUrl("cyberpuerta", normalized);
-      if (resolved.ok) {
-        return Astro.redirect(
-          `/cyberpuerta/${encodeURIComponent(resolved.sku)}`,
-          302,
-        );
-      }
-      error =
-        resolved.reason === "upstream_error"
-          ? "No pudimos consultar el catálogo en este momento. Intenta de nuevo en un momento."
-          : "No encontramos ese producto en nuestro catálogo de Cyberpuerta.";
+  // Una línea por búsqueda, visible en `wrangler tail` y en Workers Logs. Sin esto, el issue
+  // que difiere la optimización de la resolución por URL tendría un disparador imposible de
+  // comprobar: "cuando haya dato de uso" no llega solo. Se registran el modo, el desenlace y
+  // el tiempo — nunca lo que el usuario pegó, que no aporta a la decisión y sí crearía una
+  // retención que habría que justificar.
+  const t0 = Date.now();
+  let modo = "sku";
+  let resultado = "redirigido";
+
+  try {
+    if (SKU_RE.test(q) && !looksLikeUrl(q)) {
+      return Astro.redirect(`/cyberpuerta/${encodeURIComponent(q)}`, 302);
     }
+    modo = "url";
+    const normalized = normalizeProductUrl(q);
+    if (!normalized) {
+      resultado = "ilegible";
+      error =
+        "Eso no parece un código de producto ni un enlace. Revisa lo que pegaste.";
+    } else {
+      const tiendaPendiente = tiendaNoPublicada(normalized);
+      if (tiendaPendiente) {
+        resultado = "tienda_no_publicada";
+        error = `Rastreamos ${tiendaPendiente}, pero su historial todavía no está disponible en el sitio. Por ahora solo puedes consultar Cyberpuerta.`;
+      } else if (!normalized.startsWith("cyberpuerta.mx/")) {
+        resultado = "tienda_desconocida";
+        error = "Por ahora solo tenemos historial de Cyberpuerta.";
+      } else {
+        const resolved = await resolveProductUrl("cyberpuerta", normalized);
+        if (resolved.ok) {
+          return Astro.redirect(
+            `/cyberpuerta/${encodeURIComponent(resolved.sku)}`,
+            302,
+          );
+        }
+        resultado =
+          resolved.reason === "upstream_error"
+            ? "error_upstream"
+            : "no_encontrado";
+        error =
+          resolved.reason === "upstream_error"
+            ? "No pudimos consultar el catálogo en este momento. Intenta de nuevo en un momento."
+            : "No encontramos ese producto en nuestro catálogo de Cyberpuerta.";
+      }
+    }
+  } finally {
+    // En `finally` porque los caminos exitosos salen por `return Astro.redirect(...)`: sin
+    // esto, justo las búsquedas que funcionan serían las que no se registran.
+    console.log(
+      JSON.stringify({
+        evento: "buscar",
+        modo,
+        resultado,
+        ms: Date.now() - t0,
+      }),
+    );
   }
 }
 ---

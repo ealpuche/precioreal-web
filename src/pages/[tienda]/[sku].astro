@@ -98,15 +98,31 @@ if (!result.ok) {
                         label: "último precio visto",
                         value: `${pricePrefix}${formatMXN(p.current.price)}`,
                       },
-                  { label: "precio habitual", value: formatMXN(p.typical_90d) },
-                  {
-                    label: `mínimo ${p.window_days}d`,
-                    value: formatMXN(p.min_90d),
-                  },
-                  {
-                    label: `máximo ${p.window_days}d`,
-                    value: formatMXN(p.max_90d),
-                  },
+                  ...(p.typical_90d
+                    ? [
+                        {
+                          label: "precio habitual",
+                          value: formatMXN(p.typical_90d),
+                        },
+                      ]
+                    : []),
+                  ...(p.min_90d
+                    ? [
+                        {
+                          label: `mínimo ${p.window_days}d`,
+                          value: formatMXN(p.min_90d),
+                        },
+                      ]
+                    : []),
+                  ...(p.max_90d
+                    ? [
+                        {
+                          label: `máximo ${p.window_days}d`,
+                          value: formatMXN(p.max_90d),
+                        },
+                      ]
+                    : []),
+                  { label: "observaciones", value: String(p.obs) },
                 ]}
               />
 

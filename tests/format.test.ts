@@ -156,4 +156,67 @@ describe("buildVerdict", () => {
     expect(v.tone).toBe("neutral");
     expect(v.headline).toBe("Está en su precio habitual.");
   });
+
+  describe("insufficient history products", () => {
+    it("returns neutral verdict with day count when first_seen_at is present", () => {
+      const fiveDaysAgo = new Date(Date.now() - 5 * 86_400_000).toISOString();
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: fiveDaysAgo,
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+      });
+
+      const v = buildVerdict(p);
+      expect(v.tone).toBe("neutral");
+      expect(v.headline).toBe(
+        "Todavía no podemos decir si este precio es bueno.",
+      );
+      expect(v.detail).toBe(
+        "Llevamos 5 días rastreándolo y aún no hay suficientes cambios de precio para comparar.",
+      );
+    });
+
+    it("returns neutral verdict with 1 día singular when first_seen_at is 1 day ago", () => {
+      const oneDayAgo = new Date(
+        Date.now() - 1 * 86_400_000 - 1000,
+      ).toISOString();
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: oneDayAgo,
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+      });
+
+      const v = buildVerdict(p);
+      expect(v.tone).toBe("neutral");
+      expect(v.headline).toBe(
+        "Todavía no podemos decir si este precio es bueno.",
+      );
+      expect(v.detail).toBe(
+        "Llevamos 1 día rastreándolo y aún no hay suficientes cambios de precio para comparar.",
+      );
+    });
+
+    it("returns neutral verdict with generic message when first_seen_at is missing", () => {
+      const p = makeProduct({
+        status: "insufficient_history",
+        first_seen_at: undefined,
+        typical_90d: undefined,
+        min_90d: undefined,
+        max_90d: undefined,
+      });
+
+      const v = buildVerdict(p);
+      expect(v.tone).toBe("neutral");
+      expect(v.headline).toBe(
+        "Todavía no podemos decir si este precio es bueno.",
+      );
+      expect(v.detail).toBe(
+        "Necesitamos más historial para comparar. Ya lo estamos rastreando.",
+      );
+    });
+  });
 });

@@ -27,15 +27,13 @@ function hasExpectedShape(value: unknown): value is CatalogProduct {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   const current = v.current as Record<string, unknown> | undefined;
-  return (
+
+  const baseOk =
     typeof v.sku === "string" &&
     typeof v.site === "string" &&
-    typeof v.obs === "number" &&
     typeof v.name === "string" &&
     typeof v.url === "string" &&
-    typeof v.typical_90d === "string" &&
-    typeof v.min_90d === "string" &&
-    typeof v.max_90d === "string" &&
+    typeof v.obs === "number" &&
     typeof v.window_days === "number" &&
     Array.isArray(v.series) &&
     v.series.every(
@@ -47,7 +45,22 @@ function hasExpectedShape(value: unknown): value is CatalogProduct {
     typeof current?.price === "string" &&
     typeof current?.since === "string" &&
     typeof current?.available === "boolean" &&
-    (v.is_from_price === undefined || typeof v.is_from_price === "boolean")
+    (v.is_from_price === undefined || typeof v.is_from_price === "boolean") &&
+    (v.first_seen_at === undefined || typeof v.first_seen_at === "string") &&
+    (v.status === undefined ||
+      v.status === "ok" ||
+      v.status === "insufficient_history");
+  if (!baseOk) return false;
+
+  // Las estadísticas de ventana se exigen solo cuando el productor dice tenerlas. Ausente
+  // equivale a "ok" porque las fichas anteriores a #131 solo se publicaban con historial
+  // suficiente. Sin esta condición, un producto "ok" al que le falte max_90d pasaría la guarda
+  // y la gráfica saldría con coordenadas NaN bajo un 200 (CR PR #7, H3).
+  if (v.status === "insufficient_history") return true;
+  return (
+    typeof v.typical_90d === "string" &&
+    typeof v.min_90d === "string" &&
+    typeof v.max_90d === "string"
   );
 }
 

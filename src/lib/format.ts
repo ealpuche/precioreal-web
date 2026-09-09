@@ -32,9 +32,32 @@ export interface Verdict {
  * existe.
  */
 export function buildVerdict(product: CatalogProduct): Verdict {
+  // Un producto sin estadísticas de ventana no tiene "precio habitual" contra el que
+  // comparar: cualquier veredicto sería inventado. Lo honesto es decir qué falta y cuánto
+  // llevamos observándolo (#131).
+  if (product.status === "insufficient_history" || !product.typical_90d) {
+    const dias = product.first_seen_at
+      ? Math.max(
+          0,
+          Math.floor(
+            (Date.now() - new Date(product.first_seen_at).getTime()) /
+              86_400_000,
+          ),
+        )
+      : null;
+    return {
+      headline: "Todavía no podemos decir si este precio es bueno.",
+      detail:
+        dias === null
+          ? "Necesitamos más historial para comparar. Ya lo estamos rastreando."
+          : `Llevamos ${dias} ${dias === 1 ? "día" : "días"} rastreándolo y aún no hay suficientes cambios de precio para comparar.`,
+      tone: "neutral",
+    };
+  }
+
   const current = parsePrice(product.current.price);
-  const typical = parsePrice(product.typical_90d);
-  const min = parsePrice(product.min_90d);
+  const typical = parsePrice(product.typical_90d!);
+  const min = parsePrice(product.min_90d!);
   // Redondeado a lo que el usuario ve: con maximumFractionDigits: 0, una diferencia de
   // $0.40 mostraría "Está $0 por debajo", contradiciendo el propio propósito de esta función
   // (CR PR #7, H6). isLowest se mantiene con la comparación exacta (current <= min): ahí no
@@ -55,7 +78,7 @@ export function buildVerdict(product: CatalogProduct): Verdict {
       headline: `Está ${formatMXN(String(diff))} por debajo de su precio habitual.`,
       detail: isLowest
         ? `Es el precio más bajo registrado en los últimos ${product.window_days} días.`
-        : `Su precio habitual en ${product.window_days} días es ${formatMXN(product.typical_90d)}.`,
+        : `Su precio habitual en ${product.window_days} días es ${formatMXN(product.typical_90d!)}.`,
       tone: "good",
     };
   }
@@ -63,7 +86,7 @@ export function buildVerdict(product: CatalogProduct): Verdict {
   if (diff < 0) {
     return {
       headline: `Está ${formatMXN(String(-diff))} por encima de su precio habitual.`,
-      detail: `Su precio habitual en ${product.window_days} días es ${formatMXN(product.typical_90d)}.`,
+      detail: `Su precio habitual en ${product.window_days} días es ${formatMXN(product.typical_90d!)}.`,
       tone: "warn",
     };
   }

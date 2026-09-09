@@ -199,4 +199,86 @@ describe("fetchProduct", () => {
     const result = await fetchProduct("cyberpuerta", "SKU123");
     expect(result).toEqual({ ok: false, reason: "upstream_error" });
   });
+
+  describe("status handling", () => {
+    it("accepts a payload with status 'insufficient_history' without window statistics", async () => {
+      const {
+        typical_90d: _t,
+        min_90d: _m,
+        max_90d: _mx,
+        ...insufficient
+      } = {
+        ...sampleProduct,
+        status: "insufficient_history" as const,
+        first_seen_at: "2026-09-01T00:00:00Z",
+      };
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => insufficient,
+      } as unknown as Response);
+
+      const result = await fetchProduct("cyberpuerta", "SKU123");
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.product.status).toBe("insufficient_history");
+        expect(result.product.typical_90d).toBeUndefined();
+        expect(result.product.min_90d).toBeUndefined();
+        expect(result.product.max_90d).toBeUndefined();
+      }
+    });
+
+    it("returns upstream_error when status is 'ok' but missing max_90d", async () => {
+      const { max_90d: _mx, ...missingMax } = {
+        ...sampleProduct,
+        status: "ok" as const,
+      };
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => missingMax,
+      } as unknown as Response);
+
+      const result = await fetchProduct("cyberpuerta", "SKU123");
+      expect(result).toEqual({ ok: false, reason: "upstream_error" });
+    });
+
+    it("accepts a payload without status with the three window statistics", async () => {
+      const withoutStatus = {
+        ...sampleProduct,
+      };
+      delete (withoutStatus as any).status;
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => withoutStatus,
+      } as unknown as Response);
+
+      const result = await fetchProduct("cyberpuerta", "SKU123");
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.product.status).toBeUndefined();
+        expect(result.product.typical_90d).toBe("400.00");
+      }
+    });
+
+    it("returns upstream_error when status has an unknown value", async () => {
+      const withUnknownStatus = {
+        ...sampleProduct,
+        status: "unknown_status",
+      };
+
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => withUnknownStatus,
+      } as unknown as Response);
+
+      const result = await fetchProduct("cyberpuerta", "SKU123");
+      expect(result).toEqual({ ok: false, reason: "upstream_error" });
+    });
+  });
 });

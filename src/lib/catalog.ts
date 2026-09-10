@@ -125,9 +125,24 @@ export async function fetchProduct(
  */
 const indexCache = new Map<string, Promise<CatalogIndex | null>>();
 
+// Sin TTL, un isolate caliente serviría indefinidamente el primer índice que leyó.
+// Para /buscar eso es tolerable —una ficha nueva tarda en aparecer—, pero el sitemap
+// anuncia `Cache-Control: max-age=14400` y su valor entero es que Google descubra
+// fichas nuevas: un sitemap congelado es exactamente el fallo que #16 evita
+// (CR PR #19, H2 y Copilot).
+const INDEX_TTL_MS = 4 * 3600 * 1000;
+const indexCacheAt = new Map<string, number>();
+
 export async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
   const cached = indexCache.get(tienda);
-  if (cached) return cached;
+  const cachedAt = indexCacheAt.get(tienda);
+  if (
+    cached &&
+    cachedAt !== undefined &&
+    Date.now() - cachedAt < INDEX_TTL_MS
+  ) {
+    return cached;
+  }
 
   const pending = (async () => {
     try {
@@ -146,8 +161,10 @@ export async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
   // Se cachea la promesa en vuelo para que dos búsquedas simultáneas no pidan el índice dos
   // veces, y se descarta si resultó fallida: el siguiente intento vuelve a preguntar.
   indexCache.set(tienda, pending);
+  indexCacheAt.set(tienda, Date.now());
   const result = await pending;
   if (result === null) indexCache.delete(tienda);
+  if (result === null) indexCacheAt.delete(tienda);
   return result;
 }
 

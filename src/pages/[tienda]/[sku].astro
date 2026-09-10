@@ -6,9 +6,6 @@ import StatGrid from "../../components/StatGrid.astro";
 import PriceChart from "../../components/PriceChart.astro";
 import { fetchProduct } from "../../lib/catalog";
 import { formatMXN, buildVerdict, pricePrefix } from "../../lib/format";
-
-const { tienda, sku } = Astro.params;
-const result = await fetchProduct(tienda!, sku!);
 import {
   buildTitle,
   buildDescription,
@@ -16,9 +13,21 @@ import {
   buildProductJsonLd,
 } from "../../lib/seo";
 
+const { tienda, sku } = Astro.params;
+const result = await fetchProduct(tienda!, sku!);
+
 const siteUrl = (Astro.site ?? new URL("https://precioreal.mx")).origin;
 const canonical = result.ok ? buildCanonical(siteUrl, tienda!, sku!) : null;
 const jsonLd = result.ok ? buildProductJsonLd(result.product) : null;
+// `hasExpectedShape` no valida `image_url` y la plantilla usaba truthiness, mientras
+// `buildProductJsonLd` sí guarda por tipo: un valor truthy no-string habría producido
+// `content="[object Object]"` (CR PR #19, H5 y Copilot).
+const imagen =
+  result.ok &&
+  typeof result.product.image_url === "string" &&
+  result.product.image_url !== ""
+    ? result.product.image_url
+    : null;
 
 if (!result.ok) {
   Astro.response.status = result.reason === "upstream_error" ? 502 : 404;
@@ -46,12 +55,10 @@ if (!result.ok) {
           property="og:description"
           content={buildDescription(result.product)}
         />
-        {result.product.image_url && (
-          <meta property="og:image" content={result.product.image_url} />
-        )}
+        {imagen && <meta property="og:image" content={imagen} />}
         <meta
           name="twitter:card"
-          content={result.product.image_url ? "summary_large_image" : "summary"}
+          content={imagen ? "summary_large_image" : "summary"}
         />
         {jsonLd && (
           <script type="application/ld+json" is:inline set:html={jsonLd} />

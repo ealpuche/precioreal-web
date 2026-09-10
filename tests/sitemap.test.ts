@@ -377,4 +377,72 @@ describe("sitemap endpoints", () => {
       "<loc>https://precioreal.mx/sitemap/cyberpuerta/1.xml</loc>",
     );
   });
+
+  it("/sitemap.xml: el lastmod del chunk es el since máximo, no el primero ni el último", async () => {
+    // 3 productos ok con since 2026-09-01, 2026-09-07 (máximo, en medio), 2026-09-03
+    const prods: CatalogIndexProduct[] = [
+      {
+        sku: "SKU-1",
+        slug: "slug-1",
+        name: "P1",
+        url: "https://cyberpuerta.mx/p/1",
+        image_url: null,
+        category: null,
+        price: "100.00",
+        obs: 1,
+        since: "2026-09-01T00:00:00.000Z",
+        available: true,
+        is_from_price: false,
+        status: "ok",
+      },
+      {
+        sku: "SKU-2",
+        slug: "slug-2",
+        name: "P2",
+        url: "https://cyberpuerta.mx/p/2",
+        image_url: null,
+        category: null,
+        price: "200.00",
+        obs: 1,
+        since: "2026-09-07T00:00:00.000Z",
+        available: true,
+        is_from_price: false,
+        status: "ok",
+      },
+      {
+        sku: "SKU-3",
+        slug: "slug-3",
+        name: "P3",
+        url: "https://cyberpuerta.mx/p/3",
+        image_url: null,
+        category: null,
+        price: "300.00",
+        obs: 1,
+        since: "2026-09-03T00:00:00.000Z",
+        available: true,
+        is_from_price: false,
+        status: "ok",
+      },
+    ];
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ...sampleIndex,
+        products: prods,
+      }),
+    } as unknown as Response);
+
+    const indexEndpoint = await import("../src/pages/sitemap.xml");
+    const res = await indexEndpoint.GET({
+      site: new URL("https://precioreal.mx"),
+    } as any);
+
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(text).toContain("<lastmod>2026-09-07T00:00:00.000Z</lastmod>");
+    expect(text).not.toContain("2026-09-01T00:00:00.000Z");
+    expect(text).not.toContain("2026-09-03T00:00:00.000Z");
+  });
 });

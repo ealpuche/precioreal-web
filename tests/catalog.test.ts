@@ -599,5 +599,28 @@ describe("fetchProduct", () => {
         ),
       ).toEqual({ ok: true, sku: "SKU-002" });
     });
+
+    it("re-lee el índice cuando el TTL de 4 h expiró", async () => {
+      vi.useFakeTimers();
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ products: [sampleIndex.products[0]] }),
+      });
+      globalThis.fetch = fetchMock;
+      const { resolveProductUrl } = await import("../src/lib/catalog");
+      const { normalizeProductUrl } = await import("../src/lib/product-url");
+      const u = normalizeProductUrl(sampleIndex.products[0].url);
+
+      await resolveProductUrl("cyberpuerta", u!);
+      await resolveProductUrl("cyberpuerta", u!);
+      expect(fetchMock).toHaveBeenCalledTimes(1); // dentro del TTL: caché
+
+      vi.advanceTimersByTime(4 * 3600 * 1000 + 1);
+      await resolveProductUrl("cyberpuerta", u!);
+      expect(fetchMock).toHaveBeenCalledTimes(2); // expirado: re-lee
+
+      vi.useRealTimers();
+    });
   });
 });

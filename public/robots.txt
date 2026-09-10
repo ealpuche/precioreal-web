@@ -1,0 +1,14 @@
+# PrecioReal — robots.txt
+#
+# Cloudflare ANTEPONE su bloque gestionado (Managed robots.txt) a este
+# archivo; no lo reemplaza. Medido 2026-09-09: /robots.txt = 29,047 B,
+# de los cuales 27,360 B eran el fallback del origen. Los dos grupos
+# "User-agent: *" se fusionan por especificidad, así que Disallow: /api/
+# gana sobre el Allow: / del bloque gestionado.
+
+User-agent: *
+Allow: /cyberpuerta/
+Allow: /buscar
+Disallow: /api/
+
+Sitemap: https://precioreal.mx/sitemap.xml

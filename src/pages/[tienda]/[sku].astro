@@ -9,6 +9,16 @@ import { formatMXN, buildVerdict, pricePrefix } from "../../lib/format";
 
 const { tienda, sku } = Astro.params;
 const result = await fetchProduct(tienda!, sku!);
+import {
+  buildTitle,
+  buildDescription,
+  buildCanonical,
+  buildProductJsonLd,
+} from "../../lib/seo";
+
+const siteUrl = (Astro.site ?? new URL("https://precioreal.mx")).origin;
+const canonical = result.ok ? buildCanonical(siteUrl, tienda!, sku!) : null;
+const jsonLd = result.ok ? buildProductJsonLd(result.product) : null;
 
 if (!result.ok) {
   Astro.response.status = result.reason === "upstream_error" ? 502 : 404;
@@ -18,11 +28,37 @@ if (!result.ok) {
 <Base
   showNav
   title={result.ok
-    ? `${result.product.name} — PrecioReal`
+    ? buildTitle(result.product)
     : result.reason === "upstream_error"
       ? "Error temporal — PrecioReal"
       : "Producto no encontrado — PrecioReal"}
+  description={result.ok ? buildDescription(result.product) : undefined}
 >
+  {
+    result.ok && (
+      <Fragment slot="head">
+        <link rel="canonical" href={canonical} />
+        <meta property="og:type" content="product" />
+        <meta property="og:site_name" content="PrecioReal" />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:title" content={buildTitle(result.product)} />
+        <meta
+          property="og:description"
+          content={buildDescription(result.product)}
+        />
+        {result.product.image_url && (
+          <meta property="og:image" content={result.product.image_url} />
+        )}
+        <meta
+          name="twitter:card"
+          content={result.product.image_url ? "summary_large_image" : "summary"}
+        />
+        {jsonLd && (
+          <script type="application/ld+json" is:inline set:html={jsonLd} />
+        )}
+      </Fragment>
+    )
+  }
   <div class="page">
     <nav class="crumbs"><a href="/">inicio</a> / {tienda}</nav>
 

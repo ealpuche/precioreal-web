@@ -121,10 +121,11 @@ export async function fetchProduct(
  *
  * Va por tienda aunque hoy solo exista cyberpuerta: la firma recibe `tienda`, así que un
  * caché global haría que la primera en llegar fijara el índice de todas.
+ * También lo consume la generación de sitemaps.
  */
 const indexCache = new Map<string, Promise<CatalogIndex | null>>();
 
-async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
+export async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
   const cached = indexCache.get(tienda);
   if (cached) return cached;
 

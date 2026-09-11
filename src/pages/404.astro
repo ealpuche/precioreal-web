@@ -1,0 +1,86 @@
+---
+// Esta página DEBE quedar prerenderizada. No añadas `prerender = false`.
+//
+// El handler de assets de Cloudflare Pages es quien devuelve el 404: el worker
+// recibe la petición (`_routes.json` = include `/*`), no matchea ninguna ruta y
+// delega a `env.ASSETS.fetch()`. Ese handler necesita un `404.html` en la raíz del
+// build; si no lo encuentra, aplica fallback estilo SPA y sirve `index.html` con
+// HTTP 200. Medido 2026-09-10 sobre `main` en 8ec3f5e: `/no-existe` devolvía 200
+// con 27,211 B idénticos a `dist/index.html` (#20).
+//
+// Convertir esta ruta a SSR eliminaría `dist/404.html` y el soft-404 volvería sin
+// que ningún test lo note. El CHECK 3 del PQ verifica que el archivo se genere.
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  showNav
+  title="Página no encontrada — PrecioReal"
+  description="La página que buscas no existe. Consulta el historial de precios de cualquier producto que rastreamos."
+>
+  <div class="page">
+    <div class="notice">
+      <h1>Esta página no existe.</h1>
+      <p>
+        Puede que el enlace esté mal escrito o que la página se haya movido. Si
+        buscabas un producto, pega su enlace de la tienda y te llevamos a su
+        historial.
+      </p>
+      <div class="actions">
+        <a class="btn-primary" href="/buscar">Buscar un producto</a>
+        <a class="btn-ghost" href="/">Ir al inicio</a>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px 56px;
+    font-family: var(--sans);
+    color: var(--text);
+  }
+  .notice {
+    padding: 80px 0;
+    text-align: center;
+  }
+  .notice h1 {
+    font-size: 26px;
+    color: var(--text-strong);
+    margin: 0;
+  }
+  .notice p {
+    color: var(--muted);
+    max-width: 52ch;
+    margin: 12px auto 0;
+    text-wrap: pretty;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 28px;
+  }
+  .btn-primary {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 14px;
+    background: var(--green);
+    color: var(--bg);
+    padding: 13px 22px;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+  .btn-ghost {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--green);
+    border: 1px solid var(--line);
+    padding: 13px 22px;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+</style>

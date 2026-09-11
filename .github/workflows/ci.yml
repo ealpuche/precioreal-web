@@ -16,3 +16,8 @@ jobs:
       # astro check no ejercita el renderizado de páginas ni el adaptador de Cloudflare: una
       # regresión de build solo aparecía en el deploy (CR #4, Copilot).
       - run: npm run build
+      # #20: si 404.astro deja de prerenderizarse, `dist/404.html` desaparece y el
+      # handler de assets de Pages vuelve al fallback SPA: 200 con la landing en toda
+      # ruta sin match. Ningún test de vitest lo detecta —el mecanismo vive en el
+      # runtime de Pages, no en el repo—, pero la ausencia del archivo sí.
+      - run: test -f dist/404.html

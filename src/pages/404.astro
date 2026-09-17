@@ -14,7 +14,7 @@
 // El noindex NO es redundante con el status 404. Medido 2026-09-10 con
 // `wrangler pages dev dist`: el adaptador añade `/404` al `exclude` de
 // `_routes.json`, así que `GET /404` y `GET /404.html` los resuelve el handler
-// de assets y devuelven **200** con estos mismos 2,701 B. Sin noindex, este PR
+// de assets y devuelven **200** con estos mismos 2,742 B. Sin noindex, este PR
 // dejaría dos rutas indexables con contenido thin, que es el defecto que viene a
 // arreglar. En el caso normal —status 404— la etiqueta sobra y no estorba
 // (CR PR #22, H2).

@@ -8,11 +8,18 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # SonarCloud calcula "new code" contra el historial; con el shallow clone
+          # por defecto marcaría todo el repo como nuevo y el gate reprobaría (#6).
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run check
+      # El lcov que Sonar lee sale de aquí. Sin este paso el análisis reporta 0% de
+      # coverage y el gate evalúa sobre datos vacíos (#6).
+      - run: npm run test:coverage
       # astro check no ejercita el renderizado de páginas ni el adaptador de Cloudflare: una
       # regresión de build solo aparecía en el deploy (CR #4, Copilot).
       - run: npm run build
@@ -21,3 +28,7 @@ jobs:
       # ruta sin match. Ningún test de vitest lo detecta —el mecanismo vive en el
       # runtime de Pages, no en el repo—, pero la ausencia del archivo sí.
       - run: test -f dist/404.html
+      - name: SonarQube Cloud scan
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

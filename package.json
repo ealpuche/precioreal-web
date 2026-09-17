@@ -7,6 +7,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "fmt": "prettier --write .",
     "check": "prettier --check . && astro check && vitest run"
   },
@@ -17,13 +18,14 @@
   "keywords": [],
   "author": "",
   "license": "UNLICENSED",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/ealpuche/precioreal-web/issues"
   },
   "homepage": "https://github.com/ealpuche/precioreal-web#readme",
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@vitest/coverage-v8": "^4.1.10",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
     "typescript": "^6.0.3",

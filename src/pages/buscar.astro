@@ -84,6 +84,12 @@ if (q) {
       },
     });
     if (evento) logEvent(evento);
+    // Solo valores internos, nunca `q`. Si aparece, RESULTADOS_BUSCAR y los
+    // literales de este archivo se desincronizaron (CR PR #31, H5).
+    else
+      console.warn(
+        JSON.stringify({ t: "evt_invalid", evento: "buscar", modo, resultado }),
+      );
   }
 }
 ---

@@ -44,20 +44,46 @@ Dos fuentes, con retención distinta.
 de consentimiento. Dashboard de Cloudflare → Analytics & Logs → Web Analytics →
 precioreal.mx. Solo cuenta cuando el build se hace con `PUBLIC_CF_BEACON_TOKEN`,
 que se define únicamente en el entorno Production de Pages: previews y local no
-cuentan. Los bloqueadores de anuncios pueden impedir la carga del beacon; es una
-métrica de referencia, no un conteo exacto.
+cuentan. El sitio usa el snippet manual, no la inyección automática de
+Cloudflare: con las dos activas, cada página cargaría dos beacons y las visitas
+se contarían doble. Los bloqueadores de anuncios pueden impedir la carga del
+beacon; es una métrica de referencia, no un conteo exacto.
 
 **Eventos de producto** — Workers Logs, una línea JSON por evento con la forma
 `{"t":"evt","evento":…,"props":{…},"ts":…}`. Workers & Pages → precioreal-web →
 Logs, filtrando por `t = evt`.
 
+Regla de ubicación: un evento se emite en servidor si el servidor ya ve la
+acción (búsquedas, altas de alerta) y en cliente solo si nunca la ve (un clic
+hacia otro sitio).
+
 | Evento          | Dónde se emite                                                          | Props                                   |
 | --------------- | ----------------------------------------------------------------------- | --------------------------------------- |
 | `buscar`        | Servidor, en `/buscar`, una vez por búsqueda, también las que redirigen | `modo`, `resultados`, `resultado`, `ms` |
 | `salida_tienda` | Cliente, clic en "Ver en {tienda}" de la ficha                          | `tienda`, `slug`                        |
-| `alerta_alta`   | Reservado para #17                                                      | `tienda`                                |
+| `alerta_alta`   | Servidor, desde el endpoint de #17 (aún no se emite)                    | `tienda`                                |
 
-Nunca se registra el texto que el usuario teclea, la IP ni el user agent.
+Cómo leer `buscar`:
 
-**Retención:** Workers Logs guarda 3 días en el plan Free y 7 en el Paid. Para
-series más largas hace falta un destino persistente (pendiente, ver #24).
+- `modo`: `sku` o `url`. `texto` está reservado para la búsqueda por nombre de #15.
+- `resultados`: en `sku` y `url` vale 1 si la búsqueda redirige a una ficha y 0 si
+  no. En `sku` el redirect no comprueba que la ficha exista: cuenta propuestas,
+  no aciertos.
+- `ms`: espera de red, no tiempo de proceso. En Workers, `Date.now()` solo avanza
+  tras una operación de entrada/salida, así que suele valer 0 salvo cuando se
+  consulta el índice.
+- Una búsqueda cuyo evento no valida se registra aparte como
+  `{"t":"evt_invalid",…}`. Si aparece, `RESULTADOS_BUSCAR` y `buscar.astro` se
+  desincronizaron.
+
+Los eventos nunca incluyen el texto tecleado, la IP ni el user agent. El registro
+de invocación que Workers genera por su cuenta puede guardar la URL de cada
+petición; se revisa en #32.
+
+**Límites:** `/api/event` acepta cualquier POST same-origin válido y no tiene
+límite de tasa en el código. Los eventos son una señal orientativa y se
+contrastan con Web Analytics. Antes de que una decisión dependa del volumen
+absoluto hace falta la regla de borde descrita en #32.
+
+**Retención:** Workers Logs guarda 3 días en el plan Free y 7 en el Paid. El
+destino persistente se sigue en #32.

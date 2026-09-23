@@ -180,12 +180,14 @@ if (!result.ok) {
           );
         })()
     }
+    {
+      /* Dentro de <Base>: fuera de él, Astro lo emitía después de </html> (CR PR #31). */
+    }
+    <script>
+      import "../../scripts/ficha";
+    </script>
   </div>
 </Base>
-
-<script>
-  import "../../scripts/ficha";
-</script>
 
 <style>
   .page {

@@ -108,6 +108,11 @@ function vacio(status: number): Response {
   return new Response(null, { status });
 }
 
+// Servidor. `handleEvent` y `leerCuerpo` viven aquí mientras event.ts no
+// importe nada que solo exista en servidor: `track.ts` importa este módulo y
+// el tree-shaking deja esto fuera del bundle del cliente (medido en el PR #31).
+// El día que se necesite un import de servidor, ambos se mudan a
+// src/lib/event-route.ts para no arrastrarlo al navegador (CR PR #31, H6).
 // Sin `content-length` (chunked, o cabecera omitida), `request.text()`
 // cargaría el cuerpo entero antes de poder rechazarlo: aquí se corta al
 // pasar el límite (CR PR #31, H2).

@@ -475,5 +475,34 @@ describe("src/lib/event.ts", () => {
       expect(spy).not.toHaveBeenCalled();
       expect(cancelCalled).toBe(true);
     });
+
+    it("POST sin cuerpo -> 400 sin registrar", async () => {
+      const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const req = new Request("https://precioreal.mx/api/event", {
+        method: "POST",
+      });
+
+      const res = await handleEvent(req);
+      expect(res.status).toBe(400);
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("un stream que falla al leer -> 400 sin lanzar", async () => {
+      const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const stream = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          controller.error(new Error("red cortada"));
+        },
+      });
+
+      const req = new Request("https://precioreal.mx/api/event", {
+        method: "POST",
+        body: stream,
+        duplex: "half",
+      } as RequestInit);
+
+      await expect(handleEvent(req)).resolves.toHaveProperty("status", 400);
+      expect(spy).not.toHaveBeenCalled();
+    });
   });
 });

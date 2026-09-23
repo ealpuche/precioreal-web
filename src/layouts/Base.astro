@@ -13,6 +13,12 @@ const {
   description = "Rastreamos los precios de hardware en México y detectamos descuentos falsos antes de Buen Fin.",
   showNav = false,
 } = Astro.props;
+
+const beaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
+const beacon =
+  typeof beaconToken === "string" && beaconToken.trim() !== ""
+    ? JSON.stringify({ token: beaconToken.trim() })
+    : null;
 ---
 
 <!doctype html>
@@ -36,6 +42,16 @@ const {
       rel="stylesheet"
     />
     <slot name="head" />
+    {
+      beacon && (
+        <script
+          is:inline
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={beacon}
+        />
+      )
+    }
   </head>
   <body>
     {

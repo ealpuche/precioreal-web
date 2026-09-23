@@ -169,6 +169,9 @@ if (!result.ok) {
                   href={p.url}
                   target="_blank"
                   rel="noopener"
+                  data-track="salida_tienda"
+                  data-tienda={tienda}
+                  data-slug={sku}
                 >
                   Ver en {p.site}
                 </a>
@@ -177,6 +180,12 @@ if (!result.ok) {
           );
         })()
     }
+    {
+      /* Dentro de <Base>: fuera de él, Astro lo emitía después de </html> (CR PR #31). */
+    }
+    <script>
+      import "../../scripts/ficha";
+    </script>
   </div>
 </Base>
 

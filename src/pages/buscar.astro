@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import Base from "../layouts/Base.astro";
+import { logEvent, validateEvent } from "../lib/event";
 import { resolveProductUrl } from "../lib/catalog";
 import {
   hostPertenece,
@@ -69,14 +70,26 @@ if (q) {
   } finally {
     // En `finally` porque los caminos exitosos salen por `return Astro.redirect(...)`: sin
     // esto, justo las búsquedas que funcionan serían las que no se registran.
-    console.log(
-      JSON.stringify({
-        evento: "buscar",
+    // Mismo emisor que /api/event (#24): una sola forma de evento en los logs.
+    // En `sku` y `url`, `resultados` es 1 si se redirige a una ficha y 0 si no; en
+    // `sku` el redirect no comprueba que la ficha exista, así que cuenta
+    // propuestas, no aciertos.
+    const evento = validateEvent({
+      evento: "buscar",
+      props: {
         modo,
+        resultados: resultado === "redirigido" ? 1 : 0,
         resultado,
         ms: Date.now() - t0,
-      }),
-    );
+      },
+    });
+    if (evento) logEvent(evento);
+    // Solo valores internos, nunca `q`. Si aparece, RESULTADOS_BUSCAR y los
+    // literales de este archivo se desincronizaron (CR PR #31, H5).
+    else
+      console.warn(
+        JSON.stringify({ t: "evt_invalid", evento: "buscar", modo, resultado }),
+      );
   }
 }
 ---

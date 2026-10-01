@@ -623,4 +623,162 @@ describe("fetchProduct", () => {
       vi.useRealTimers();
     });
   });
+
+  describe("fetchVerifiedAt", () => {
+    let originalFetch: typeof globalThis.fetch;
+
+    beforeEach(() => {
+      originalFetch = globalThis.fetch;
+      vi.resetModules();
+    });
+
+    afterEach(() => {
+      globalThis.fetch = originalFetch;
+      vi.restoreAllMocks();
+    });
+
+    it("devuelve el Last-Modified en ISO y usa HEAD", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "last-modified": "Thu, 01 Oct 2026 01:19:47 GMT",
+        }),
+      } as unknown as Response);
+      globalThis.fetch = fetchMock;
+
+      const { fetchVerifiedAt } = await import("../src/lib/catalog");
+      const result = await fetchVerifiedAt("cyberpuerta");
+
+      expect(result).toBe("2026-10-01T01:19:47.000Z");
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://feed.precioreal.mx/cyberpuerta/products/index.json",
+        expect.objectContaining({
+          method: "HEAD",
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    it("devuelve null sin cabecera", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+      } as unknown as Response);
+
+      const { fetchVerifiedAt } = await import("../src/lib/catalog");
+      const result = await fetchVerifiedAt("cyberpuerta");
+      expect(result).toBeNull();
+    });
+
+    it("devuelve null con cabecera ilegible", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "last-modified": "no es fecha",
+        }),
+      } as unknown as Response);
+
+      const { fetchVerifiedAt } = await import("../src/lib/catalog");
+      const result = await fetchVerifiedAt("cyberpuerta");
+      expect(result).toBeNull();
+    });
+
+    it("devuelve null con respuesta no ok", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        headers: new Headers({
+          "last-modified": "Thu, 01 Oct 2026 01:19:47 GMT",
+        }),
+      } as unknown as Response);
+
+      const { fetchVerifiedAt } = await import("../src/lib/catalog");
+      const result = await fetchVerifiedAt("cyberpuerta");
+      expect(result).toBeNull();
+    });
+
+    it("devuelve null cuando fetch rechaza", async () => {
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network down"));
+
+      const { fetchVerifiedAt } = await import("../src/lib/catalog");
+      await expect(fetchVerifiedAt("cyberpuerta")).resolves.toBeNull();
+    });
+
+    it("no llama a fetch para una tienda fuera de la lista", async () => {
+      const fetchMock = vi.fn();
+      globalThis.fetch = fetchMock;
+
+      const { fetchVerifiedAt } = await import("../src/lib/catalog");
+      const result = await fetchVerifiedAt("tienda_inexistente");
+
+      expect(result).toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("reutiliza el valor dentro del TTL", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "last-modified": "Thu, 01 Oct 2026 01:19:47 GMT",
+        }),
+      } as unknown as Response);
+      globalThis.fetch = fetchMock;
+
+      const { fetchVerifiedAt } = await import("../src/lib/catalog");
+      const r1 = await fetchVerifiedAt("cyberpuerta");
+      const r2 = await fetchVerifiedAt("cyberpuerta");
+
+      expect(r1).toBe("2026-10-01T01:19:47.000Z");
+      expect(r2).toBe("2026-10-01T01:19:47.000Z");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("vuelve a preguntar cuando el TTL expiró", async () => {
+      vi.useFakeTimers();
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "last-modified": "Thu, 01 Oct 2026 01:19:47 GMT",
+        }),
+      } as unknown as Response);
+      globalThis.fetch = fetchMock;
+
+      const { fetchVerifiedAt } = await import("../src/lib/catalog");
+      await fetchVerifiedAt("cyberpuerta");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(5 * 60 * 1000 + 1);
+      await fetchVerifiedAt("cyberpuerta");
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+
+      vi.useRealTimers();
+    });
+
+    it("un fallo no se cachea", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockRejectedValueOnce(new Error("Timeout"))
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: new Headers({
+            "last-modified": "Thu, 01 Oct 2026 01:19:47 GMT",
+          }),
+        } as unknown as Response);
+      globalThis.fetch = fetchMock;
+
+      const { fetchVerifiedAt } = await import("../src/lib/catalog");
+      const r1 = await fetchVerifiedAt("cyberpuerta");
+      expect(r1).toBeNull();
+
+      const r2 = await fetchVerifiedAt("cyberpuerta");
+      expect(r2).toBe("2026-10-01T01:19:47.000Z");
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+  });
 });

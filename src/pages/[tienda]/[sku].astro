@@ -4,7 +4,7 @@ export const prerender = false;
 import Base from "../../layouts/Base.astro";
 import StatGrid from "../../components/StatGrid.astro";
 import PriceChart from "../../components/PriceChart.astro";
-import { fetchProduct } from "../../lib/catalog";
+import { fetchProduct, fetchVerifiedAt } from "../../lib/catalog";
 import { formatMXN, buildVerdict, pricePrefix } from "../../lib/format";
 import {
   buildTitle,
@@ -14,7 +14,10 @@ import {
 } from "../../lib/seo";
 
 const { tienda, sku } = Astro.params;
-const result = await fetchProduct(tienda!, sku!);
+const [result, verifiedAt] = await Promise.all([
+  fetchProduct(tienda!, sku!),
+  fetchVerifiedAt(tienda!),
+]);
 
 const siteUrl = (Astro.site ?? new URL("https://precioreal.mx")).origin;
 const canonical = result.ok ? buildCanonical(siteUrl, tienda!, sku!) : null;
@@ -122,6 +125,7 @@ if (!result.ok) {
                 min={p.min_90d}
                 max={p.max_90d}
                 generatedAt={p.generated_at}
+                verifiedAt={verifiedAt}
               />
 
               <StatGrid

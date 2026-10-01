@@ -69,13 +69,14 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   lo que escribió el usuario, sin consultar el índice, así que ahí no hay slug que usar. Para
   un sku cuyo slug difiera, ese camino da 404; hoy no ocurre y resolverlo exigiría consultar el
   índice también en la búsqueda por código.
-- `generated_at` de `{slug}.json` es la fecha del **último cambio de contenido** de esa ficha,
-  no la de la última verificación: desde price-crawler-saas#183 el productor no reescribe una
-  ficha cuyo contenido no cambió. La fecha de la última verificación del catálogo es la
-  cabecera `Last-Modified` de `{tienda}/products/index.json`, que el productor publica en
-  cada corrida; el consumidor la lee con HEAD y nunca descarga el cuerpo del índice para eso
-  (21.4 MB medidos el 2026-10-01). Sin esa cabecera la UI muestra solo el último cambio:
-  nunca sustituye una fecha ausente por la hora de la visita.
+- `generated_at` de `{slug}.json` es la fecha en que el productor escribió esa ficha por
+  última vez. Cuando price-crawler-saas#183 esté desplegado, el productor dejará de
+  reescribir una ficha cuyo contenido no cambió, así que una ficha estable conservará una
+  fecha anterior a la última corrida. La UI la rotula "actualizado {fecha}" y nunca
+  sustituye una fecha ausente o ilegible por la hora de la visita. Hoy no existe un dato
+  publicado que pruebe cuándo se observó un producto por última vez: el `Last-Modified`
+  de `index.json` solo dice cuándo corrió el exportador, que corre aunque el crawler esté
+  detenido (ealpuche/price-crawler-saas#185).
 
 ## Recurso ausente (producto sin ficha en R2)
 

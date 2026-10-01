@@ -9,12 +9,10 @@ interface Props {
   typical?: string;
   min?: string;
   max?: string;
-  /** `generated_at` de la ficha: fecha de su último cambio, no de la última verificación. */
+  /** `generated_at` de la ficha: fecha en que el productor la escribió por última vez. */
   generatedAt?: string;
-  /** Fecha de la última corrida del exportador (Last-Modified del índice). */
-  verifiedAt?: string | null;
 }
-const { series, typical, min, max, generatedAt, verifiedAt } = Astro.props;
+const { series, typical, min, max, generatedAt } = Astro.props;
 
 const W = 1000,
   H = 320,
@@ -87,7 +85,7 @@ const hoverPoints = series.map(([d, p]) => {
   };
 });
 
-const stamp = buildChartStamp(generatedAt, verifiedAt);
+const stamp = buildChartStamp(generatedAt);
 ---
 
 {

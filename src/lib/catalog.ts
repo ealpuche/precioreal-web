@@ -175,10 +175,11 @@ export type ResolveUrlResult =
 /**
  * Encuentra el sku cuyo `url` en el índice coincide con la que pegó el usuario.
  *
- * Corre en el worker y no en el navegador a propósito: el índice pesa ~2.7 MB gzip y le llega
- * al worker desde el caché de borde (verificado: cf-cache-status HIT). Resolverlo aquí hace
- * que el usuario reciba un redirect en vez de esos megabytes, que en móvil con datos serían
- * el coste de cada búsqueda.
+ * Corre en el worker y no en el navegador a propósito: resolverlo aquí hace que el usuario
+ * reciba un redirect en vez del índice completo, que en móvil con datos sería el coste de
+ * cada búsqueda. El índice pesa 21.4 MB sin comprimir y ya NO llega desde el caché de borde
+ * (medido 2026-10-01: cf-cache-status DYNAMIC, #21): cada isolate frío lo baja de R2. El
+ * argumento de resolver en el worker sigue en pie; el de coste no, hasta que #21 se cierre.
  */
 export async function resolveProductUrl(
   tienda: string,
@@ -222,57 +223,4 @@ export async function resolveProductUrl(
     }
   }
   return { ok: false, reason: "not_found" };
-}
-
-const VERIFIED_TTL_MS = 5 * 60 * 1000;
-const VERIFIED_TIMEOUT_MS = 1500;
-const verifiedCache = new Map<
-  string,
-  { at: number; pending: Promise<string | null> }
->();
-
-/**
- * Fecha de la última corrida del exportador para una tienda: la cabecera `Last-Modified`
- * de su `index.json`, leída con HEAD. No lanza; cualquier fallo devuelve `null`.
- *
- * HEAD y no GET: el índice pesa 21.4 MB (medido 2026-10-01) y aquí solo interesa una fecha.
- * Caché por isolate con TTL corto: el índice sale `cf-cache-status: DYNAMIC`, así que cada
- * HEAD llega a R2 y cuenta como operación Class B; sin caché habría una por vista de ficha.
- * Un fallo no se cachea, por el mismo motivo que en `fetchIndex`.
- * Timeout propio y más corto que el de la ficha: corre en paralelo con ella y un HEAD
- * colgado no debe retrasar la página.
- */
-export async function fetchVerifiedAt(tienda: string): Promise<string | null> {
-  if (!TIENDAS_VALIDAS.has(tienda)) {
-    return null;
-  }
-
-  const cached = verifiedCache.get(tienda);
-  if (cached && Date.now() - cached.at < VERIFIED_TTL_MS) {
-    return cached.pending;
-  }
-
-  const pending = (async () => {
-    try {
-      const res = await fetch(
-        `${FEED_BASE}/${encodeURIComponent(tienda)}/products/index.json`,
-        {
-          method: "HEAD",
-          signal: AbortSignal.timeout(VERIFIED_TIMEOUT_MS),
-        },
-      );
-      if (!res.ok) return null;
-      const lm = res.headers.get("last-modified");
-      if (!lm) return null;
-      const t = Date.parse(lm);
-      return Number.isFinite(t) ? new Date(t).toISOString() : null;
-    } catch {
-      return null;
-    }
-  })();
-
-  verifiedCache.set(tienda, { at: Date.now(), pending });
-  const result = await pending;
-  if (result === null) verifiedCache.delete(tienda);
-  return result;
 }

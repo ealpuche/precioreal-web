@@ -70,8 +70,8 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
   un sku cuyo slug difiera, ese camino da 404; hoy no ocurre y resolverlo exigiría consultar el
   índice también en la búsqueda por código.
 - `generated_at` de `{slug}.json` es la fecha en que el productor escribió esa ficha por
-  última vez. Cuando price-crawler-saas#183 esté desplegado, el productor dejará de
-  reescribir una ficha cuyo contenido no cambió, así que una ficha estable conservará una
+  última vez. Desde price-crawler-saas#183 (desplegado el 2026-10-01) el productor no
+  reescribe una ficha cuyo contenido no cambió, así que una ficha estable conserva una
   fecha anterior a la última corrida. La UI la rotula "actualizado {fecha}" y nunca
   sustituye una fecha ausente o ilegible por la hora de la visita. Hoy no existe un dato
   publicado que pruebe cuándo se observó un producto por última vez: el `Last-Modified`

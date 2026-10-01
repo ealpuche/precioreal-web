@@ -178,8 +178,9 @@ export type ResolveUrlResult =
  * Corre en el worker y no en el navegador a propósito: resolverlo aquí hace que el usuario
  * reciba un redirect en vez del índice completo, que en móvil con datos sería el coste de
  * cada búsqueda. El índice pesa 21.4 MB sin comprimir y ya NO llega desde el caché de borde
- * (medido 2026-10-01: cf-cache-status DYNAMIC, #21): cada isolate frío lo baja de R2. El
- * argumento de resolver en el worker sigue en pie; el de coste no, hasta que #21 se cierre.
+ * (medido 2026-10-01: cf-cache-status DYNAMIC, #21): cada isolate lo baja de R2 al arrancar
+ * y otra vez cada INDEX_TTL_MS (4 h). El argumento de resolver en el worker sigue en pie; el
+ * de coste no, hasta que #21 se cierre.
  */
 export async function resolveProductUrl(
   tienda: string,

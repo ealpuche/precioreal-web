@@ -175,10 +175,12 @@ export type ResolveUrlResult =
 /**
  * Encuentra el sku cuyo `url` en el índice coincide con la que pegó el usuario.
  *
- * Corre en el worker y no en el navegador a propósito: el índice pesa ~2.7 MB gzip y le llega
- * al worker desde el caché de borde (verificado: cf-cache-status HIT). Resolverlo aquí hace
- * que el usuario reciba un redirect en vez de esos megabytes, que en móvil con datos serían
- * el coste de cada búsqueda.
+ * Corre en el worker y no en el navegador a propósito: resolverlo aquí hace que el usuario
+ * reciba un redirect en vez del índice completo, que en móvil con datos sería el coste de
+ * cada búsqueda. El índice pesa 21.4 MB sin comprimir y ya NO llega desde el caché de borde
+ * (medido 2026-10-01: cf-cache-status DYNAMIC, #21): cada isolate lo baja de R2 al arrancar
+ * y otra vez cada INDEX_TTL_MS (4 h). El argumento de resolver en el worker sigue en pie; el
+ * de coste no, hasta que #21 se cierre.
  */
 export async function resolveProductUrl(
   tienda: string,

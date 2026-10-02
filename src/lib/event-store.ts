@@ -3,9 +3,17 @@ import type { EventPayload } from "./event";
 // Subconjunto estructural de `locals.runtime` (adaptador de Cloudflare). Todo es opcional:
 // en tests, en local sin binding y en un preview sin configurar no existe, y la escritura
 // se omite en silencio en vez de romper la respuesta (#32).
+// Forma mínima del binding de D1 que este módulo usa. El proyecto no depende de
+// @cloudflare/workers-types y `D1Database` no existe como tipo global para astro check.
+export type EventsDb = {
+  prepare(sql: string): {
+    bind(...values: unknown[]): { run(): Promise<unknown> };
+  };
+};
+
 export type EventStoreRuntime =
   | {
-      env?: { EVENTS_DB?: D1Database };
+      env?: { EVENTS_DB?: EventsDb };
       ctx?: { waitUntil(promise: Promise<unknown>): void };
     }
   | undefined;

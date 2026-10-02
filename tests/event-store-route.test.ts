@@ -58,7 +58,7 @@ describe("event-store-route", () => {
   it("8. handleEvent(request, now, runtime) con payload válido -> 204 y un run()", async () => {
     const db = createMockDb();
     const runtime: EventStoreRuntime = {
-      env: { EVENTS_DB: db as unknown as D1Database },
+      env: { EVENTS_DB: db },
     };
     const request = makeValidRequest();
 
@@ -70,7 +70,7 @@ describe("event-store-route", () => {
   it("9. con payload inválido -> 400 y cero run()", async () => {
     const db = createMockDb();
     const runtime: EventStoreRuntime = {
-      env: { EVENTS_DB: db as unknown as D1Database },
+      env: { EVENTS_DB: db },
     };
     const request = makeInvalidRequest();
 
@@ -85,7 +85,7 @@ describe("event-store-route", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     const runtime: EventStoreRuntime = {
-      env: { EVENTS_DB: db as unknown as D1Database },
+      env: { EVENTS_DB: db },
     };
     const request = makeValidRequest();
 
@@ -97,7 +97,7 @@ describe("event-store-route", () => {
   it("11. POST({ request, locals: { runtime } }) de src/pages/api/event.ts -> 204 y un run()", async () => {
     const db = createMockDb();
     const runtime: EventStoreRuntime = {
-      env: { EVENTS_DB: db as unknown as D1Database },
+      env: { EVENTS_DB: db },
     };
     const request = makeValidRequest();
 

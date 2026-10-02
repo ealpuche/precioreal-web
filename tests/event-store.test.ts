@@ -52,7 +52,7 @@ describe("storeEvent", () => {
   it("3. salida_tienda con base y sin ctx -> exactamente un run(); los argumentos de bind son, en orden: el ISO de un now inyectado, 'salida_tienda', la tienda, el slug, null y el JSON de las props", async () => {
     const db = createMockDb();
     const runtime: EventStoreRuntime = {
-      env: { EVENTS_DB: db as unknown as D1Database },
+      env: { EVENTS_DB: db },
     };
     const payload: EventPayload = {
       evento: "salida_tienda",
@@ -80,7 +80,7 @@ describe("storeEvent", () => {
   it("4. buscar -> tienda y slug van como null", async () => {
     const db = createMockDb();
     const runtime: EventStoreRuntime = {
-      env: { EVENTS_DB: db as unknown as D1Database },
+      env: { EVENTS_DB: db },
     };
     const payload: EventPayload = {
       evento: "buscar",
@@ -117,14 +117,14 @@ describe("storeEvent", () => {
         }),
     );
 
-    let waitedPromise: Promise<unknown> | null = null;
+    const waited: Promise<unknown>[] = [];
     const ctx = {
       waitUntil: vi.fn((promise: Promise<unknown>) => {
-        waitedPromise = promise;
+        waited.push(promise);
       }),
     };
     const runtime: EventStoreRuntime = {
-      env: { EVENTS_DB: db as unknown as D1Database },
+      env: { EVENTS_DB: db },
       ctx,
     };
 
@@ -139,11 +139,11 @@ describe("storeEvent", () => {
     // storeEvent resolvió antes de que termine run()
     expect(runFinished).toBe(false);
     expect(ctx.waitUntil).toHaveBeenCalledTimes(1);
-    expect(waitedPromise).not.toBeNull();
+    expect(waited).toHaveLength(1);
 
     // Ahora terminamos run()
     resolveRun();
-    await waitedPromise;
+    await waited[0];
     expect(runFinished).toBe(true);
     expect(db.calls).toHaveLength(1);
   });
@@ -154,7 +154,7 @@ describe("storeEvent", () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const runtime: EventStoreRuntime = {
-      env: { EVENTS_DB: db as unknown as D1Database },
+      env: { EVENTS_DB: db },
     };
     const payload: EventPayload = {
       evento: "salida_tienda",
@@ -182,7 +182,7 @@ describe("storeEvent", () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const runtime: EventStoreRuntime = {
-      env: { EVENTS_DB: db as unknown as D1Database },
+      env: { EVENTS_DB: db },
     };
     const payload: EventPayload = {
       evento: "salida_tienda",

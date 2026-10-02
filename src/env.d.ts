@@ -7,7 +7,7 @@ type ENV = {
   SUBSCRIBERS: KVNamespace;
   TURNSTILE_SECRET: string;
   // Opcional: en local y en un preview sin configurar no existe (#32).
-  EVENTS_DB?: D1Database;
+  EVENTS_DB?: import("./lib/event-store").EventsDb;
 };
 type Runtime = import("@astrojs/cloudflare").Runtime<ENV>;
 declare namespace App {

@@ -49,9 +49,12 @@ Cloudflare: con las dos activas, cada página cargaría dos beacons y las visita
 se contarían doble. Los bloqueadores de anuncios pueden impedir la carga del
 beacon; es una métrica de referencia, no un conteo exacto.
 
-**Eventos de producto** — Workers Logs, una línea JSON por evento con la forma
-`{"t":"evt","evento":…,"props":{…},"ts":…}`. Workers & Pages → precioreal-web →
-Logs, filtrando por `t = evt`.
+**Eventos de producto** — una fila por evento en la base D1 `precioreal-events`
+(tabla `events`: `ts`, `evento`, `tienda`, `slug`, `origen`, `props`). Se consulta
+en el dashboard de Cloudflare → Storage & databases → D1 → precioreal-events →
+Console. Los previews de PR escriben en `precioreal-events-dev`. Cada evento
+también imprime una línea JSON `{"t":"evt",…}` en la consola del worker, visible
+solo en vivo: Cloudflare Pages no almacena logs.
 
 Regla de ubicación: un evento se emite en servidor si el servidor ya ve la
 acción (búsquedas, altas de alerta) y en cliente solo si nunca la ve (un clic
@@ -85,5 +88,7 @@ límite de tasa en el código. Los eventos son una señal orientativa y se
 contrastan con Web Analytics. Antes de que una decisión dependa del volumen
 absoluto hace falta la regla de borde descrita en #32.
 
-**Retención:** Workers Logs guarda 3 días en el plan Free y 7 en el Paid. El
-destino persistente se sigue en #32.
+**Retención:** D1 conserva las filas hasta que se borren. El plan gratuito admite
+100,000 filas escritas al día; al rebasarlo las escrituras fallan sin cargo y el
+sitio sigue respondiendo (el fallo queda como `evt_store_error` en la consola).
+La carga a la base principal se sigue en #32.

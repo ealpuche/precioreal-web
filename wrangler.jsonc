@@ -14,4 +14,14 @@
       "preview_id": "336f084771d84a53878a09b5d5fffb1b",
     },
   ],
+  "d1_databases": [
+    {
+      // Base de DESARROLLO, nunca la de producción (mismo criterio que SUBSCRIBERS).
+      // En `astro dev` el binding apunta a una base local simulada sin la tabla `events`:
+      // la escritura falla, queda `evt_store_error` en consola y la página responde igual.
+      "binding": "EVENTS_DB",
+      "database_name": "precioreal-events-dev",
+      "database_id": "e59b612c-c110-430d-9fef-e0abec0c82ba",
+    },
+  ],
 }

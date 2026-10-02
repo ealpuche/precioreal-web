@@ -1,4 +1,5 @@
 import { SKU_RE } from "./sku";
+import { storeEvent, type EventStoreRuntime } from "./event-store";
 
 export type Evento = "buscar" | "salida_tienda" | "alerta_alta";
 
@@ -143,6 +144,7 @@ async function leerCuerpo(request: Request): Promise<string | null> {
 export async function handleEvent(
   request: Request,
   now?: number,
+  runtime?: EventStoreRuntime,
 ): Promise<Response> {
   const contentLength = request.headers.get("content-length");
   if (contentLength !== null) {
@@ -171,5 +173,6 @@ export async function handleEvent(
   if (!payload) return vacio(400);
 
   logEvent(payload, now);
+  await storeEvent(runtime, payload, now);
   return new Response(null, { status: 204 });
 }

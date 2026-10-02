@@ -1,8 +1,5 @@
 import type { EventPayload } from "./event";
 
-// Subconjunto estructural de `locals.runtime` (adaptador de Cloudflare). Todo es opcional:
-// en tests, en local sin binding y en un preview sin configurar no existe, y la escritura
-// se omite en silencio en vez de romper la respuesta (#32).
 // Forma mínima del binding de D1 que este módulo usa. El proyecto no depende de
 // @cloudflare/workers-types y `D1Database` no existe como tipo global para astro check.
 export type EventsDb = {
@@ -11,6 +8,10 @@ export type EventsDb = {
   };
 };
 
+// Subconjunto estructural de `locals.runtime` (adaptador de Cloudflare). Todo es
+// opcional: en tests y en un preview sin configurar el binding no existe, y la
+// escritura se omite en silencio en vez de romper la respuesta (#32). En `astro dev`
+// el binding sí existe (wrangler.jsonc) y apunta a una base local.
 export type EventStoreRuntime =
   | {
       env?: { EVENTS_DB?: EventsDb };
@@ -38,7 +39,8 @@ function logStoreError(evento: string, err: unknown): void {
 /**
  * Guarda un evento ya validado como una fila en D1. Nunca lanza y nunca rechaza:
  * la medición no puede romper ni retrasar la respuesta al usuario.
- * Con `ctx.waitUntil` la escritura continúa después de responder; sin él se espera.
+ * Con `ctx.waitUntil` la escritura continúa después de responder; sin él, o si
+ * `waitUntil` lanza, se espera.
  */
 export async function storeEvent(
   runtime: EventStoreRuntime,
@@ -71,8 +73,13 @@ export async function storeEvent(
 
   const ctx = runtime?.ctx;
   if (ctx) {
-    ctx.waitUntil(pending);
-    return;
+    try {
+      ctx.waitUntil(pending);
+      return;
+    } catch (err) {
+      // waitUntil lanzó: se espera la escritura en vez de perderla.
+      logStoreError(evento, err);
+    }
   }
   await pending;
 }

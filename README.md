@@ -13,6 +13,7 @@ Frontend de PrecioReal.mx — estático en Cloudflare Pages + Pages Functions.
 
 - KV: SUBSCRIBERS → precioreal-subscribers (d5841532f55d4718a5ab3c16845a83b3)
 - Secret: TURNSTILE_SECRET
+- D1: EVENTS_DB → precioreal-events (Production) / precioreal-events-dev (Preview)
 
 ## Local
 
@@ -32,7 +33,9 @@ Nota: crear `.dev.vars` con `TURNSTILE_SECRET=...` para probar suscripción loca
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Variable de entorno: `NODE_VERSION=22`
-- Bindings (sin cambios): KV `SUBSCRIBERS` → `precioreal-subscribers`; secreto `TURNSTILE_SECRET`
+- Bindings: KV `SUBSCRIBERS` → `precioreal-subscribers`; D1 `EVENTS_DB` →
+  `precioreal-events` (Production) y `precioreal-events-dev` (Preview); secreto
+  `TURNSTILE_SECRET`
 - El entorno **Preview** tiene su propia configuración: sin `TURNSTILE_SECRET` ahí, la
   suscripción responde `server_misconfigured` en los previews de PR.
 
@@ -79,16 +82,18 @@ Cómo leer `buscar`:
   `{"t":"evt_invalid",…}`. Si aparece, `RESULTADOS_BUSCAR` y `buscar.astro` se
   desincronizaron.
 
-Los eventos nunca incluyen el texto tecleado, la IP ni el user agent. El registro
-de invocación que Workers genera por su cuenta puede guardar la URL de cada
-petición; se revisa en #32.
+Los eventos nunca incluyen el texto tecleado, la IP ni el user agent. Cloudflare
+Pages no guarda el registro de invocación: la URL de cada petición solo es visible
+en vivo.
 
-**Límites:** `/api/event` acepta cualquier POST same-origin válido y no tiene
-límite de tasa en el código. Los eventos son una señal orientativa y se
-contrastan con Web Analytics. Antes de que una decisión dependa del volumen
-absoluto hace falta la regla de borde descrita en #32.
+**Límites:** `/api/event` solo acepta `salida_tienda`; `buscar` y `alerta_alta` se
+rechazan con 400 porque los emite el servidor. El endpoint no tiene límite de tasa
+en el código: cualquier POST same-origin válido deja una fila. Los eventos son una
+señal orientativa y se contrastan con Web Analytics. Antes de que una decisión
+dependa del volumen absoluto hace falta la regla de borde descrita en #32.
 
 **Retención:** D1 conserva las filas hasta que se borren. El plan gratuito admite
 100,000 filas escritas al día; al rebasarlo las escrituras fallan sin cargo y el
 sitio sigue respondiendo (el fallo queda como `evt_store_error` en la consola).
-La carga a la base principal se sigue en #32.
+Cada evento cuesta una fila escrita. La carga a la base principal se sigue en
+price-crawler-saas#188.

@@ -199,4 +199,58 @@ describe("storeEvent", () => {
     expect(loggedObj.error).toBe("Prepare sync failure");
     expect(loggedStr).not.toContain("cpu-sync");
   });
+
+  it("13. waitUntil lanza -> storeEvent no rechaza, registra evt_store_error y espera a run()", async () => {
+    const db = createMockDb();
+    let resolveRun!: () => void;
+
+    db.setRunHandler(
+      () =>
+        new Promise<unknown>((res) => {
+          resolveRun = () => {
+            res({ success: true });
+          };
+        }),
+    );
+
+    const ctx = {
+      waitUntil: vi.fn(() => {
+        throw new Error("waitUntil roto");
+      }),
+    };
+    const runtime: EventStoreRuntime = {
+      env: { EVENTS_DB: db },
+      ctx,
+    };
+
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const payload: EventPayload = {
+      evento: "salida_tienda",
+      props: { tienda: "cyberpuerta", slug: "cpu-broken-wait" },
+    };
+
+    let resolved = false;
+    const storePromise = storeEvent(runtime, payload).then(() => {
+      resolved = true;
+    });
+
+    // Dejar correr las microtareas y afirmar que TODAVÍA no resolvió
+    await new Promise((r) => setTimeout(r, 0));
+    expect(resolved).toBe(false);
+
+    // Resuelve run(), espera la promesa y afirma
+    resolveRun();
+    const result = await storePromise;
+    expect(result).toBeUndefined();
+    expect(resolved).toBe(true);
+
+    expect(db.calls).toHaveLength(1);
+    expect(consoleSpy).toHaveBeenCalledTimes(1);
+
+    const loggedStr = consoleSpy.mock.calls[0][0];
+    const loggedObj = JSON.parse(loggedStr);
+    expect(loggedObj.t).toBe("evt_store_error");
+    expect(loggedObj.error).toBe("waitUntil roto");
+  });
 });

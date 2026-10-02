@@ -6,7 +6,8 @@
 type ENV = {
   SUBSCRIBERS: KVNamespace;
   TURNSTILE_SECRET: string;
-  // Opcional: en local y en un preview sin configurar no existe (#32).
+  // Opcional: no existe en tests ni en un preview sin configurar. En `astro dev` sí
+  // existe (wrangler.jsonc) y apunta a una base local (#32).
   EVENTS_DB?: import("./lib/event-store").EventsDb;
 };
 type Runtime = import("@astrojs/cloudflare").Runtime<ENV>;

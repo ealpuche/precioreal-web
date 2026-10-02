@@ -141,6 +141,12 @@ async function leerCuerpo(request: Request): Promise<string | null> {
   return new TextDecoder().decode(out);
 }
 
+// Eventos que el navegador puede enviar a /api/event. `buscar` y `alerta_alta` los
+// emite solo el servidor: aceptarlos aquí dejaría filas falsas en D1 (CR PR #38, H5).
+const EVENTOS_DE_CLIENTE: ReadonlySet<Evento> = new Set<Evento>([
+  "salida_tienda",
+]);
+
 export async function handleEvent(
   request: Request,
   now?: number,
@@ -170,7 +176,7 @@ export async function handleEvent(
   }
 
   const payload = validateEvent(parsed);
-  if (!payload) return vacio(400);
+  if (!payload || !EVENTOS_DE_CLIENTE.has(payload.evento)) return vacio(400);
 
   logEvent(payload, now);
   await storeEvent(runtime, payload, now);

@@ -112,4 +112,53 @@ describe("event-store-route", () => {
     const res = await POST({ request } as never);
     expect(res.status).toBe(204);
   });
+
+  it("14. POST de un evento buscar válido -> 400, cero run() y cero console.log", async () => {
+    const db = createMockDb();
+    const runtime: EventStoreRuntime = {
+      env: { EVENTS_DB: db },
+    };
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const request = new Request("https://precioreal.mx/api/event", {
+      method: "POST",
+      body: JSON.stringify({
+        evento: "buscar",
+        props: {
+          modo: "sku",
+          resultados: 1,
+          resultado: "redirigido",
+          ms: 15,
+        },
+      }),
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+    });
+
+    const res = await POST({ request, locals: { runtime } } as never);
+    expect(res.status).toBe(400);
+    expect(db.calls).toHaveLength(0);
+    expect(logSpy).not.toHaveBeenCalled();
+  });
+
+  it("15. POST de alerta_alta válido -> 400 y cero run()", async () => {
+    const db = createMockDb();
+    const runtime: EventStoreRuntime = {
+      env: { EVENTS_DB: db },
+    };
+
+    const request = new Request("https://precioreal.mx/api/event", {
+      method: "POST",
+      body: JSON.stringify({
+        evento: "alerta_alta",
+        props: {
+          tienda: "cyberpuerta",
+        },
+      }),
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+    });
+
+    const res = await POST({ request, locals: { runtime } } as never);
+    expect(res.status).toBe(400);
+    expect(db.calls).toHaveLength(0);
+  });
 });

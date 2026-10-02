@@ -17,7 +17,8 @@ const q = (Astro.url.searchParams.get("q") ?? "").trim();
 let error: string | null = null;
 
 if (q) {
-  // Una línea por búsqueda, visible en `wrangler tail` y en Workers Logs. Sin esto, el issue
+  // Una línea por búsqueda en la consola del worker (solo en vivo, con `wrangler tail`)
+  // y una fila en D1 (#32). Sin esto, el issue
   // que difiere la optimización de la resolución por URL tendría un disparador imposible de
   // comprobar: "cuando haya dato de uso" no llega solo. Se registran el modo, el desenlace y
   // el tiempo — nunca lo que el usuario pegó, que no aporta a la decisión y sí crearía una

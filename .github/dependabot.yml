@@ -1,0 +1,52 @@
+# Dependabot: actualizaciones de versión semanales (#43).
+# Las actualizaciones de seguridad son aparte: se activan en Settings → Code security
+# ("Dependabot security updates") y usan este mismo archivo para agrupar y etiquetar.
+#
+# - `labels: []`: sin la etiqueta "dependencies" por defecto; el set de labels del proyecto
+#   es cerrado y no crece hasta que falte uno.
+# - Los PRs de Dependabot no reciben los secretos del repo, sino los de Dependabot. Para que
+#   el quality gate de SonarCloud corra en ellos, SONAR_TOKEN debe existir también como
+#   secreto de Dependabot (ver la descripción del PR que agrega este archivo).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 5
+    labels: []
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      # Astro y su adaptador se mueven juntos: el adaptador 14 exige Astro 7 (#5).
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      dev-menores:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 3
+    labels: []
+    commit-message:
+      prefix: ci
+    groups:
+      # Las acciones van fijadas a SHA; Dependabot actualiza el SHA y el comentario de versión
+      # (cubre lo que pide #33: pasar a las versiones con Node 24).
+      acciones:
+        patterns:
+          - "*"

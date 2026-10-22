@@ -4,7 +4,25 @@ on:
     branches: [main]
   pull_request:
 
+# Mínimo necesario: leer el código. SonarCloud usa su propio token y decora el PR con su app.
+permissions:
+  contents: read
+
 jobs:
+  # Falla si el PR agrega o actualiza una dependencia con una vulnerabilidad alta o crítica
+  # conocida (GitHub Advisory Database). No falla por las vulnerabilidades que ya existen en
+  # main: esas las corrige Dependabot (#43). Solo tiene sentido en PRs.
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+
+  # Check requerido en main (#43): falla con tests en rojo, cobertura de líneas < 90 %
+  # (vitest.config.ts), build roto, 404 sin prerenderizar o quality gate de SonarCloud en
+  # rojo (sonar.qualitygate.wait=true en sonar-project.properties).
   check:
     runs-on: ubuntu-latest
     steps:

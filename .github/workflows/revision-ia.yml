@@ -20,8 +20,9 @@ permissions:
 
 jobs:
   claude:
-    # Evita que corra en copias del repositorio donde no existe el secreto.
-    if: github.repository_owner == 'ealpuche'
+    # Evita que corra en copias del repositorio donde no existe el secreto, y en PRs de
+    # Dependabot: no reciben el secreto (el job fallaría) y cada corrida consume cuota (#43).
+    if: github.repository_owner == 'ealpuche' && github.actor != 'dependabot[bot]'
     uses: ealpuche/ai-code-review-workflows/.github/workflows/claude-pr-review.yml@v1
     # Sin bloque `with`, se usan los valores por defecto del workflow central
     # (modelo y turnos). Agrégalo solo si este repo necesita otros.

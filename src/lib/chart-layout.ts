@@ -14,3 +14,13 @@ export function yAxisMargin(labels: string[], fontSize: number): number {
   const longest = labels.reduce((n, l) => Math.max(n, l.length), 0);
   return Math.max(MIN_MARGIN, Math.ceil(longest * fontSize * CHAR_EM) + GAP);
 }
+
+// Pendiente de implementar: el test define el contrato (H1, cuarta revisión del PR #41).
+export function minMarkerIndex(
+  _series: [string, string, boolean][],
+  _min: string | undefined,
+  _windowDays: number,
+  _refMs: number,
+): number {
+  return 1;
+}

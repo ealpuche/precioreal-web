@@ -20,6 +20,12 @@ updates:
       timezone: America/Mexico_City
     open-pull-requests-limit: 5
     labels: []
+    ignore:
+      # @astrojs/check@0.9.10 declara typescript ^5 || ^6: TypeScript 7 no instala (#51,
+      # cerrado; #56). Quitar cuando @astrojs/check soporte la 7.
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
     commit-message:
       prefix: deps
       include: scope
@@ -36,6 +42,13 @@ updates:
         patterns:
           - "astro"
           - "@astrojs/*"
+      # vitest y @vitest/* se publican en la misma versión y se exigen entre sí como peer
+      # dependency exacta: en PRs separados ninguno instala (#49 y #54, cerrados; #56).
+      # Va antes de dev-menores porque gana el primer grupo que coincide.
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
       dev-menores:
         dependency-type: development
         update-types:

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   normalizeProductUrl,
+  normalizePastedUrl,
   looksLikeUrl,
   tiendaNoPublicada,
   hostPertenece,
@@ -75,18 +76,20 @@ describe("normalizeProductUrl", () => {
     // path.replace(/\/+$/, "") yields "" so host+path is "hola"
     expect(normalizeProductUrl("hola")).toBe("hola");
   });
+});
 
+describe("normalizePastedUrl", () => {
   it("extracts the URL from text pasted from a share sheet (#42)", () => {
     // Compartir desde el navegador del teléfono pega "nombre + enlace", y a veces el enlace
     // llega en su propia línea. Antes, `new URL("https://Klip Xtreme ... https://...")`
     // lanzaba y la búsqueda terminaba en "ilegible" aunque el enlace fuera correcto.
     expect(
-      normalizeProductUrl(
+      normalizePastedUrl(
         "Klip Xtreme Soporte de Techo KPM-610B https://www.cyberpuerta.mx/Audio-y-Video/Soportes/KPM-610B.html",
       ),
     ).toBe("cyberpuerta.mx/Audio-y-Video/Soportes/KPM-610B.html");
     expect(
-      normalizeProductUrl(
+      normalizePastedUrl(
         "Mira este producto:\nhttps://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html\nen Cyberpuerta",
       ),
     ).toBe("cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html");
@@ -94,16 +97,38 @@ describe("normalizeProductUrl", () => {
 
   it("drops punctuation that a sentence attaches to the end of a URL (#42)", () => {
     expect(
-      normalizeProductUrl(
+      normalizePastedUrl(
         "(https://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html).",
       ),
     ).toBe("cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html");
   });
 
   it("returns null for text with spaces and no URL in it (#42)", () => {
-    // Un nombre tecleado no es un enlace: antes `new URL` lanzaba y daba null por accidente;
-    // ahora es la regla explícita, para que `/buscar` lo clasifique como texto.
-    expect(normalizeProductUrl("Monitor LG 27 pulgadas")).toBeNull();
+    // Un nombre tecleado no es un enlace. Con `new URL` directo, "Monitor LG 27" lanzaba
+    // (null por accidente) pero "cyberpuerta.mx/x.html Dell" pasaba con el espacio
+    // codificado como %20 (CR PR #62, H3): la regla explícita cubre los dos.
+    expect(normalizePastedUrl("Monitor LG 27 pulgadas")).toBeNull();
+    expect(normalizePastedUrl("cyberpuerta.mx/Laptops/x.html Dell")).toBeNull();
+  });
+
+  it("drops quotes and guillemets around the link (CR PR #62, H2)", () => {
+    expect(
+      normalizePastedUrl(
+        "Mira «https://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html»!",
+      ),
+    ).toBe("cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html");
+    expect(
+      normalizePastedUrl(
+        '"https://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html"',
+      ),
+    ).toBe("cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html");
+  });
+
+  it("keeps the canonical normalizer cheap for the index: no link extraction", () => {
+    // `resolveProductUrl` llama a normalizeProductUrl 31,903 veces por búsqueda.
+    expect(
+      normalizeProductUrl("Mira https://www.cyberpuerta.mx/Laptops/x.html"),
+    ).toBeNull();
   });
 
   it("returns null for empty string or invalid schemes", () => {

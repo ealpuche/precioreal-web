@@ -3,7 +3,7 @@ import type { MODOS_BUSCAR, RESULTADOS_BUSCAR } from "./event";
 import {
   hostPertenece,
   looksLikeUrl,
-  normalizeProductUrl,
+  normalizePastedUrl,
   tiendaNoPublicada,
 } from "./product-url";
 import { SKU_RE } from "./sku";
@@ -58,7 +58,7 @@ export async function decidirBusqueda(
   }
 
   const modo = "url";
-  const normalized = normalizeProductUrl(q);
+  const normalized = normalizePastedUrl(q);
   if (!normalized) {
     return { modo, resultado: "ilegible", error: MENSAJE_ENLACE_ILEGIBLE };
   }

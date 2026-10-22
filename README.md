@@ -81,7 +81,7 @@ hacia otro sitio).
 
 Cómo leer `buscar`:
 
-- `modo`: `sku` o `url`. `texto` está reservado para la búsqueda por nombre de #15.
+- `modo`: `sku` (código), `url` (enlace, aunque no se pueda leer) o `texto` (un nombre tecleado: espacios sin `http(s)://`; es la demanda de búsqueda por nombre, #15). Hasta el 2026-10-22 (PR #62) `texto` no se emitía: un nombre con espacios contaba como `url`/`ilegible` y uno de una palabra como `url`/`tienda_desconocida` o como `sku`. Las series de esos tres pares cambian de significado en esa fecha.
 - `resultados`: en `sku` y `url` vale 1 si la búsqueda redirige a una ficha y 0 si
   no. En `sku` el redirect no comprueba que la ficha exista: cuenta propuestas,
   no aciertos.

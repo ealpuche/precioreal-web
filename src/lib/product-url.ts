@@ -4,40 +4,20 @@
  * Medido contra el índice en producción (2026-09-09): sus 31,520 URLs comparten host
  * (`https://www.cyberpuerta.mx`) y ninguna lleva query string. Así que normalizar es tratar lo
  * que el usuario pega —parámetros de campaña, `http`, `www` ausente, barra final, mayúsculas
- * de host, y el texto que una hoja de compartir pone alrededor del enlace— no variantes del
- * propio índice.
+ * de host— no variantes del propio índice. Lo que una hoja de compartir pone alrededor del
+ * enlace lo trata `normalizePastedUrl`, que `/buscar` usa en vez de esta.
  *
  * La ruta conserva mayúsculas: los slugs de Cyberpuerta las usan y el path de una URL es
  * case-sensitive (RFC 3986).
  */
 
-// Primer enlace http(s) dentro de un texto. Compartir desde el navegador del teléfono pega
-// "nombre del producto + enlace", a veces con el enlace en su propia línea; `new URL` sobre
-// ese texto lanzaba y la búsqueda terminaba en "ilegible" con el enlace correcto adentro
-// (#42: 36 de 92 búsquedas por enlace entre el 2 y el 22 de octubre).
-const ENLACE_EN_TEXTO = /https?:\/\/\S+/i;
-
-// Puntuación que una frase pega al final de un enlace ("(…html)." ). Las URLs del índice
-// terminan en `.html`, así que quitar un punto final nunca rompe una real.
-const PUNTUACION_FINAL = /[.,;:)\]]+$/;
-
-/** El enlace que hay dentro de lo que el usuario pegó, o el texto entero si no trae uno. */
-function candidatoAUrl(raw: string): string {
-  const enlace = ENLACE_EN_TEXTO.exec(raw)?.[0] ?? raw.trim();
-  return enlace.replace(PUNTUACION_FINAL, "");
-}
-
 export function normalizeProductUrl(raw: string): string | null {
-  const candidato = candidatoAUrl(raw);
-  // Sin enlace dentro y con espacios, es un nombre tecleado, no una URL. Antes esto salía
-  // null porque `new URL` lanzaba; ahora es la regla, para que no dependa del parser.
-  if (!candidato || /\s/.test(candidato)) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
 
   let parsed: URL;
   try {
-    parsed = new URL(
-      candidato.includes("://") ? candidato : `https://${candidato}`,
-    );
+    parsed = new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`);
   } catch {
     return null;
   }
@@ -46,6 +26,33 @@ export function normalizeProductUrl(raw: string): string | null {
   const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
   const path = parsed.pathname.replace(/\/+$/, "");
   return `${host}${path}`;
+}
+
+// Primer enlace http(s) dentro de un texto. Compartir desde el navegador del teléfono pega
+// "nombre del producto + enlace", a veces con el enlace en su propia línea; `new URL` sobre
+// ese texto lanzaba y la búsqueda terminaba en "ilegible" con el enlace correcto adentro
+// (#42: 36 de 92 búsquedas por enlace entre el 2 y el 22 de octubre).
+const ENLACE_EN_TEXTO = /https?:\/\/\S+/i;
+
+// Puntuación y comillas que una frase pega al final de un enlace ("(…html)." , «…html»).
+// Las URLs del índice terminan en `.html`, así que quitarlas nunca rompe una real.
+const PUNTUACION_FINAL = /[.,;:!?)\]"'»>]+$/;
+
+/**
+ * Normaliza lo que el usuario pegó: el enlace que haya dentro del texto, o el texto entero
+ * si no trae uno. Sin enlace y con espacios devuelve null: es un nombre tecleado, no una
+ * URL (antes salía null solo porque `new URL` lanzaba, y "cyberpuerta.mx/x.html Dell"
+ * pasaba con el espacio codificado como `%20`).
+ *
+ * Solo para la entrada del usuario. El recorrido del índice en `catalog.ts` usa
+ * `normalizeProductUrl` directo: sus 31,903 URLs son canónicas y no necesitan el regex
+ * (CR PR #62, evidencia insuficiente 2).
+ */
+export function normalizePastedUrl(raw: string): string | null {
+  const enlace = ENLACE_EN_TEXTO.exec(raw)?.[0] ?? raw.trim();
+  const candidato = enlace.replace(PUNTUACION_FINAL, "");
+  if (!candidato || /\s/.test(candidato)) return null;
+  return normalizeProductUrl(candidato);
 }
 
 /**

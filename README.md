@@ -81,7 +81,7 @@ hacia otro sitio).
 
 Cómo leer `buscar`:
 
-- `modo`: `sku` (código), `url` (enlace, aunque no se pueda leer) o `texto` (un nombre tecleado: espacios sin `http(s)://`; es la demanda de búsqueda por nombre, #15). Hasta el 2026-10-22 (PR #62) `texto` no se emitía: un nombre con espacios contaba como `url`/`ilegible`, así que esa serie cambia de significado en esa fecha (antes mezclaba nombres y enlaces ilegibles; desde entonces solo enlaces). Un nombre de una sola palabra no cambia: si cumple el charset de SKU (`monitor`) sigue en `sku`, y si no (`Cámara.4K`) sigue en `url`/`tienda_desconocida`; distinguirlos exigiría consultar el catálogo.
+- `modo`: `sku` (código), `url` (enlace, aunque no se pueda leer) o `texto` (un nombre tecleado: espacios sin `http(s)://`; es la demanda de búsqueda por nombre, #15). Hasta el 2026-10-22 (PR #62) `texto` no se emitía: un nombre con espacios contaba como `url`/`ilegible`, así que esa serie cambia de significado en esa fecha (antes mezclaba nombres y enlaces ilegibles; desde entonces solo enlaces). Un nombre de una sola palabra: si cumple el charset de SKU (`monitor`) sigue en `sku`; si lleva punto (`Cámara.4K`) sigue en `url`/`tienda_desconocida`; si no cumple el charset ni lleva punto (`cámara`) pasa de `url`/`tienda_desconocida` a `texto`/`ilegible`. Distinguir un SKU de una palabra exigiría consultar el catálogo.
 - `resultados`: en `sku` y `url` vale 1 si la búsqueda redirige a una ficha y 0 si
   no. En `sku` el redirect no comprueba que la ficha exista: cuenta propuestas,
   no aciertos.

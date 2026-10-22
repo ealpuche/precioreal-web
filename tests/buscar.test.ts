@@ -38,6 +38,21 @@ describe("decidirBusqueda", () => {
     });
   });
 
+  it("una palabra fija la frontera que documenta el README (CR PR #62 ronda 5)", async () => {
+    const resolver = vi.fn<Resolver>();
+    // Sin charset de SKU ni punto: antes url/tienda_desconocida, ahora texto.
+    expect(await decidirBusqueda("cámara", resolver)).toMatchObject({
+      modo: "texto",
+      resultado: "ilegible",
+    });
+    // Con punto: sigue siendo url/tienda_desconocida, como antes del PR.
+    expect(await decidirBusqueda("Cámara.4K", resolver)).toMatchObject({
+      modo: "url",
+      resultado: "tienda_desconocida",
+    });
+    expect(resolver).not.toHaveBeenCalled();
+  });
+
   it("un enlace de producto redirige a la clave que devuelve el catálogo", async () => {
     const d = await decidirBusqueda(KPM + "?utm_source=share", resuelveKpm);
     expect(d).toEqual({

@@ -20,8 +20,11 @@ permissions:
 
 jobs:
   claude:
-    # Evita que corra en copias del repositorio donde no existe el secreto, y en PRs de
-    # Dependabot: no reciben el secreto (el job fallaría) y cada corrida consume cuota (#43).
+    # Evita que corra en copias del repositorio donde no existe el secreto, y cuando quien
+    # dispara el evento es Dependabot: no recibe el secreto (el job fallaría) y cada corrida
+    # consume cuota (#43). Se usa `github.actor` y no el autor del PR a propósito: si el
+    # mantenedor cierra y reabre un PR de Dependabot, la revisión corre con secretos. Es el
+    # mismo mecanismo de re-revisión del resto de los PRs (revisión del PR #44).
     if: github.repository_owner == 'ealpuche' && github.actor != 'dependabot[bot]'
     uses: ealpuche/ai-code-review-workflows/.github/workflows/claude-pr-review.yml@v1
     # Sin bloque `with`, se usan los valores por defecto del workflow central

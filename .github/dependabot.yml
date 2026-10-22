@@ -1,6 +1,8 @@
-# Dependabot: actualizaciones de versión semanales (#43).
-# Las actualizaciones de seguridad son aparte: se activan en Settings → Code security
-# ("Dependabot security updates") y usan este mismo archivo para agrupar y etiquetar.
+# Dependabot: actualizaciones de versión semanales y agrupado de las de seguridad (#43).
+# Las actualizaciones de seguridad se activan en Settings → Advanced Security ("Dependabot
+# security updates"). Un grupo sin `applies-to` solo cubre actualizaciones de versión; para
+# que una de seguridad salga agrupada hace falta un grupo con `applies-to: security-updates`
+# (revisión del PR #44, H1).
 #
 # - `labels: []`: sin la etiqueta "dependencies" por defecto; el set de labels del proyecto
 #   es cerrado y no crece hasta que falte uno.
@@ -24,6 +26,13 @@ updates:
     groups:
       # Astro y su adaptador se mueven juntos: el adaptador 14 exige Astro 7 (#5).
       astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      # Lo mismo para las de seguridad: la vulnerabilidad crítica de `astro` se corrige con
+      # Astro 7, que necesita `@astrojs/cloudflare` 14 en el mismo PR.
+      astro-seguridad:
+        applies-to: security-updates
         patterns:
           - "astro"
           - "@astrojs/*"

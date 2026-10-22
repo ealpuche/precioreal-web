@@ -101,12 +101,6 @@ function referenceMs(product: CatalogProduct, levels: Level[]): number | null {
   return candidates.length ? Math.max(...candidates) : null;
 }
 
-/** Duración de cada nivel en días completos; el último dura hasta la referencia. */
-function levelDays(levels: Level[], i: number, refMs: number): number {
-  const end = i + 1 < levels.length ? levels[i + 1].t : refMs;
-  return Math.max(0, Math.floor((end - levels[i].t) / DAY_MS));
-}
-
 /**
  * Frases del bloque "Qué dice el historial". Devuelve [] si no hay serie legible.
  *
@@ -121,6 +115,7 @@ export function historySentences(product: CatalogProduct): string[] {
   if (ref === null) return [];
 
   const sentences: string[] = [];
+  const available = product.current.available;
   const firstSeen = Date.parse(product.first_seen_at ?? "");
   const since = Number.isFinite(firstSeen)
     ? Math.min(firstSeen, levels[0].t)
@@ -165,11 +160,13 @@ export function historySentences(product: CatalogProduct): string[] {
     if (Number.isFinite(min) && minIdx !== -1) {
       const isCurrent = minIdx === levels.length - 1;
       minIsCurrent = isCurrent;
-      const days = levelDays(levels, minIdx, ref);
+      // Sin "duró N días": el productor termina un nivel en el siguiente estado de cualquier
+      // tipo (build_levels), pero el contrato solo publica los disponibles, así que la
+      // distancia al siguiente punto puede incluir días agotado (revisión del PR #41).
       sentences.push(
         isCurrent
-          ? `Su mínimo de ${windowDays} días, ${formatMXN(String(min))}, empezó el ${formatDay(levels[minIdx].t)} y es el precio de hoy.`
-          : `Su mínimo de ${windowDays} días fue ${formatMXN(String(min))}, el ${formatDay(levels[minIdx].t)}, y duró ${plural(days, "día", "días")}.`,
+          ? `Su mínimo de ${windowDays} días, ${formatMXN(String(min))}, empezó el ${formatDay(levels[minIdx].t)} y es ${available ? "el precio de hoy" : "el último precio visto"}.`
+          : `Su mínimo de ${windowDays} días fue ${formatMXN(String(min))}, el ${formatDay(levels[minIdx].t)}.`,
       );
     }
   }
@@ -191,11 +188,22 @@ export function historySentences(product: CatalogProduct): string[] {
   if (minIsCurrent) return sentences;
 
   const current = levels[levels.length - 1];
-  const daysAtCurrent = levelDays(levels, levels.length - 1, ref);
+  // H1 de la revisión del PR #41: agotado no hay precio vigente, igual que en buildVerdict.
+  if (!available) {
+    sentences.push(
+      `El último precio visto fue ${formatMXN(String(current.price))}, registrado el ${formatDay(current.t)}.`,
+    );
+    return sentences;
+  }
+  // Desde `current.since` y no desde el último punto: si hubo un hueco sin stock al mismo
+  // precio, los puntos se colapsan y el inicio del nivel sería anterior al estado vigente.
+  const sinceCurrent = Date.parse(product.current.since);
+  const startCurrent = Number.isFinite(sinceCurrent) ? sinceCurrent : current.t;
+  const daysAtCurrent = Math.max(0, Math.floor((ref - startCurrent) / DAY_MS));
   sentences.push(
     daysAtCurrent === 0
-      ? `El precio actual, ${formatMXN(String(current.price))}, apareció el ${formatDay(current.t)}.`
-      : `Lleva ${plural(daysAtCurrent, "día", "días")} en ${formatMXN(String(current.price))}, desde el ${formatDay(current.t)}.`,
+      ? `El precio actual, ${formatMXN(String(current.price))}, apareció el ${formatDay(startCurrent)}.`
+      : `Lleva ${plural(daysAtCurrent, "día", "días")} en ${formatMXN(String(current.price))}, desde el ${formatDay(startCurrent)}.`,
   );
 
   return sentences;

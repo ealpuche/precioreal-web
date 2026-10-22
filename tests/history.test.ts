@@ -121,9 +121,7 @@ describe("historySentences", () => {
       ],
     });
     const s = historySentences(p);
-    expect(s).toContain(
-      "Su mínimo de 90 días fue $100, el 10 sep, y duró 4 días.",
-    );
+    expect(s).toContain("Su mínimo de 90 días fue $100, el 10 sep.");
     expect(s[s.length - 1]).toBe("Lleva 9 días en $130, desde el 30 sep.");
   });
 
@@ -337,4 +335,57 @@ describe("historySentences: regresiones de la revisión del PR #41", () => {
     });
     expect(historySentences(p).join(" ")).not.toContain("duró");
   });
+});
+
+describe("historySentences: precio vigente y agotado", () => {
+  it("agotado con el mínimo como último nivel: dice 'último precio visto', no 'de hoy'", () => {
+    const p = {
+      ...real,
+      current: { ...real.current, available: false },
+    } as CatalogProduct;
+    const s = historySentences(p);
+    expect(s).toContain(
+      "Su mínimo de 90 días, $559, empezó el 19 oct y es el último precio visto.",
+    );
+  });
+
+  it("los días al precio actual cuentan desde current.since, no desde el nivel colapsado", () => {
+    // Mismo precio antes y después de un hueco sin stock: la serie colapsa ambos puntos,
+    // pero el estado vigente empezó en current.since.
+    const p = make({
+      current: {
+        price: "130.00",
+        since: "2026-10-08T00:00:00Z",
+        available: true,
+      },
+      min_90d: "50.00",
+      series: [
+        ["2026-09-01T00:00:00Z", "120.00", true],
+        ["2026-09-20T00:00:00Z", "130.00", true],
+        ["2026-10-08T00:00:00Z", "130.00", true],
+      ],
+    });
+    const s = historySentences(p);
+    expect(s[s.length - 1]).toBe("Lleva 2 días en $130, desde el 7 oct.");
+  });
+});
+
+it("agotado sin ser el mínimo: cierra con el último precio visto y su fecha", () => {
+  const p = make({
+    current: {
+      price: "130.00",
+      since: "2026-10-05T00:00:00Z",
+      available: false,
+    },
+    series: [
+      ["2026-09-01T00:00:00Z", "120.00", true],
+      ["2026-09-11T00:00:00Z", "100.00", true],
+      ["2026-09-15T00:00:00Z", "150.00", true],
+      ["2026-10-01T00:00:00Z", "130.00", true],
+    ],
+  });
+  const s = historySentences(p);
+  expect(s[s.length - 1]).toBe(
+    "El último precio visto fue $130, registrado el 30 sep.",
+  );
 });

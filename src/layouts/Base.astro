@@ -42,19 +42,19 @@ const beacon =
       rel="stylesheet"
     />
     <slot name="head" />
-    {
-      beacon && (
-        <script
-          is:inline
-          defer
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon={beacon}
-        />
-      )
-    }
+    {beacon && (
+      <script
+        is:inline
+        defer
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon={beacon}
+      />
+    )}
   </head>
   <body>
-    <a class="skip" href="#contenido">Saltar al contenido</a>
+    <a class="skip" href="#contenido">
+      Saltar al contenido
+    </a>
     <header class="site-header">
       <div class="container bar">
         <a href="/" class="brand" aria-label="PrecioReal.mx, inicio">
@@ -81,9 +81,9 @@ const beacon =
         <nav aria-label="Pie de página" class="foot-links">
           <a href="/buscar">Buscar un producto</a>
           <a href="/datos">Datos para negocios</a>
-          <a href={TELEGRAM_URL} rel="noopener" target="_blank"
-            >Ofertas en Telegram</a
-          >
+          <a href={TELEGRAM_URL} rel="noopener" target="_blank">
+            Ofertas en Telegram
+          </a>
           <a href={`mailto:${CONTACT_EMAIL}`}>Contacto</a>
         </nav>
         <p class="legal">

@@ -27,10 +27,9 @@ const mailto = `mailto:${CONTACT_EMAIL}?subject=${asunto}&body=${cuerpo}`;
       <h1>El historial de precios, como dato.</h1>
       <p class="lede">
         Registramos cada cambio de precio de más de
-        <span class="num">{COBERTURA.productos}</span> productos de {
-          COBERTURA.tienda
-        }, todos los días. Si vendes, distribuyes o cubres esas categorías, esos
-        datos te dicen cómo se mueve tu mercado.
+        <span class="num">{COBERTURA.productos}</span> productos de{" "}
+        {COBERTURA.tienda}, todos los días. Si vendes, distribuyes o cubres esas
+        categorías, esos datos te dicen cómo se mueve tu mercado.
       </p>
     </header>
 
@@ -76,30 +75,32 @@ const mailto = `mailto:${CONTACT_EMAIL}?subject=${asunto}&body=${cuerpo}`;
             <tr>
               <th scope="col">Fecha (UTC)</th>
               <th scope="col">SKU</th>
-              <th scope="col" class="r">Precio</th>
+              <th scope="col" class="r">
+                Precio
+              </th>
             </tr>
           </thead>
           <tbody class="num">
-            <tr
-              ><td>2026-10-01 19:16</td><td>KPM-610B</td><td class="r"
-                >1,429.00</td
-              ></tr
-            >
-            <tr
-              ><td>2026-10-15 13:16</td><td>KPM-610B</td><td class="r"
-                >1,459.00</td
-              ></tr
-            >
-            <tr
-              ><td>2026-10-19 19:16</td><td>KPM-610B</td><td class="r"
-                >1,449.00</td
-              ></tr
-            >
-            <tr
-              ><td>2026-10-20 01:14</td><td>KPM-610B</td><td class="r"
-                >559.00</td
-              ></tr
-            >
+            <tr>
+              <td>2026-10-01 19:16</td>
+              <td>KPM-610B</td>
+              <td class="r">1,429.00</td>
+            </tr>
+            <tr>
+              <td>2026-10-15 13:16</td>
+              <td>KPM-610B</td>
+              <td class="r">1,459.00</td>
+            </tr>
+            <tr>
+              <td>2026-10-19 19:16</td>
+              <td>KPM-610B</td>
+              <td class="r">1,449.00</td>
+            </tr>
+            <tr>
+              <td>2026-10-20 01:14</td>
+              <td>KPM-610B</td>
+              <td class="r">559.00</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -108,11 +109,13 @@ const mailto = `mailto:${CONTACT_EMAIL}?subject=${asunto}&body=${cuerpo}`;
     <section aria-labelledby="contacto" class="block contact card">
       <h2 id="contacto">Cuéntanos qué necesitas</h2>
       <p>
-        Escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> con tu
-        empresa, las categorías que te interesan y para qué usarías los datos. Te
-        respondemos con una muestra.
+        Escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> con
+        tu empresa, las categorías que te interesan y para qué usarías los
+        datos. Te respondemos con una muestra.
       </p>
-      <a class="btn btn-primary" href={mailto}>Escribir correo</a>
+      <a class="btn btn-primary" href={mailto}>
+        Escribir correo
+      </a>
     </section>
   </div>
 </Base>

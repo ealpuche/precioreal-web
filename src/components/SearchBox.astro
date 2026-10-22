@@ -21,7 +21,9 @@ const errorId = `${inputId}-error`;
 ---
 
 <form class:list={["search", variant]} method="get" action="/buscar">
-  <label class="label" for={inputId}>{label}</label>
+  <label class="label" for={inputId}>
+    {label}
+  </label>
   <div class="row">
     <input
       id={inputId}
@@ -38,15 +40,15 @@ const errorId = `${inputId}-error`;
       aria-describedby={error ? errorId : undefined}
       required
     />
-    <button class="btn btn-primary" type="submit">Ver historial</button>
+    <button class="btn btn-primary" type="submit">
+      Ver historial
+    </button>
   </div>
-  {
-    error && (
-      <p class="error" id={errorId} role="alert">
-        {error}
-      </p>
-    )
-  }
+  {error && (
+    <p class="error" id={errorId} role="alert">
+      {error}
+    </p>
+  )}
   <details class="help">
     <summary>¿Dónde encuentro el código?</summary>
     <p>

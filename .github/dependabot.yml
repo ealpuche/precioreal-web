@@ -1,0 +1,61 @@
+# Dependabot: actualizaciones de versión semanales y agrupado de las de seguridad (#43).
+# Las actualizaciones de seguridad se activan en Settings → Advanced Security ("Dependabot
+# security updates"). Un grupo sin `applies-to` solo cubre actualizaciones de versión; para
+# que una de seguridad salga agrupada hace falta un grupo con `applies-to: security-updates`
+# (revisión del PR #44, H1).
+#
+# - `labels: []`: sin la etiqueta "dependencies" por defecto; el set de labels del proyecto
+#   es cerrado y no crece hasta que falte uno.
+# - Los PRs de Dependabot no reciben los secretos del repo, sino los de Dependabot. Para que
+#   el quality gate de SonarCloud corra en ellos, SONAR_TOKEN debe existir también como
+#   secreto de Dependabot (ver la descripción del PR que agrega este archivo).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 5
+    labels: []
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      # Astro y su adaptador se mueven juntos: el adaptador 14 exige Astro 7 (#5).
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      # Lo mismo para las de seguridad: la vulnerabilidad crítica de `astro` se corrige con
+      # Astro 7, que necesita `@astrojs/cloudflare` 14 en el mismo PR.
+      astro-seguridad:
+        applies-to: security-updates
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      dev-menores:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 3
+    labels: []
+    commit-message:
+      prefix: ci
+    groups:
+      # Las acciones van fijadas a SHA; Dependabot actualiza el SHA y el comentario de versión
+      # (cubre lo que pide #33: pasar a las versiones con Node 24).
+      acciones:
+        patterns:
+          - "*"

@@ -19,79 +19,40 @@
 // arreglar. En el caso normal —status 404— la etiqueta sobra y no estorba
 // (CR PR #22, H2).
 import Base from "../layouts/Base.astro";
+import SearchBox from "../components/SearchBox.astro";
 ---
 
 <Base
-  showNav
-  title="Página no encontrada — PrecioReal"
+  title="Página no encontrada — PrecioReal.mx"
   description="La página que buscas no existe. Consulta el historial de precios de cualquier producto que rastreamos."
 >
   <Fragment slot="head">
     <meta name="robots" content="noindex" />
   </Fragment>
-  <div class="page">
-    <div class="notice">
-      <h1>Esta página no existe.</h1>
-      <p>
-        Puede que el enlace esté mal escrito o que la página se haya movido. Si
-        buscabas un producto, pega su enlace de la tienda y te llevamos a su
-        historial.
-      </p>
-      <div class="actions">
-        <a class="btn-primary" href="/buscar">Buscar un producto</a>
-        <a class="btn-ghost" href="/">Ir al inicio</a>
-      </div>
-    </div>
+  <div class="container page">
+    <p class="eyebrow">Error 404</p>
+    <h1>Esta página no existe.</h1>
+    <p class="sub">
+      Puede que el enlace esté mal escrito o que la página se haya movido. Si
+      buscabas un producto, consúltalo aquí.
+    </p>
+    <SearchBox />
+    <p><a href="/">Ir al inicio</a></p>
   </div>
 </Base>
 
 <style>
   .page {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 24px 56px;
-    font-family: var(--sans);
-    color: var(--text);
+    display: grid;
+    gap: var(--sp-4);
+    max-width: 720px;
+    padding-top: var(--sp-7);
   }
-  .notice {
-    padding: 80px 0;
-    text-align: center;
-  }
-  .notice h1 {
-    font-size: 26px;
-    color: var(--text-strong);
-    margin: 0;
-  }
-  .notice p {
-    color: var(--muted);
-    max-width: 52ch;
-    margin: 12px auto 0;
-    text-wrap: pretty;
-  }
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 28px;
-  }
-  .btn-primary {
-    font-family: var(--mono);
+  h1 {
+    font-size: var(--fs-32);
     font-weight: 700;
-    font-size: 14px;
-    background: var(--green);
-    color: var(--bg);
-    padding: 13px 22px;
-    border-radius: 4px;
-    text-decoration: none;
   }
-  .btn-ghost {
-    font-family: var(--mono);
-    font-size: 14px;
-    color: var(--green);
-    border: 1px solid var(--line);
-    padding: 13px 22px;
-    border-radius: 4px;
-    text-decoration: none;
+  .sub {
+    color: var(--muted);
   }
 </style>

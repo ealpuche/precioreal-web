@@ -2,7 +2,7 @@
 interface Stat {
   label: string;
   value: string;
-  tone?: "default" | "green" | "amber";
+  tone?: "default" | "good" | "warn";
 }
 interface Props {
   stats: Stat[];
@@ -10,46 +10,51 @@ interface Props {
 const { stats } = Astro.props;
 ---
 
-<div class="stats">
+<dl class="stats">
   {
     stats.map((s) => (
       <div class="stat">
-        <div class="k">{s.label}</div>
-        <div class={`v ${s.tone ?? "default"}`}>{s.value}</div>
+        <dt>{s.label}</dt>
+        <dd class:list={["num", s.tone ?? "default"]}>{s.value}</dd>
       </div>
     ))
   }
-</div>
+</dl>
 
 <style>
   .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1px;
+    margin: 0;
     background: var(--line);
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: var(--radius);
     overflow: hidden;
   }
-  .stat {
-    background: var(--bg);
-    padding: 14px 16px;
+  @media (min-width: 720px) {
+    .stats {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
   }
-  .k {
-    font-size: 13px;
+  .stat {
+    background: var(--surface);
+    padding: var(--sp-3) var(--sp-4);
+  }
+  dt {
+    font-size: var(--fs-12);
     color: var(--muted);
   }
-  .v {
-    font-family: var(--mono);
-    font-size: 18px;
-    color: var(--text-strong);
-    font-variant-numeric: tabular-nums;
-    margin-top: 2px;
+  dd {
+    margin: 2px 0 0;
+    font-size: var(--fs-18);
+    font-weight: 500;
+    color: var(--text);
   }
-  .v.green {
-    color: var(--green);
+  dd.good {
+    color: var(--down);
   }
-  .v.amber {
-    color: var(--amber);
+  dd.warn {
+    color: var(--up);
   }
 </style>

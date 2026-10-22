@@ -138,6 +138,19 @@ describe("/ir/{tienda}/{slug} (web#60)", () => {
     expect(db.calls).toHaveLength(0);
   });
 
+  it("un teléfono con 'bot' en el modelo sí cuenta (CR PR #63 ronda 2)", async () => {
+    feedResponde(ficha);
+    const ua =
+      "Mozilla/5.0 (Linux; Android 13; CUBOT X30) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36";
+    const { res, db } = llamar(
+      "/ir/cyberpuerta/KPM-610B?de=telegram",
+      mockDb(),
+      ua,
+    );
+    await res;
+    expect(db.calls).toHaveLength(1);
+  });
+
   it("HEAD redirige igual y no cuenta", async () => {
     feedResponde(ficha);
     const r = await HEAD({

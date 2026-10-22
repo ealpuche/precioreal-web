@@ -4,8 +4,16 @@ export const prerender = false;
 import Base from "../../layouts/Base.astro";
 import StatGrid from "../../components/StatGrid.astro";
 import PriceChart from "../../components/PriceChart.astro";
+import SearchBox from "../../components/SearchBox.astro";
 import { fetchProduct } from "../../lib/catalog";
 import { formatMXN, buildVerdict, pricePrefix } from "../../lib/format";
+import {
+  buildAnchor,
+  formatDayYear,
+  historySentences,
+  recentChanges,
+  verdictBadge,
+} from "../../lib/history";
 import {
   buildTitle,
   buildDescription,
@@ -32,29 +40,67 @@ const imagen =
 if (!result.ok) {
   Astro.response.status = result.reason === "upstream_error" ? 502 : 404;
 }
+
+// Todo se deriva en el servidor: la ficha es la página de adquisición orgánica y Google
+// tiene que leer el historial en el HTML, no en JS (#28, #40).
+const p = result.ok ? result.product : null;
+const verdict = p ? buildVerdict(p) : null;
+const badge = p ? verdictBadge(p) : null;
+const anchor = p ? buildAnchor(p) : null;
+const sentences = p ? historySentences(p) : [];
+const changes = p ? recentChanges(p.series, 8) : [];
+const updated = p ? Date.parse(p.generated_at) : NaN;
+const updatedLabel = Number.isFinite(updated) ? formatDayYear(updated) : null;
+const fmtDelta = (d: number) => formatMXN(String(Math.abs(d)));
+// Con historial insuficiente solo quedaría "precio actual", que el ancla ya muestra: una
+// grilla de una celda dejaba media fila vacía (#40).
+const stats = p
+  ? [
+      {
+        label: p.current.available ? "Precio actual" : "Último precio visto",
+        value: `${pricePrefix(p)}${formatMXN(p.current.price)}`,
+      },
+      ...(p.typical_90d
+        ? [{ label: "Habitual", value: formatMXN(p.typical_90d) }]
+        : []),
+      ...(p.min_90d
+        ? [
+            {
+              label: `Mínimo ${p.window_days} d`,
+              value: formatMXN(p.min_90d),
+              tone: "good" as const,
+            },
+          ]
+        : []),
+      ...(p.max_90d
+        ? [
+            {
+              label: `Máximo ${p.window_days} d`,
+              value: formatMXN(p.max_90d),
+            },
+          ]
+        : []),
+    ]
+  : [];
 ---
 
 <Base
-  showNav
-  title={result.ok
-    ? buildTitle(result.product)
-    : result.reason === "upstream_error"
-      ? "Error temporal — PrecioReal"
-      : "Producto no encontrado — PrecioReal"}
-  description={result.ok ? buildDescription(result.product) : undefined}
+  title={p
+    ? buildTitle(p)
+    : !result.ok && result.reason === "upstream_error"
+      ? "Error temporal — PrecioReal.mx"
+      : "Producto no encontrado — PrecioReal.mx"}
+  description={p ? buildDescription(p) : undefined}
 >
   {
-    result.ok && (
+    p && (
       <Fragment slot="head">
         <link rel="canonical" href={canonical} />
         <meta property="og:type" content="product" />
-        <meta property="og:site_name" content="PrecioReal" />
+        <meta property="og:site_name" content="PrecioReal.mx" />
         <meta property="og:url" content={canonical} />
-        <meta property="og:title" content={buildTitle(result.product)} />
-        <meta
-          property="og:description"
-          content={buildDescription(result.product)}
-        />
+        <meta property="og:title" content={buildTitle(p)} />
+        <meta property="og:description" content={buildDescription(p)} />
         {imagen && <meta property="og:image" content={imagen} />}
         <meta
           name="twitter:card"
@@ -66,106 +112,115 @@ if (!result.ok) {
       </Fragment>
     )
   }
-  <div class="page">
-    <nav class="crumbs"><a href="/">inicio</a> / {tienda}</nav>
 
+  <div class="container page">
     {
-      !result.ok && result.reason === "invalid_route" && (
+      !result.ok && (
         <div class="notice">
-          <h1>No existe esa tienda o ese código.</h1>
-          <p>Revisa el enlace. Hoy solo tenemos historial de Cyberpuerta.</p>
-        </div>
-      )
-    }
-
-    {
-      !result.ok && result.reason === "not_found" && (
-        <div class="notice">
-          <h1>No encontramos este producto.</h1>
-          <p>
-            Puede que ya no esté en el catálogo de la tienda o que el enlace sea
-            incorrecto.
-          </p>
-        </div>
-      )
-    }
-
-    {
-      !result.ok && result.reason === "upstream_error" && (
-        <div class="notice">
-          <h1>No pudimos cargar este producto.</h1>
-          <p>Puede ser un problema temporal. Intenta de nuevo en un momento.</p>
-        </div>
-      )
-    }
-
-    {
-      result.ok &&
-        (() => {
-          const p = result.product;
-          const verdict = buildVerdict(p);
-          return (
+          {result.reason === "invalid_route" && (
             <>
-              <div class="head">
-                <h1>{p.name}</h1>
-                <div class="sub">
-                  {p.sku} · {p.site} · {p.obs} observaciones
-                </div>
+              <h1>No existe esa tienda o ese código.</h1>
+              <p>
+                Revisa el enlace. Hoy publicamos el historial de Cyberpuerta.
+              </p>
+            </>
+          )}
+          {result.reason === "not_found" && (
+            <>
+              <h1>No encontramos este producto.</h1>
+              <p>
+                Puede que ya no esté en el catálogo de la tienda o que el enlace
+                sea incorrecto.
+              </p>
+            </>
+          )}
+          {result.reason === "upstream_error" && (
+            <>
+              <h1>No pudimos cargar este producto.</h1>
+              <p>
+                Puede ser un problema temporal. Intenta de nuevo en un momento.
+              </p>
+            </>
+          )}
+          <div class="notice-search">
+            <SearchBox label="Consulta otro producto" />
+          </div>
+        </div>
+      )
+    }
+
+    {
+      p && verdict && badge && (
+        <>
+          <nav class="crumbs" aria-label="Ruta">
+            <ol>
+              <li>
+                <a href="/">Inicio</a>
+              </li>
+              <li>{p.site}</li>
+              {p.category && <li>{p.category}</li>}
+            </ol>
+          </nav>
+
+          <div class="layout">
+            <section class="summary" aria-labelledby="producto">
+              <h1 id="producto">{p.name}</h1>
+              <p class="ids num">
+                {p.sku} · {p.site}
+              </p>
+
+              <div class:list={["verdict", verdict.tone]}>
+                <span class:list={["badge", badge.tone]}>{badge.label}</span>
+                <p class="headline">{verdict.headline}</p>
+                <p class="detail">{verdict.detail}</p>
               </div>
 
-              <p class={`verdict ${verdict.tone}`}>{verdict.headline}</p>
-              <p class="verdict-sub">{verdict.detail}</p>
+              {anchor ? (
+                <div
+                  class="anchor"
+                  aria-label="Precio habitual y precio de hoy"
+                >
+                  <div class="anchor-item">
+                    <span class="anchor-k">Habitual {p.window_days} días</span>
+                    <span class="anchor-v num">{anchor.typical}</span>
+                  </div>
+                  <span class="arrow" aria-hidden="true">
+                    →
+                  </span>
+                  <div class="anchor-item">
+                    <span class="anchor-k">Hoy en {p.site}</span>
+                    <span class="anchor-v today num">
+                      {pricePrefix(p)}
+                      {anchor.current}
+                    </span>
+                  </div>
+                  <p class:list={["anchor-note", anchor.tone]}>{anchor.text}</p>
+                </div>
+              ) : (
+                <div class="anchor single">
+                  <div class="anchor-item">
+                    <span class="anchor-k">
+                      {p.current.available
+                        ? `Hoy en ${p.site}`
+                        : "Último precio visto"}
+                    </span>
+                    <span class="anchor-v today num">
+                      {pricePrefix(p)}
+                      {formatMXN(p.current.price)}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-              <PriceChart
-                series={p.series}
-                typical={p.typical_90d}
-                min={p.min_90d}
-                max={p.max_90d}
-                generatedAt={p.generated_at}
-              />
+              <p class="meta">
+                Fuente: {p.site}
+                {updatedLabel && <> · actualizado {updatedLabel}</>} · {p.obs}{" "}
+                {p.obs === 1 ? "observación" : "observaciones"}
+              </p>
 
-              <StatGrid
-                stats={[
-                  p.current.available
-                    ? {
-                        label: "precio actual",
-                        value: `${pricePrefix(p)}${formatMXN(p.current.price)}`,
-                        tone: "green",
-                      }
-                    : {
-                        label: "último precio visto",
-                        value: `${pricePrefix(p)}${formatMXN(p.current.price)}`,
-                      },
-                  ...(p.typical_90d
-                    ? [
-                        {
-                          label: "precio habitual",
-                          value: formatMXN(p.typical_90d),
-                        },
-                      ]
-                    : []),
-                  ...(p.min_90d
-                    ? [
-                        {
-                          label: `mínimo ${p.window_days}d`,
-                          value: formatMXN(p.min_90d),
-                        },
-                      ]
-                    : []),
-                  ...(p.max_90d
-                    ? [
-                        {
-                          label: `máximo ${p.window_days}d`,
-                          value: formatMXN(p.max_90d),
-                        },
-                      ]
-                    : []),
-                ]}
-              />
-
-              <div class="actions">
+              <div class="cta">
                 <a
-                  class="btn-primary"
+                  class="btn btn-primary"
                   href={p.url}
                   target="_blank"
                   rel="noopener"
@@ -176,9 +231,113 @@ if (!result.ok) {
                   Ver en {p.site}
                 </a>
               </div>
-            </>
-          );
-        })()
+            </section>
+
+            <div class="detail-col">
+              <section aria-labelledby="grafica">
+                <h2 id="grafica" class="sr-only">
+                  Gráfica del historial de precios
+                </h2>
+                <PriceChart
+                  series={p.series}
+                  typical={p.typical_90d}
+                  min={p.min_90d}
+                  max={p.max_90d}
+                  generatedAt={p.generated_at}
+                />
+              </section>
+
+              {stats.length > 1 && <StatGrid stats={stats} />}
+
+              {sentences.length > 0 && (
+                <section class="block" aria-labelledby="historial">
+                  <h2 id="historial">Qué dice el historial</h2>
+                  <ul class="facts">
+                    {sentences.map((s) => (
+                      <li>{s}</li>
+                    ))}
+                  </ul>
+                  {p.typical_90d && (
+                    <p class="note">
+                      El precio habitual es la mediana de sus precios en los
+                      últimos {p.window_days} días, ponderada por el tiempo que
+                      duró cada uno. Es el mismo cálculo del canal de Telegram.
+                    </p>
+                  )}
+                </section>
+              )}
+
+              {changes.length > 1 && (
+                <section class="block" aria-labelledby="cambios">
+                  <h2 id="cambios">Cambios de precio</h2>
+                  <table class="changes">
+                    <caption class="sr-only">
+                      Últimos {changes.length} cambios de precio, del más
+                      reciente al más antiguo
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Fecha</th>
+                        <th scope="col" class="r">
+                          Precio
+                        </th>
+                        <th scope="col" class="r">
+                          Cambio
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {changes.map((c) => (
+                        <tr>
+                          <td class="num">
+                            {formatDayYear(Date.parse(c.iso))}
+                          </td>
+                          <td class="num r">{formatMXN(String(c.price))}</td>
+                          <td
+                            class:list={[
+                              "num",
+                              "r",
+                              c.delta === null
+                                ? ""
+                                : c.delta < 0
+                                  ? "down"
+                                  : "up",
+                            ]}
+                          >
+                            {c.delta === null ? (
+                              <span>primer precio</span>
+                            ) : (
+                              <>
+                                <span class="sr-only">
+                                  {c.delta < 0 ? "Bajó" : "Subió"}
+                                </span>
+                                <span aria-hidden="true">
+                                  {c.delta < 0 ? "▼" : "▲"}
+                                </span>{" "}
+                                {`${c.delta < 0 ? "−" : "+"}${fmtDelta(c.delta)}`}
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </section>
+              )}
+
+              <section class="block" aria-labelledby="otro">
+                <h2 id="otro">Consulta otro producto</h2>
+                <SearchBox label="Código o enlace de Cyberpuerta" />
+              </section>
+
+              <p class="b2b">
+                ¿Necesitas estos datos para tu negocio?{" "}
+                <a href="/datos">Datos para negocios</a>
+              </p>
+            </div>
+          </div>
+        </>
+      )
     }
     {
       /* Dentro de <Base>: fuera de él, Astro lo emitía después de </html> (CR PR #31). */
@@ -191,74 +350,267 @@ if (!result.ok) {
 
 <style>
   .page {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 24px 56px;
-    font-family: var(--sans);
-    color: var(--text);
+    padding-top: var(--sp-4);
+    padding-bottom: 96px;
   }
-  .crumbs {
-    padding: 24px 0 8px;
-    font-family: var(--mono);
-    font-size: 12px;
+  @media (min-width: 960px) {
+    .page {
+      padding-bottom: var(--sp-6);
+    }
+  }
+  .crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-1);
+    list-style: none;
+    margin: 0 0 var(--sp-4);
+    padding: 0;
+    font-size: var(--fs-14);
     color: var(--muted);
+  }
+  .crumbs li + li::before {
+    content: "/";
+    margin-right: var(--sp-1);
+    color: var(--line-strong);
   }
   .crumbs a {
     color: var(--muted);
   }
-  .head h1 {
-    font-size: 26px;
-    color: var(--text-strong);
-    margin: 8px 0 4px;
+  .layout {
+    display: grid;
+    gap: var(--sp-6);
   }
-  .sub {
-    font-family: var(--mono);
-    font-size: 12px;
+  @media (min-width: 960px) {
+    .layout {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: start;
+      gap: var(--sp-7);
+    }
+    .summary {
+      position: sticky;
+      top: var(--sp-5);
+    }
+  }
+  .summary {
+    display: grid;
+    gap: var(--sp-4);
+  }
+  h1 {
+    font-size: var(--fs-24);
+    font-weight: 700;
+  }
+  @media (min-width: 720px) {
+    h1 {
+      font-size: var(--fs-32);
+    }
+  }
+  .ids {
+    font-size: var(--fs-12);
     color: var(--muted);
+    margin-top: calc(-1 * var(--sp-2));
   }
   .verdict {
-    font-size: 22px;
-    color: var(--text-strong);
-    margin: 24px 0 4px;
+    display: grid;
+    gap: var(--sp-2);
+    padding: var(--sp-4);
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left-width: 4px;
   }
-  .verdict.good b,
   .verdict.good {
-    color: var(--green);
+    border-left-color: var(--down);
   }
   .verdict.warn {
-    color: var(--amber);
+    border-left-color: var(--up);
   }
-  .verdict-sub {
-    color: var(--muted);
-    font-size: 14px;
-    margin: 0 0 24px;
-    max-width: 60ch;
+  .verdict.neutral {
+    border-left-color: var(--line-strong);
   }
-  .actions {
-    margin-top: 28px;
-  }
-  .btn-primary {
-    display: inline-block;
+  .badge {
+    width: fit-content;
     font-family: var(--mono);
+    font-size: var(--fs-12);
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .badge.good {
+    background: var(--down-wash);
+    color: var(--down);
+  }
+  .badge.warn {
+    background: var(--up-wash);
+    color: var(--up);
+  }
+  .badge.neutral {
+    background: var(--bg);
+    color: var(--muted);
+  }
+  .headline {
+    font-size: var(--fs-20);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .detail {
+    color: var(--muted);
+    font-size: var(--fs-14);
+  }
+  .anchor {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--sp-2) var(--sp-4);
+  }
+  .anchor-item {
+    display: grid;
+    gap: 2px;
+  }
+  .anchor-k {
+    font-size: var(--fs-12);
+    color: var(--muted);
+  }
+  .anchor-v {
+    font-size: var(--fs-20);
+    color: var(--muted);
+  }
+  .anchor-v.today {
+    font-size: var(--fs-40);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+  }
+  .arrow {
+    font-family: var(--mono);
+    color: var(--muted);
+    font-size: var(--fs-20);
+    padding-bottom: 6px;
+  }
+  .anchor-note {
+    flex-basis: 100%;
+    font-size: var(--fs-14);
+    font-weight: 600;
+  }
+  .anchor-note.good {
+    color: var(--down);
+  }
+  .anchor-note.warn {
+    color: var(--up);
+  }
+  .anchor-note.neutral {
+    color: var(--muted);
+  }
+  .meta {
+    font-size: var(--fs-12);
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+  /* En móvil la acción a la tienda queda fija abajo, siempre visible tras el veredicto. */
+  .cta {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+  }
+  .cta .btn {
+    width: 100%;
+  }
+  @media (min-width: 960px) {
+    .cta {
+      position: static;
+      padding: 0;
+      background: none;
+      border: 0;
+    }
+    .cta .btn {
+      width: auto;
+    }
+  }
+  .detail-col {
+    display: grid;
+    gap: var(--sp-6);
+    min-width: 0;
+  }
+  .block {
+    display: grid;
+    gap: var(--sp-3);
+  }
+  h2 {
+    font-size: var(--fs-20);
     font-weight: 700;
-    font-size: 14px;
-    background: var(--green);
-    color: var(--bg);
-    padding: 13px 22px;
-    border-radius: 4px;
-    text-decoration: none;
+  }
+  .facts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .facts li {
+    padding: var(--sp-3) 0;
+    border-bottom: 1px solid var(--line);
+    max-width: var(--reading);
+  }
+  .note {
+    font-size: var(--fs-14);
+    color: var(--muted);
+    max-width: var(--reading);
+  }
+  .changes {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-size: var(--fs-14);
+  }
+  .changes th {
+    text-align: left;
+    font-weight: 600;
+    font-size: var(--fs-12);
+    color: var(--muted);
+    padding: var(--sp-2) var(--sp-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .changes td {
+    padding: var(--sp-2) var(--sp-3);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .changes tr:last-child td {
+    border-bottom: 0;
+  }
+  .changes .r {
+    text-align: right;
+  }
+  .changes .down {
+    color: var(--down);
+  }
+  .changes .up {
+    color: var(--up);
+  }
+  .b2b {
+    font-size: var(--fs-14);
+    color: var(--muted);
   }
   .notice {
-    padding: 60px 0;
+    display: grid;
+    gap: var(--sp-3);
+    justify-items: center;
     text-align: center;
-  }
-  .notice h1 {
-    font-size: 22px;
-    color: var(--text-strong);
+    padding: var(--sp-8) 0;
   }
   .notice p {
     color: var(--muted);
     max-width: 50ch;
-    margin: 8px auto 0;
+  }
+  .notice-search {
+    width: 100%;
+    max-width: 640px;
+    margin-top: var(--sp-5);
+    text-align: left;
   }
 </style>

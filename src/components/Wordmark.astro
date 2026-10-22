@@ -1,0 +1,38 @@
+---
+import Symbol from "./Symbol.astro";
+
+interface Props {
+  size?: "sm" | "md";
+}
+const { size = "md" } = Astro.props;
+---
+
+<span class:list={["wordmark", size]}>
+  <Symbol size={size === "sm" ? 26 : 34} />
+  <span class="name">PrecioReal<span class="tld">.mx</span></span>
+</span>
+
+<style>
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+  }
+  .name {
+    font-family: var(--sans);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .md .name {
+    font-size: var(--fs-20);
+  }
+  .sm .name {
+    font-size: var(--fs-16);
+  }
+  .tld {
+    color: var(--muted);
+    font-weight: 600;
+  }
+</style>

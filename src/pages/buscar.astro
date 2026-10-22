@@ -11,7 +11,7 @@ import {
   tiendaNoPublicada,
 } from "../lib/product-url";
 import { SKU_RE } from "../lib/sku";
-import "../styles/tokens.css";
+import SearchBox from "../components/SearchBox.astro";
 
 const q = (Astro.url.searchParams.get("q") ?? "").trim();
 let error: string | null = null;
@@ -37,8 +37,10 @@ if (q) {
     const normalized = normalizeProductUrl(q);
     if (!normalized) {
       resultado = "ilegible";
+      // Casi siempre es un nombre tecleado: el mensaje da la salida en vez de un callejón
+      // (auditoría V0, #40). La búsqueda por nombre es #15.
       error =
-        "Eso no parece un código de producto ni un enlace. Revisa lo que pegaste.";
+        "Eso no parece un código ni un enlace. Todavía no buscamos por nombre: abre el producto en Cyberpuerta y copia su código (SKU) o el enlace de la página.";
     } else {
       const tiendaPendiente = tiendaNoPublicada(normalized);
       if (tiendaPendiente) {
@@ -65,7 +67,7 @@ if (q) {
             : "no_encontrado";
         error =
           resolved.reason === "upstream_error"
-            ? "No pudimos consultar el catálogo en este momento. Intenta de nuevo en un momento."
+            ? "No pudimos consultar el catálogo con ese enlace en este momento. Prueba con el código del producto: aparece como SKU en su página de Cyberpuerta."
             : "No encontramos ese producto en nuestro catálogo de Cyberpuerta.";
       }
     }
@@ -99,85 +101,32 @@ if (q) {
 }
 ---
 
-<Base title="Buscar producto — PrecioReal" showNav>
-  <div class="page">
+<Base
+  title="Buscar producto — PrecioReal.mx"
+  description="Pega el código o el enlace de un producto de Cyberpuerta y consulta su historial de precios."
+>
+  <div class="container page">
     <h1>Buscar producto</h1>
     <p class="sub">
-      Escribe el código de un producto o pega el enlace de su página en
-      Cyberpuerta.
+      Consulta el historial de precios de un producto de Cyberpuerta con su
+      código o el enlace de su página.
     </p>
-    <form id="buscar-form" class="form" method="get">
-      <input
-        type="text"
-        id="sku-input"
-        name="q"
-        value={q}
-        placeholder="ej. 010-02551-01 o pega el enlace del producto"
-        autocomplete="off"
-      />
-      <button type="submit" class="btn-primary">Buscar</button>
-    </form>
-    {
-      error && (
-        <p id="buscar-error" class="error">
-          {error}
-        </p>
-      )
-    }
+    <SearchBox value={q} error={error} />
   </div>
 </Base>
 
 <style>
   .page {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 60px 24px;
-    font-family: var(--sans);
-    color: var(--text);
+    display: grid;
+    gap: var(--sp-4);
+    max-width: 720px;
+    padding-top: var(--sp-7);
   }
   h1 {
-    color: var(--text-strong);
-    font-size: 26px;
-    margin: 0 0 8px;
+    font-size: var(--fs-32);
+    font-weight: 700;
   }
   .sub {
     color: var(--muted);
-    margin: 0 0 24px;
-  }
-  .form {
-    display: flex;
-    gap: 10px;
-  }
-  .form input {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: 4px;
-    padding: 12px 14px;
-    color: var(--text-strong);
-    font-family: var(--mono);
-    font-size: 14px;
-  }
-  .btn-primary {
-    font-family: var(--mono);
-    font-weight: 700;
-    font-size: 14px;
-    background: var(--green);
-    color: var(--bg);
-    padding: 12px 20px;
-    border: 0;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  .error {
-    margin-top: 12px;
-    color: var(--amber);
-    font-size: 13px;
-    font-family: var(--mono);
-  }
-  .note {
-    margin-top: 24px;
-    color: var(--muted);
-    font-size: 12px;
   }
 </style>

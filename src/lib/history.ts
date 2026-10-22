@@ -96,7 +96,7 @@ function plural(n: number, uno: string, varios: string): string {
  */
 function referenceMs(product: CatalogProduct, levels: Level[]): number | null {
   const gen = Date.parse(product.generated_at);
-  const last = levels.length ? levels[levels.length - 1].t : NaN;
+  const last = levels.length ? levels[levels.length - 1].t : Number.NaN;
   const candidates = [gen, last].filter(Number.isFinite);
   return candidates.length ? Math.max(...candidates) : null;
 }
@@ -310,7 +310,7 @@ export function verdictBadge(product: CatalogProduct): Badge {
   const current = parsePrice(product.current.price);
   const diff = Math.round(parsePrice(product.typical_90d) - current);
   if (diff > 0) {
-    const min = product.min_90d ? parsePrice(product.min_90d) : NaN;
+    const min = product.min_90d ? parsePrice(product.min_90d) : Number.NaN;
     return {
       label:
         Number.isFinite(min) && current <= min

@@ -49,7 +49,7 @@ const badge = p ? verdictBadge(p) : null;
 const anchor = p ? buildAnchor(p) : null;
 const sentences = p ? historySentences(p) : [];
 const changes = p ? recentChanges(p.series, 8) : [];
-const updated = p ? Date.parse(p.generated_at) : NaN;
+const updated = p ? Date.parse(p.generated_at) : Number.NaN;
 const updatedLabel = Number.isFinite(updated) ? formatDayYear(updated) : null;
 const fmtDelta = (d: number) => formatMXN(String(Math.abs(d)));
 // Con historial insuficiente solo quedaría "precio actual", que el ancla ya muestra: una

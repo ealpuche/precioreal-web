@@ -31,7 +31,7 @@ export function minMarkerIndex(
   windowDays: number,
   refMs: number,
 ): number {
-  const minValue = min !== undefined ? Number(min) : NaN;
+  const minValue = min !== undefined ? Number(min) : Number.NaN;
   if (!Number.isFinite(minValue)) return -1;
   const windowStart = refMs - windowDays * DAY_MS;
   for (let i = series.length - 1; i >= 0; i--) {

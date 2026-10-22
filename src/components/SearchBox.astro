@@ -1,0 +1,137 @@
+---
+/**
+ * Formulario de consulta. Solo markup: la resolución vive en el servidor, en `/buscar`
+ * (sin JS de cliente, ADR-001). La ayuda va fuera del campo: dentro, a 390 px el placeholder
+ * se cortaba a media frase (auditoría V0, #40).
+ */
+interface Props {
+  value?: string;
+  error?: string | null;
+  variant?: "hero" | "compact";
+  label?: string;
+}
+const {
+  value = "",
+  error = null,
+  variant = "compact",
+  label = "Código o enlace de Cyberpuerta",
+} = Astro.props;
+const inputId = `q-${variant}`;
+const errorId = `${inputId}-error`;
+---
+
+<form class:list={["search", variant]} method="get" action="/buscar">
+  <label class="label" for={inputId}>{label}</label>
+  <div class="row">
+    <input
+      id={inputId}
+      name="q"
+      type="text"
+      inputmode="text"
+      enterkeyhint="search"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      value={value}
+      placeholder="ej. KPM-610B"
+      aria-invalid={error ? "true" : undefined}
+      aria-describedby={error ? errorId : undefined}
+      required
+    />
+    <button class="btn btn-primary" type="submit">Ver historial</button>
+  </div>
+  {
+    error && (
+      <p class="error" id={errorId} role="alert">
+        {error}
+      </p>
+    )
+  }
+  <details class="help">
+    <summary>¿Dónde encuentro el código?</summary>
+    <p>
+      En la página del producto en Cyberpuerta, junto a la foto, aparece como
+      <b>SKU</b> o <b>Modelo</b>. También puedes copiar el enlace completo de
+      esa página y pegarlo aquí.
+    </p>
+    <p>Todavía no buscamos por nombre.</p>
+  </details>
+</form>
+
+<style>
+  .search {
+    display: grid;
+    gap: var(--sp-2);
+    width: 100%;
+  }
+  .label {
+    font-size: var(--fs-14);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+  @media (min-width: 560px) {
+    .row {
+      flex-direction: row;
+    }
+  }
+  input {
+    width: 100%;
+    min-height: 52px;
+    min-width: 0;
+    padding: 0 var(--sp-4);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: var(--fs-16);
+  }
+  input::placeholder {
+    color: var(--muted);
+  }
+  input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+    border-color: var(--accent);
+  }
+  input[aria-invalid="true"] {
+    border-color: var(--alert);
+  }
+  .row .btn {
+    flex: none;
+    min-height: 52px;
+  }
+  .hero input {
+    min-height: 56px;
+    font-size: var(--fs-18);
+  }
+  .hero .row .btn {
+    min-height: 56px;
+  }
+  .error {
+    color: var(--alert);
+    font-size: var(--fs-14);
+  }
+  .help {
+    font-size: var(--fs-14);
+    color: var(--muted);
+  }
+  .help summary {
+    cursor: pointer;
+    color: var(--accent);
+    width: fit-content;
+  }
+  .help p {
+    margin-top: var(--sp-2);
+    max-width: 60ch;
+  }
+  .help b {
+    color: var(--text);
+    font-weight: 600;
+  }
+</style>

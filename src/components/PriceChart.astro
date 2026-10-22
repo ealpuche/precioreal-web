@@ -3,6 +3,7 @@ import type { CatalogSeriesPoint } from "../contracts/catalog";
 import { TZ } from "../lib/tz";
 import { monthTicks } from "../lib/chart-ticks";
 import { buildChartStamp } from "../lib/freshness";
+import { minMarkerIndex, yAxisMargin } from "../lib/chart-layout";
 
 interface Props {
   series: CatalogSeriesPoint[];
@@ -11,15 +12,20 @@ interface Props {
   max?: string;
   /** `generated_at` de la ficha: fecha en que el productor la escribió por última vez. */
   generatedAt?: string;
+  /** `window_days` de la ficha: la ventana de `min`. */
+  windowDays: number;
 }
-const { series, typical, min, max, generatedAt } = Astro.props;
+const { series, typical, min, max, generatedAt, windowDays } = Astro.props;
 
-const W = 1000,
-  H = 320,
-  L = 64,
-  R = 16,
+// 640 de ancho y no 1000: el SVG escala al contenedor, y con 1000 unidades las etiquetas de
+// 11 salían a ~4 px en un teléfono de 390 px (auditoría V0, #40). Con 640 y fuente de 17 se
+// leen a ~9.5 px en móvil y a ~17 px en la columna de escritorio.
+const W = 640,
+  H = 340,
+  R = 12,
   T = 16,
-  B = 36;
+  B = 40;
+const FS = 17;
 const prices = series.map(([, p]) => Number(p));
 const dates = series.map(([d]) => new Date(d).getTime());
 
@@ -38,6 +44,12 @@ const xMin = dates.length ? Math.min(...dates) : 0;
 const xMax = dates.length ? Math.max(...dates) : 1;
 const xSpan = xMax - xMin || 1;
 
+// Mismas etiquetas que dibuja el eje: el margen se calcula con ellas, no con un ancho fijo.
+const yLabels = [0, 0.25, 0.5, 0.75, 1].map((f) =>
+  Math.round(yMin + (yMax - yMin) * f).toLocaleString("es-MX"),
+);
+const L = yAxisMargin(yLabels, FS);
+
 const x = (t: number) => L + ((t - xMin) / xSpan) * (W - L - R);
 const y = (v: number) => T + (1 - (v - yMin) / (yMax - yMin)) * (H - T - B);
 
@@ -51,6 +63,15 @@ series.forEach(([d, p], i) => {
 const gridValues = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + (yMax - yMin) * f);
 const typicalY = typical !== undefined ? y(Number(typical)) : null;
 const lastPoint = series[series.length - 1];
+
+// El número es el del productor; la posición sale de la serie, solo dentro de la ventana
+// (minMarkerIndex). La referencia es la última escritura de la ficha o el último punto.
+const refMs = Math.max(
+  ...[Date.parse(generatedAt ?? ""), xMax].filter(Number.isFinite),
+);
+const minIdx = minMarkerIndex(series, min, windowDays, refMs);
+const minPoint =
+  minIdx === -1 ? null : { x: x(dates[minIdx]), y: y(Number(min)) };
 
 // Ticks en fronteras de mes calendario, no "hasta 6 espaciados por índice" como especificaba
 // el PQ 05: con series de longitud irregular, el espaciado por índice deja etiquetas en
@@ -112,8 +133,8 @@ const stamp = buildChartStamp(generatedAt);
                 x={L - 10}
                 y={y(v) + 4}
                 text-anchor="end"
-                font-family="JetBrains Mono"
-                font-size="11"
+                font-family="IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
+                font-size={FS}
                 fill="var(--muted)"
               >
                 {Math.round(v).toLocaleString("es-MX")}
@@ -132,10 +153,10 @@ const stamp = buildChartStamp(generatedAt);
               />
               <text
                 x={tick.x}
-                y={H - B + 16}
+                y={H - B + 26}
                 text-anchor="middle"
-                font-family="JetBrains Mono"
-                font-size="11"
+                font-family="IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
+                font-size={FS}
                 fill="var(--muted)"
               >
                 {tick.label}
@@ -165,11 +186,11 @@ const stamp = buildChartStamp(generatedAt);
             y={T + (H - T - B) * 0.78}
             text-anchor="middle"
             dominant-baseline="middle"
-            font-family="JetBrains Mono"
-            font-size="42"
+            font-family="IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
+            font-size="34"
             font-weight="700"
-            fill="var(--green)"
-            opacity="0.1"
+            fill="var(--muted)"
+            opacity="0.09"
             style="pointer-events: none; user-select: none;"
           >
             precioreal.mx
@@ -177,27 +198,38 @@ const stamp = buildChartStamp(generatedAt);
           <path
             d={stepPath}
             fill="none"
-            stroke="var(--green)"
-            stroke-width="2"
+            stroke="var(--text)"
+            stroke-width="2.5"
+            stroke-linejoin="round"
           />
+          {minPoint && (
+            <circle
+              cx={minPoint.x}
+              cy={minPoint.y}
+              r="6"
+              fill="var(--down)"
+              stroke="var(--surface)"
+              stroke-width="2"
+            />
+          )}
           {lastPoint && (
             <circle
               cx={x(new Date(lastPoint[0]).getTime())}
               cy={y(Number(lastPoint[1]))}
-              r="5"
-              fill="var(--bg)"
-              stroke="var(--green)"
-              stroke-width="2"
+              r="7"
+              fill="var(--accent)"
+              stroke="var(--surface)"
+              stroke-width="2.5"
             />
           )}
           <text
             x={W - R}
             y={T + 12}
             text-anchor="end"
-            font-family="JetBrains Mono"
-            font-size="11"
+            font-family="IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
+            font-size="14"
             fill="var(--muted)"
-            opacity="0.6"
+            opacity="0.8"
             style="pointer-events: none; user-select: none;"
           >
             {stamp}
@@ -218,8 +250,8 @@ const stamp = buildChartStamp(generatedAt);
               cx="0"
               cy="0"
               r="6"
-              fill="var(--green)"
-              stroke="var(--bg)"
+              fill="var(--accent)"
+              stroke="var(--surface)"
               stroke-width="2"
             />
           </g>
@@ -243,9 +275,15 @@ const stamp = buildChartStamp(generatedAt);
       </div>
       <div class="legend">
         <span>
-          <i class="dot green" />
+          <i class="dot line" />
           precio observado
         </span>
+        {minPoint && (
+          <span>
+            <i class="dot min" />
+            mínimo
+          </span>
+        )}
         {typical !== undefined && (
           <span>
             <i class="dot dashed" />
@@ -348,8 +386,8 @@ const stamp = buildChartStamp(generatedAt);
   .figure {
     border: 1px solid var(--line);
     background: var(--surface);
-    border-radius: 4px;
-    padding: 20px 20px 12px;
+    border-radius: var(--radius);
+    padding: var(--sp-3) var(--sp-3) var(--sp-3);
   }
   .chart-wrapper {
     position: relative;
@@ -357,26 +395,25 @@ const stamp = buildChartStamp(generatedAt);
   }
   .figure svg {
     width: 100%;
-    height: 320px;
+    height: auto;
     display: block;
   }
   .chart-tooltip {
     position: absolute;
     pointer-events: none;
     transform: translate(-50%, -120%);
-    background: var(--surface-raised);
-    border: 1px solid var(--line);
-    border-radius: 4px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
     padding: 6px 10px;
     font-family: var(--mono);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     z-index: 10;
     white-space: nowrap;
   }
   .tooltip-price {
     font-size: 13px;
-    font-weight: 700;
-    color: var(--green);
+    font-weight: 600;
+    color: var(--text);
   }
   .tooltip-date {
     font-size: 11px;
@@ -398,8 +435,14 @@ const stamp = buildChartStamp(generatedAt);
     vertical-align: middle;
     margin-right: 6px;
   }
-  .dot.green {
-    background: var(--green);
+  .dot.line {
+    background: var(--text);
+  }
+  .dot.min {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--down);
   }
   .dot.dashed {
     border-top: 2px dashed var(--muted);

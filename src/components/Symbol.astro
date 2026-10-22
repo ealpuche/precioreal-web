@@ -1,0 +1,68 @@
+---
+/**
+ * Símbolo de PrecioReal.mx: etiqueta de precio con la serie de historial adentro, que
+ * termina en el punto del precio real. Geometría fija (repo precioreal-brand); solo cambian
+ * los colores.
+ */
+interface Props {
+  size?: number;
+  /** "light": etiqueta papel con tinta (sobre fondos oscuros o como ícono). "dark": etiqueta tinta. */
+  variant?: "light" | "dark";
+  title?: string;
+}
+const { size = 32, variant = "dark", title } = Astro.props;
+---
+
+<svg
+  class:list={["symbol", variant]}
+  width={size}
+  height={Math.round((size * 64) / 88)}
+  viewBox="6 18 88 64"
+  role={title ? "img" : undefined}
+  aria-hidden={title ? undefined : "true"}
+  aria-label={title}
+>
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <polygon class="tag" points="12,50 34,24 88,24 88,76 34,76" stroke-width="8"
+    ></polygon>
+    <circle class="hole" cx="30" cy="50" r="5"></circle>
+    <polyline
+      class="ink"
+      points="44,64 55,50 65,60 78,43"
+      fill="none"
+      stroke-width="6"></polyline>
+    <circle class="dot" cx="78" cy="43" r="7.5"></circle>
+  </g>
+</svg>
+
+<style>
+  .symbol {
+    display: block;
+    flex: none;
+  }
+  .dark .tag {
+    fill: var(--text);
+    stroke: var(--text);
+  }
+  .dark .hole {
+    fill: var(--bg);
+  }
+  .dark .ink {
+    stroke: var(--surface);
+  }
+  .light .tag {
+    fill: var(--surface);
+    stroke: var(--surface);
+  }
+  .light .hole {
+    fill: var(--text);
+  }
+  .light .ink {
+    stroke: var(--text);
+  }
+  /* Mismo azul en ambas variantes: sobre papel 5.52:1, sobre tinta 3.15:1 (>= 3:1 que WCAG
+     pide a un elemento gráfico). */
+  .dot {
+    fill: var(--accent);
+  }
+</style>

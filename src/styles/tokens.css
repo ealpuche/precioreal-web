@@ -1,18 +1,58 @@
+/*
+ * Identidad PrecioReal.mx (decidida 2026-10-21; Notion → Branding, repo precioreal-brand).
+ * Papel, tinta y azul firma: la paleta de un documento, no la de una oferta. El rojo existe
+ * solo para el tachado que nunca se cobró; nunca para vender. Contrastes WCAG medidos sobre
+ * --bg y --surface: texto 15.76:1, --muted 5.85:1, --accent 5.52:1, --down 5.39:1,
+ * --up 5.02:1, --alert 6.04:1. Bajó/subió siempre van con flecha y signo, no solo color.
+ * Ningún componente usa colores literales: todo pasa por aquí (#25).
+ */
 :root {
-  --bg: #0b0e14;
-  --surface: #10151d;
-  --surface-raised: #161b22; /* superficies flotantes: tooltips, popovers */
-  --line: #1c2330;
-  --line-strong: #2a3342;
-  --text: #c9d1d9;
-  --text-strong: #e8edf3;
-  --muted: #7d8999; /* contraste >= 4.5:1 sobre --bg y --surface (CR PR #7 ronda 2, Copilot) */
-  --green: #22ff88;
-  --green-soft: #8cffc4;
-  --green-dim: #1f5c3d;
-  --green-wash: #122419;
-  --amber: #ffb454;
-  --amber-wash: #2a2114;
-  --mono: "JetBrains Mono", ui-monospace, monospace;
-  --sans: "Space Grotesk", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --bg: #f3f4f1;
+  --surface: #ffffff;
+  --text: #0d1b2a;
+  --muted: #52606d;
+  --line: #d7dbd3;
+  --line-strong: #b4bbb1;
+
+  --accent: #2f5bea; /* azul firma: punto del símbolo, enlaces, acción primaria */
+  --accent-hover: #2549c4;
+  --accent-active: #1d3a9e;
+  --accent-wash: #e9eefd;
+  --on-accent: #ffffff;
+
+  --down: #0b7a4b; /* bajó de precio */
+  --down-wash: #e5f2eb;
+  --up: #b45309; /* subió de precio */
+  --up-wash: #fbefe2;
+  --alert: #c4161c; /* precio tachado que nunca existió */
+  --alert-wash: #fbe8e8;
+
+  --disabled-bg: #e3e6e0;
+  --disabled-text: #5e6a75;
+
+  --sans: "Archivo", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --fs-12: 0.75rem;
+  --fs-14: 0.875rem;
+  --fs-16: 1rem;
+  --fs-18: 1.125rem;
+  --fs-20: 1.25rem;
+  --fs-24: 1.5rem;
+  --fs-32: 2rem;
+  --fs-40: 2.5rem;
+  --fs-56: 3.5rem;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 72px;
+
+  --radius: 6px;
+  --content: 1120px;
+  --reading: 68ch;
 }

@@ -1,17 +1,17 @@
 ---
 import "../styles/tokens.css";
 import "../styles/global.css";
+import Wordmark from "../components/Wordmark.astro";
+import { CONTACT_EMAIL, COBERTURA, TELEGRAM_URL } from "../lib/site";
 
 interface Props {
   title?: string;
   description?: string;
-  showNav?: boolean;
 }
 
 const {
-  title = "PrecioReal — ¿Ese descuento es real?",
-  description = "Rastreamos los precios de hardware en México y detectamos descuentos falsos antes de Buen Fin.",
-  showNav = false,
+  title = "PrecioReal.mx — ¿Ese descuento es real?",
+  description = "Consulta el historial de precios de un producto de Cyberpuerta antes de comprar y sabe si el descuento es real.",
 } = Astro.props;
 
 const beaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
@@ -28,17 +28,17 @@ const beacon =
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230B0E14'/%3E%3Crect x='8' y='8' width='16' height='16' fill='%2322FF88' rx='2'/%3E%3C/svg%3E"
-    />
+    <meta name="theme-color" content="#f3f4f1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       rel="preconnect"
       href="https://fonts.gstatic.com"
       crossorigin="anonymous"
     />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <slot name="head" />
@@ -54,52 +54,127 @@ const beacon =
     }
   </head>
   <body>
-    {
-      showNav && (
-        <nav class="site-nav">
-          <a href="/" class="site-nav-brand">
-            PrecioReal<span class="cursor">_</span>
-          </a>
-          <a href="/buscar" class="site-nav-link">
-            Buscar producto
-          </a>
+    <a class="skip" href="#contenido">Saltar al contenido</a>
+    <header class="site-header">
+      <div class="container bar">
+        <a href="/" class="brand" aria-label="PrecioReal.mx, inicio">
+          <Wordmark />
+        </a>
+        <nav aria-label="Principal" class="links">
+          <a href="/buscar">Buscar</a>
+          <a href="/datos">Para negocios</a>
         </nav>
-      )
-    }
-    <slot />
+      </div>
+    </header>
+    <main id="contenido">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container foot">
+        <div class="about">
+          <Wordmark size="sm" />
+          <p>
+            Historial de precios de {COBERTURA.tienda}, actualizado a diario.
+            Datos, no promesas.
+          </p>
+        </div>
+        <nav aria-label="Pie de página" class="foot-links">
+          <a href="/buscar">Buscar un producto</a>
+          <a href="/datos">Datos para negocios</a>
+          <a href={TELEGRAM_URL} rel="noopener" target="_blank"
+            >Ofertas en Telegram</a
+          >
+          <a href={`mailto:${CONTACT_EMAIL}`}>Contacto</a>
+        </nav>
+        <p class="legal">
+          Los precios provienen de las páginas públicas de cada tienda. Las
+          marcas pertenecen a sus dueños. PrecioReal.mx no vende productos ni
+          cobra comisiones por enlaces.
+        </p>
+      </div>
+    </footer>
   </body>
 </html>
 
 <style>
-  .site-nav {
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+  .skip:focus {
+    left: var(--sp-4);
+    top: var(--sp-2);
+    z-index: 10;
+    background: var(--surface);
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--radius);
+  }
+  .site-header {
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--line);
-    font-family: var(--sans);
+    gap: var(--sp-4);
+    min-height: 64px;
   }
-  .site-nav-brand {
-    font-weight: 700;
-    font-size: 19px;
-    letter-spacing: -0.02em;
-    color: var(--text-strong);
+  .brand {
+    text-decoration: none;
+    color: var(--text);
+  }
+  .links {
+    display: flex;
+    gap: var(--sp-4);
+    font-size: var(--fs-14);
+    font-weight: 600;
+  }
+  .links a {
+    color: var(--text);
     text-decoration: none;
   }
-  .site-nav-brand .cursor {
-    color: var(--green);
-    font-family: var(--mono);
+  .links a:hover {
+    color: var(--accent);
   }
-  .site-nav-link {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--green);
-    text-decoration: none;
+  .site-footer {
+    margin-top: var(--sp-8);
+    border-top: 1px solid var(--line);
+    background: var(--surface);
   }
-  .site-nav-link:hover {
-    text-decoration: underline;
+  .foot {
+    display: grid;
+    gap: var(--sp-5);
+    padding-top: var(--sp-6);
+    padding-bottom: var(--sp-6);
+  }
+  @media (min-width: 720px) {
+    .foot {
+      grid-template-columns: 1fr auto;
+    }
+    .legal {
+      grid-column: 1 / -1;
+    }
+  }
+  .about {
+    display: grid;
+    gap: var(--sp-3);
+    max-width: 44ch;
+  }
+  .about p,
+  .legal {
+    color: var(--muted);
+    font-size: var(--fs-14);
+  }
+  .foot-links {
+    display: grid;
+    gap: var(--sp-2);
+    font-size: var(--fs-14);
+    align-content: start;
+  }
+  .legal {
+    font-size: var(--fs-12);
+    border-top: 1px solid var(--line);
+    padding-top: var(--sp-4);
   }
 </style>

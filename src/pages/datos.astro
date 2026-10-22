@@ -1,0 +1,208 @@
+---
+// Versión mínima de #30: prueba de demanda B2B sin backend. El contacto es un mailto, así que
+// esta página se prerenderiza y no añade ruta SSR, KV ni escrituras (plan gratuito).
+// El formulario con Turnstile, KV y aviso a ops queda en #30.
+import Base from "../layouts/Base.astro";
+import { CONTACT_EMAIL, COBERTURA } from "../lib/site";
+
+const asunto = encodeURIComponent("Datos de precios para mi negocio");
+const cuerpo = encodeURIComponent(
+  [
+    "Empresa:",
+    "Qué categorías o productos me interesan:",
+    "Para qué los usaría (monitoreo de competencia, reporte, otro):",
+    "Cada cuánto los necesito:",
+  ].join("\n"),
+);
+const mailto = `mailto:${CONTACT_EMAIL}?subject=${asunto}&body=${cuerpo}`;
+---
+
+<Base
+  title="Datos para negocios — PrecioReal.mx"
+  description={`Historial de precios de ${COBERTURA.tienda} como dato: monitoreo de competencia, reportes por categoría y series históricas.`}
+>
+  <div class="container page">
+    <header class="intro">
+      <p class="eyebrow">Para negocios</p>
+      <h1>El historial de precios, como dato.</h1>
+      <p class="lede">
+        Registramos cada cambio de precio de más de
+        <span class="num">{COBERTURA.productos}</span> productos de {
+          COBERTURA.tienda
+        }, todos los días. Si vendes, distribuyes o cubres esas categorías, esos
+        datos te dicen cómo se mueve tu mercado.
+      </p>
+    </header>
+
+    <section aria-labelledby="usos" class="block">
+      <h2 id="usos">Lo que podemos preparar</h2>
+      <dl class="uses">
+        <div>
+          <dt>Monitoreo de competencia</dt>
+          <dd>
+            Los precios de una lista de productos o marcas, con cada cambio y su
+            fecha.
+          </dd>
+        </div>
+        <div>
+          <dt>Reporte por categoría</dt>
+          <dd>
+            Cómo se movieron los precios de una categoría en un periodo:
+            subidas, bajadas y descuentos que sí fueron reales.
+          </dd>
+        </div>
+        <div>
+          <dt>Series históricas</dt>
+          <dd>
+            El historial completo de precios por producto, para análisis propio.
+          </dd>
+        </div>
+      </dl>
+      <p class="note">
+        Estamos empezando: el formato, la frecuencia y el precio se acuerdan en
+        la primera conversación.
+      </p>
+    </section>
+
+    <section aria-labelledby="muestra" class="block">
+      <h2 id="muestra">Cómo se ve el dato</h2>
+      <p class="note">
+        Una fila por cambio de precio. Abajo, cuatro filas reales del historial
+        del Klip Xtreme KPM-610B en Cyberpuerta (no consecutivas).
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Fecha (UTC)</th>
+              <th scope="col">SKU</th>
+              <th scope="col" class="r">Precio</th>
+            </tr>
+          </thead>
+          <tbody class="num">
+            <tr
+              ><td>2026-10-01 19:16</td><td>KPM-610B</td><td class="r"
+                >1,429.00</td
+              ></tr
+            >
+            <tr
+              ><td>2026-10-15 13:16</td><td>KPM-610B</td><td class="r"
+                >1,459.00</td
+              ></tr
+            >
+            <tr
+              ><td>2026-10-19 19:16</td><td>KPM-610B</td><td class="r"
+                >1,449.00</td
+              ></tr
+            >
+            <tr
+              ><td>2026-10-20 01:14</td><td>KPM-610B</td><td class="r"
+                >559.00</td
+              ></tr
+            >
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="contacto" class="block contact card">
+      <h2 id="contacto">Cuéntanos qué necesitas</h2>
+      <p>
+        Escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> con tu
+        empresa, las categorías que te interesan y para qué usarías los datos. Te
+        respondemos con una muestra.
+      </p>
+      <a class="btn btn-primary" href={mailto}>Escribir correo</a>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--sp-7);
+    padding-top: var(--sp-7);
+  }
+  .intro {
+    display: grid;
+    gap: var(--sp-4);
+    max-width: var(--reading);
+  }
+  h1 {
+    font-size: var(--fs-40);
+    font-weight: 700;
+  }
+  .lede {
+    font-size: var(--fs-18);
+    color: var(--muted);
+  }
+  .block {
+    display: grid;
+    gap: var(--sp-4);
+  }
+  h2 {
+    font-size: var(--fs-24);
+    font-weight: 700;
+  }
+  .uses {
+    display: grid;
+    gap: var(--sp-3);
+    margin: 0;
+  }
+  @media (min-width: 720px) {
+    .uses {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .uses div {
+    padding: var(--sp-4);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  dt {
+    font-weight: 600;
+  }
+  dd {
+    margin: var(--sp-1) 0 0;
+    color: var(--muted);
+    font-size: var(--fs-14);
+  }
+  .note {
+    font-size: var(--fs-14);
+    color: var(--muted);
+  }
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    font-size: var(--fs-14);
+  }
+  th {
+    text-align: left;
+    font-size: var(--fs-12);
+    color: var(--muted);
+    font-weight: 600;
+    padding: var(--sp-2) var(--sp-3);
+    border-bottom: 1px solid var(--line);
+  }
+  td {
+    padding: var(--sp-2) var(--sp-3);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .r {
+    text-align: right;
+  }
+  .contact {
+    padding: var(--sp-5);
+    max-width: 720px;
+  }
+  .contact .btn {
+    width: fit-content;
+  }
+</style>

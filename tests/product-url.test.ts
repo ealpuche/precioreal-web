@@ -143,7 +143,9 @@ describe("normalizePastedUrl", () => {
     const t0 = performance.now();
     normalizePastedUrl("https://" + ".".repeat(16000) + "a");
     normalizePastedUrl("https://x.html" + ".".repeat(16000));
-    expect(performance.now() - t0).toBeLessThan(100);
+    // 500 ms y no 100: con el regex cuadrático las dos llamadas sumaban ~700 ms, y un
+    // runner lento con cobertura no debe volver rojo lo lineal (CR PR #62 ronda 3).
+    expect(performance.now() - t0).toBeLessThan(500);
   });
 
   it("keeps the canonical normalizer cheap for the index: no link extraction", () => {

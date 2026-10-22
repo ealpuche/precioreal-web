@@ -89,7 +89,7 @@ Cómo leer `buscar`:
   tras una operación de entrada/salida, así que suele valer 0 salvo cuando se
   consulta el índice.
 - Una búsqueda cuyo evento no valida se registra aparte como
-  `{"t":"evt_invalid",…}`. Si aparece, `RESULTADOS_BUSCAR` y `buscar.astro` se
+  `{"t":"evt_invalid",…}`. Si aparece, `RESULTADOS_BUSCAR` y `src/lib/buscar.ts` se
   desincronizaron.
 
 Los eventos nunca incluyen el texto tecleado, la IP ni el user agent. Cloudflare

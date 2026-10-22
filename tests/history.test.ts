@@ -412,3 +412,18 @@ describe("historySentences: regresiones de la segunda revisión del PR #41", () 
     );
   });
 });
+
+it("la frase del precio vigente usa current.price aunque el último punto de la serie difiera", () => {
+  // Defensa pedida en la tercera revisión: si la serie no termina en el precio vigente
+  // (punto descartado, serie diezmada), el historial no debe contradecir al ancla.
+  const p = make({
+    min_90d: "50.00",
+    current: {
+      price: "99.00",
+      since: "2026-10-01T00:00:00Z",
+      available: true,
+    },
+  });
+  const s = historySentences(p);
+  expect(s[s.length - 1]).toBe("Lleva 9 días en $99, desde el 30 sep.");
+});

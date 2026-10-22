@@ -3,6 +3,7 @@ import type { CatalogSeriesPoint } from "../contracts/catalog";
 import { TZ } from "../lib/tz";
 import { monthTicks } from "../lib/chart-ticks";
 import { buildChartStamp } from "../lib/freshness";
+import { yAxisMargin } from "../lib/chart-layout";
 
 interface Props {
   series: CatalogSeriesPoint[];
@@ -19,7 +20,6 @@ const { series, typical, min, max, generatedAt } = Astro.props;
 // leen a ~9.5 px en móvil y a ~17 px en la columna de escritorio.
 const W = 640,
   H = 340,
-  L = 72,
   R = 12,
   T = 16,
   B = 40;
@@ -41,6 +41,12 @@ const yMax = yMaxRaw + pad;
 const xMin = dates.length ? Math.min(...dates) : 0;
 const xMax = dates.length ? Math.max(...dates) : 1;
 const xSpan = xMax - xMin || 1;
+
+// Mismas etiquetas que dibuja el eje: el margen se calcula con ellas, no con un ancho fijo.
+const yLabels = [0, 0.25, 0.5, 0.75, 1].map((f) =>
+  Math.round(yMin + (yMax - yMin) * f).toLocaleString("es-MX"),
+);
+const L = yAxisMargin(yLabels, FS);
 
 const x = (t: number) => L + ((t - xMin) / xSpan) * (W - L - R);
 const y = (v: number) => T + (1 - (v - yMin) / (yMax - yMin)) * (H - T - B);

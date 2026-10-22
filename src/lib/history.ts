@@ -200,7 +200,9 @@ export function historySentences(product: CatalogProduct): string[] {
   const sinceCurrent = Date.parse(product.current.since);
   const startCurrent = Number.isFinite(sinceCurrent) ? sinceCurrent : current.t;
   const daysAtCurrent = Math.max(0, Math.floor((ref - startCurrent) / DAY_MS));
-  const precio = `${prefix}${formatMXN(String(current.price))}`;
+  // current.price y no el último nivel: si la serie no termina en el precio vigente (punto
+  // descartado por ilegible, serie diezmada), la frase no debe contradecir al ancla.
+  const precio = `${prefix}${formatMXN(product.current.price)}`;
   sentences.push(
     daysAtCurrent === 0
       ? `El precio actual, ${precio}, apareció el ${formatDay(startCurrent)}.`

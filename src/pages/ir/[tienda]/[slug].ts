@@ -29,41 +29,77 @@ function redirigir(destino: string): Response {
   });
 }
 
-export const GET: APIRoute = async ({ params, url, locals }) => {
-  const tienda = params.tienda ?? "";
-  const slug = params.slug ?? "";
-  const resultado = await fetchProduct(tienda, slug);
+// Agentes que piden la URL sin que nadie haya hecho clic: las vistas previas de Telegram y de
+// otras apps de mensajería, y los rastreadores que ignoran robots.txt. Se les redirige igual,
+// pero no se cuentan (CR PR #63). El user agent se lee para decidir y no se guarda.
+const NO_ES_CLIC =
+  /bot|crawler|spider|preview|facebookexternalhit|whatsapp|slack|discord|embedly/i;
 
+type Destino = { url: string } | { ficha: string } | { portada: true };
+
+async function resolver(tienda: string, slug: string): Promise<Destino> {
+  const resultado = await fetchProduct(tienda, slug);
   // Tienda o slug imposibles: fetchProduct no consulta R2 y no hay ficha a la cual volver.
   if (!resultado.ok && resultado.reason === "invalid_route") {
-    return redirigir("/");
+    return { portada: true };
   }
   const ficha = `/${tienda}/${encodeURIComponent(slug)}`;
-  if (!resultado.ok) {
-    // 404 o upstream caído: la ficha propia muestra el mensaje correcto. Sin evento: no
-    // hubo salida a la tienda.
-    return redirigir(ficha);
-  }
+  // 404 o upstream caído: la ficha propia muestra el mensaje correcto.
+  if (!resultado.ok) return { ficha };
 
-  const destino = resultado.product.url;
-  const normalizado = normalizeProductUrl(destino);
+  // Se valida y se redirige la MISMA URL ya parseada: normalizeProductUrl acepta una URL
+  // sin esquema, y redirigir el texto crudo "www.cyberpuerta.mx/…" sería un salto relativo
+  // dentro de precioreal.mx (CR PR #63, H1).
+  let parsed: URL;
+  try {
+    parsed = new URL(resultado.product.url);
+  } catch {
+    return { ficha };
+  }
   const dominio = DOMINIO_DE_TIENDA[tienda];
-  if (!normalizado || !dominio || !hostPertenece(normalizado, dominio)) {
+  const normalizado = normalizeProductUrl(parsed.href);
+  if (
+    (parsed.protocol !== "https:" && parsed.protocol !== "http:") ||
+    !normalizado ||
+    !dominio ||
+    !hostPertenece(normalizado, dominio)
+  ) {
     console.warn(JSON.stringify({ t: "ir_destino_rechazado", tienda, slug }));
-    return redirigir(ficha);
+    return { ficha };
   }
+  return { url: parsed.href };
+}
 
-  const de = url.searchParams.get("de") ?? "";
-  const origen = (ORIGENES_SALIDA as readonly string[]).includes(de)
-    ? de
-    : "otro";
-  const evento = validateEvent({
-    evento: "salida_tienda",
-    props: { tienda, slug, origen },
-  });
-  if (evento) {
-    logEvent(evento);
-    await storeEvent(locals?.runtime, evento);
+function responder(destino: Destino): Response {
+  if ("url" in destino) return redirigir(destino.url);
+  if ("ficha" in destino) return redirigir(destino.ficha);
+  return redirigir("/");
+}
+
+export const GET: APIRoute = async ({ params, url, request, locals }) => {
+  const tienda = params.tienda ?? "";
+  const slug = params.slug ?? "";
+  const destino = await resolver(tienda, slug);
+
+  const ua = request.headers.get("user-agent") ?? "";
+  if ("url" in destino && !NO_ES_CLIC.test(ua)) {
+    const de = url.searchParams.get("de") ?? "";
+    const origen = (ORIGENES_SALIDA as readonly string[]).includes(de)
+      ? de
+      : "otro";
+    const evento = validateEvent({
+      evento: "salida_tienda",
+      props: { tienda, slug, origen },
+    });
+    if (evento) {
+      logEvent(evento);
+      await storeEvent(locals?.runtime, evento);
+    }
   }
-  return redirigir(destino);
+  return responder(destino);
 };
+
+// HEAD explícito: un verificador de enlaces que solo pregunta si la URL existe recibe la
+// misma redirección y no cuenta como clic.
+export const HEAD: APIRoute = async ({ params }) =>
+  responder(await resolver(params.tienda ?? "", params.slug ?? ""));

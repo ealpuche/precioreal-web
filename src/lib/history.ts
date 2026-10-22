@@ -1,5 +1,5 @@
 import type { CatalogProduct, CatalogSeriesPoint } from "../contracts/catalog";
-import { formatMXN, parsePrice } from "./format";
+import { formatMXN, parsePrice, pricePrefix } from "./format";
 import { TZ } from "./tz";
 
 /**
@@ -116,6 +116,9 @@ export function historySentences(product: CatalogProduct): string[] {
 
   const sentences: string[] = [];
   const available = product.current.available;
+  // "desde " en productos multivariante: el precio vigente es el de la variante más barata,
+  // igual que en la grilla y el veredicto (H2, segunda revisión del PR #41).
+  const prefix = pricePrefix(product);
   const firstSeen = Date.parse(product.first_seen_at ?? "");
   const since = Number.isFinite(firstSeen)
     ? Math.min(firstSeen, levels[0].t)
@@ -165,7 +168,7 @@ export function historySentences(product: CatalogProduct): string[] {
       // distancia al siguiente punto puede incluir días agotado (revisión del PR #41).
       sentences.push(
         isCurrent
-          ? `Su mínimo de ${windowDays} días, ${formatMXN(String(min))}, empezó el ${formatDay(levels[minIdx].t)} y es ${available ? "el precio de hoy" : "el último precio visto"}.`
+          ? `Su mínimo de ${windowDays} días, ${prefix}${formatMXN(String(min))}, empezó el ${formatDay(levels[minIdx].t)} y es ${available ? "el precio de hoy" : "el último precio visto"}.`
           : `Su mínimo de ${windowDays} días fue ${formatMXN(String(min))}, el ${formatDay(levels[minIdx].t)}.`,
       );
     }
@@ -188,22 +191,20 @@ export function historySentences(product: CatalogProduct): string[] {
   if (minIsCurrent) return sentences;
 
   const current = levels[levels.length - 1];
-  // H1 de la revisión del PR #41: agotado no hay precio vigente, igual que en buildVerdict.
-  if (!available) {
-    sentences.push(
-      `El último precio visto fue ${formatMXN(String(current.price))}, registrado el ${formatDay(current.t)}.`,
-    );
-    return sentences;
-  }
+  // Agotado no hay precio vigente (H1, primera revisión del PR #41), y el veredicto ya dice
+  // cuál fue el último precio y cuándo: repetirlo aquí con la fecha del nivel ponía dos
+  // fechas distintas al mismo precio (H1, segunda revisión).
+  if (!available) return sentences;
   // Desde `current.since` y no desde el último punto: si hubo un hueco sin stock al mismo
   // precio, los puntos se colapsan y el inicio del nivel sería anterior al estado vigente.
   const sinceCurrent = Date.parse(product.current.since);
   const startCurrent = Number.isFinite(sinceCurrent) ? sinceCurrent : current.t;
   const daysAtCurrent = Math.max(0, Math.floor((ref - startCurrent) / DAY_MS));
+  const precio = `${prefix}${formatMXN(String(current.price))}`;
   sentences.push(
     daysAtCurrent === 0
-      ? `El precio actual, ${formatMXN(String(current.price))}, apareció el ${formatDay(startCurrent)}.`
-      : `Lleva ${plural(daysAtCurrent, "día", "días")} en ${formatMXN(String(current.price))}, desde el ${formatDay(startCurrent)}.`,
+      ? `El precio actual, ${precio}, apareció el ${formatDay(startCurrent)}.`
+      : `Lleva ${plural(daysAtCurrent, "día", "días")} ${prefix ? `con precio ${precio}` : `en ${precio}`}, desde el ${formatDay(startCurrent)}.`,
   );
 
   return sentences;

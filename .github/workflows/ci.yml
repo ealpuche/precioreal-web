@@ -9,9 +9,11 @@ permissions:
   contents: read
 
 jobs:
-  # Falla si el PR agrega o actualiza una dependencia con una vulnerabilidad alta o crítica
-  # conocida (GitHub Advisory Database). No falla por las vulnerabilidades que ya existen en
-  # main: esas las corrige Dependabot (#43). Solo tiene sentido en PRs.
+  # Falla si el PR agrega una dependencia, o cambia la versión de una, y la versión que queda
+  # tiene una vulnerabilidad alta o crítica conocida (GitHub Advisory Database), aunque esa
+  # vulnerabilidad ya existiera en main. Un paquete que el PR no toca no cuenta. Las
+  # existentes las corrige Dependabot (#43); si una heredada bloquea un PR legítimo antes de
+  # cerrar #5, se puede excluir temporalmente con `allow-ghsas`. Solo tiene sentido en PRs.
   dependency-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest

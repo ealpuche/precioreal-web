@@ -76,6 +76,36 @@ describe("normalizeProductUrl", () => {
     expect(normalizeProductUrl("hola")).toBe("hola");
   });
 
+  it("extracts the URL from text pasted from a share sheet (#42)", () => {
+    // Compartir desde el navegador del teléfono pega "nombre + enlace", y a veces el enlace
+    // llega en su propia línea. Antes, `new URL("https://Klip Xtreme ... https://...")`
+    // lanzaba y la búsqueda terminaba en "ilegible" aunque el enlace fuera correcto.
+    expect(
+      normalizeProductUrl(
+        "Klip Xtreme Soporte de Techo KPM-610B https://www.cyberpuerta.mx/Audio-y-Video/Soportes/KPM-610B.html",
+      ),
+    ).toBe("cyberpuerta.mx/Audio-y-Video/Soportes/KPM-610B.html");
+    expect(
+      normalizeProductUrl(
+        "Mira este producto:\nhttps://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html\nen Cyberpuerta",
+      ),
+    ).toBe("cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html");
+  });
+
+  it("drops punctuation that a sentence attaches to the end of a URL (#42)", () => {
+    expect(
+      normalizeProductUrl(
+        "(https://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html).",
+      ),
+    ).toBe("cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html");
+  });
+
+  it("returns null for text with spaces and no URL in it (#42)", () => {
+    // Un nombre tecleado no es un enlace: antes `new URL` lanzaba y daba null por accidente;
+    // ahora es la regla explícita, para que `/buscar` lo clasifique como texto.
+    expect(normalizeProductUrl("Monitor LG 27 pulgadas")).toBeNull();
+  });
+
   it("returns null for empty string or invalid schemes", () => {
     expect(normalizeProductUrl("")).toBeNull();
     expect(normalizeProductUrl("   ")).toBeNull();
@@ -96,6 +126,19 @@ describe("looksLikeUrl", () => {
   it("returns false for plain skus or text without dot and slash", () => {
     expect(looksLikeUrl("010-02551-01")).toBe(false);
     expect(looksLikeUrl("hola")).toBe(false);
+  });
+
+  it("tells a typed name from a pasted link (#42)", () => {
+    // Un nombre con espacios no es un enlace aunque lleve un punto ("27 pulg."); un dominio
+    // sin ruta sí lo es, y el texto de una hoja de compartir lo es si trae un enlace dentro.
+    expect(looksLikeUrl("Monitor LG 27 pulg. curvo")).toBe(false);
+    expect(looksLikeUrl("cyberpuerta.mx")).toBe(true);
+    expect(looksLikeUrl("www.cyberpuerta.mx")).toBe(true);
+    expect(
+      looksLikeUrl(
+        "Mira esto https://www.cyberpuerta.mx/Laptops/Laptop-1.html",
+      ),
+    ).toBe(true);
   });
 });
 

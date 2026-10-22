@@ -15,12 +15,32 @@ export function yAxisMargin(labels: string[], fontSize: number): number {
   return Math.max(MIN_MARGIN, Math.ceil(longest * fontSize * CHAR_EM) + GAP);
 }
 
-// Pendiente de implementar: el test define el contrato (H1, cuarta revisión del PR #41).
+const DAY_MS = 86_400_000;
+
+/**
+ * Índice del punto que la gráfica marca como "mínimo": el último punto dentro de la ventana
+ * cuyo precio es el mínimo que publica el productor. -1 si no hay ninguno o si es el último
+ * punto (ese ya lo marca el punto de hoy).
+ *
+ * Buscaba en toda la serie: un precio igual al mínimo de 90 días pero de hace cinco meses se
+ * marcaba como "mínimo" (H1, cuarta revisión del PR #41).
+ */
 export function minMarkerIndex(
-  _series: [string, string, boolean][],
-  _min: string | undefined,
-  _windowDays: number,
-  _refMs: number,
+  series: [string, string, boolean][],
+  min: string | undefined,
+  windowDays: number,
+  refMs: number,
 ): number {
-  return 1;
+  const minValue = min !== undefined ? Number(min) : NaN;
+  if (!Number.isFinite(minValue)) return -1;
+  const windowStart = refMs - windowDays * DAY_MS;
+  for (let i = series.length - 1; i >= 0; i--) {
+    const t = Date.parse(series[i][0]);
+    if (!Number.isFinite(t)) continue;
+    if (t < windowStart) break;
+    if (Number(series[i][1]) === minValue) {
+      return i === series.length - 1 ? -1 : i;
+    }
+  }
+  return -1;
 }

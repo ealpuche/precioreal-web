@@ -3,7 +3,7 @@ import type { CatalogSeriesPoint } from "../contracts/catalog";
 import { TZ } from "../lib/tz";
 import { monthTicks } from "../lib/chart-ticks";
 import { buildChartStamp } from "../lib/freshness";
-import { yAxisMargin } from "../lib/chart-layout";
+import { minMarkerIndex, yAxisMargin } from "../lib/chart-layout";
 
 interface Props {
   series: CatalogSeriesPoint[];
@@ -12,8 +12,10 @@ interface Props {
   max?: string;
   /** `generated_at` de la ficha: fecha en que el productor la escribió por última vez. */
   generatedAt?: string;
+  /** `window_days` de la ficha: la ventana de `min`. */
+  windowDays: number;
 }
-const { series, typical, min, max, generatedAt } = Astro.props;
+const { series, typical, min, max, generatedAt, windowDays } = Astro.props;
 
 // 640 de ancho y no 1000: el SVG escala al contenedor, y con 1000 unidades las etiquetas de
 // 11 salían a ~4 px en un teléfono de 390 px (auditoría V0, #40). Con 640 y fuente de 17 se
@@ -62,18 +64,14 @@ const gridValues = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + (yMax - yMin) * f);
 const typicalY = typical !== undefined ? y(Number(typical)) : null;
 const lastPoint = series[series.length - 1];
 
-// Último punto de la serie que toca el mínimo publicado: el número es el del productor, la
-// posición sale de la serie. Si no coincide ninguno, no se marca (no se inventa la fecha).
-const minValue = min !== undefined ? Number(min) : NaN;
-let minPoint: { x: number; y: number } | null = null;
-// Si el mínimo es el último punto, el punto de "hoy" ya lo marca: dibujar los dos encima
-// dejaba una leyenda "mínimo" sin marca visible.
-for (let i = series.length - 1; i >= 0 && Number.isFinite(minValue); i--) {
-  if (Number(series[i][1]) === minValue) {
-    if (i < series.length - 1) minPoint = { x: x(dates[i]), y: y(minValue) };
-    break;
-  }
-}
+// El número es el del productor; la posición sale de la serie, solo dentro de la ventana
+// (minMarkerIndex). La referencia es la última escritura de la ficha o el último punto.
+const refMs = Math.max(
+  ...[Date.parse(generatedAt ?? ""), xMax].filter(Number.isFinite),
+);
+const minIdx = minMarkerIndex(series, min, windowDays, refMs);
+const minPoint =
+  minIdx === -1 ? null : { x: x(dates[minIdx]), y: y(Number(min)) };
 
 // Ticks en fronteras de mes calendario, no "hasta 6 espaciados por índice" como especificaba
 // el PQ 05: con series de longitud irregular, el espaciado por índice deja etiquetas en

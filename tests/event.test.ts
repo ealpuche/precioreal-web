@@ -506,3 +506,34 @@ describe("src/lib/event.ts", () => {
     });
   });
 });
+
+describe("validateEvent: origen de salida_tienda (web#60)", () => {
+  const base = { tienda: "cyberpuerta", slug: "KPM-610B" };
+
+  it("acepta salida_tienda sin origen (clic de la ficha) y con un origen de la lista", () => {
+    expect(
+      validateEvent({ evento: "salida_tienda", props: base }),
+    ).not.toBeNull();
+    for (const origen of ["telegram", "feed", "otro"]) {
+      expect(
+        validateEvent({ evento: "salida_tienda", props: { ...base, origen } }),
+      ).not.toBeNull();
+    }
+  });
+
+  it.each(["x", 1, "", null])("rechaza origen=%s", (origen) => {
+    expect(
+      validateEvent({ evento: "salida_tienda", props: { ...base, origen } }),
+    ).toBeNull();
+  });
+
+  it("los eventos sin opcionales siguen exigiendo todas sus claves", () => {
+    expect(validateEvent({ evento: "alerta_alta", props: {} })).toBeNull();
+    expect(
+      validateEvent({
+        evento: "alerta_alta",
+        props: { tienda: "cyberpuerta", origen: "feed" },
+      }),
+    ).toBeNull();
+  });
+});

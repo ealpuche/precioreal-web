@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import ficha from "./fixtures/kpm-610b.json";
 // Vite importa el texto con ?raw; evita depender de los tipos de Node en astro check.
 import robots from "../public/robots.txt?raw";
-import { GET } from "../src/pages/ir/[tienda]/[slug]";
+import { GET, HEAD } from "../src/pages/ir/[tienda]/[slug]";
 import { POST } from "../src/pages/api/event";
 
 // web#60: los enlaces de las ofertas (Telegram y deals.json) pasan por precioreal.mx,
@@ -28,7 +28,7 @@ function mockDb() {
   };
 }
 
-function llamar(path: string, db = mockDb()) {
+function llamar(path: string, db = mockDb(), ua = "Mozilla/5.0 (iPhone)") {
   const url = new URL(`https://precioreal.mx${path}`);
   const [, , tienda, slug] = url.pathname.split("/");
   return {
@@ -36,7 +36,7 @@ function llamar(path: string, db = mockDb()) {
     res: GET({
       params: { tienda, slug: decodeURIComponent(slug) },
       url,
-      request: new Request(url),
+      request: new Request(url, { headers: { "user-agent": ua } }),
       locals: { runtime: { env: { EVENTS_DB: db } } },
       redirect: (to: string, status: number) =>
         new Response(null, { status, headers: { Location: to } }),
@@ -112,6 +112,39 @@ describe("/ir/{tienda}/{slug} (web#60)", () => {
     const r = await res;
     expect(r.headers.get("Location")).toBe("/cyberpuerta/KPM-610B");
     expect(db.calls).toHaveLength(0);
+  });
+
+  it("una URL sin esquema en la ficha no se usa como destino (CR PR #63, H1)", async () => {
+    feedResponde({ ...ficha, url: "www.cyberpuerta.mx/x.html" });
+    const { res, db } = llamar("/ir/cyberpuerta/KPM-610B?de=telegram");
+    const r = await res;
+    expect(r.headers.get("Location")).toBe("/cyberpuerta/KPM-610B");
+    expect(db.calls).toHaveLength(0);
+  });
+
+  it.each([
+    "TelegramBot (like TwitterBot)",
+    "WhatsApp/2.23.20.0",
+    "Mozilla/5.0 (compatible; Googlebot/2.1)",
+  ])("la vista previa de %s redirige pero no cuenta", async (ua) => {
+    feedResponde(ficha);
+    const { res, db } = llamar(
+      "/ir/cyberpuerta/KPM-610B?de=telegram",
+      mockDb(),
+      ua,
+    );
+    const r = await res;
+    expect(r.headers.get("Location")).toBe(ficha.url);
+    expect(db.calls).toHaveLength(0);
+  });
+
+  it("HEAD redirige igual y no cuenta", async () => {
+    feedResponde(ficha);
+    const r = await HEAD({
+      params: { tienda: "cyberpuerta", slug: "KPM-610B" },
+    } as never);
+    expect(r.status).toBe(302);
+    expect(r.headers.get("Location")).toBe(ficha.url);
   });
 
   it("el navegador no puede inventar un origen en /api/event", async () => {

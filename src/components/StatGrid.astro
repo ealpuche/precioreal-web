@@ -11,14 +11,12 @@ const { stats } = Astro.props;
 ---
 
 <dl class="stats">
-  {
-    stats.map((s) => (
-      <div class="stat">
-        <dt>{s.label}</dt>
-        <dd class:list={["num", s.tone ?? "default"]}>{s.value}</dd>
-      </div>
-    ))
-  }
+  {stats.map((s) => (
+    <div class="stat">
+      <dt>{s.label}</dt>
+      <dd class:list={["num", s.tone ?? "default"]}>{s.value}</dd>
+    </div>
+  ))}
 </dl>
 
 <style>

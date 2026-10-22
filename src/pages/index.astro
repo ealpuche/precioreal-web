@@ -21,9 +21,8 @@ const ejemploHref = `/${FICHA_EJEMPLO.tienda}/${encodeURIComponent(FICHA_EJEMPLO
         </p>
         <SearchBox variant="hero" />
         <p class="coverage">
-          Más de <span class="num">{COBERTURA.productos}</span> productos de {
-            COBERTURA.tienda
-          } con historial diario. Otras tiendas, todavía no.
+          Más de <span class="num">{COBERTURA.productos}</span> productos de{" "}
+          {COBERTURA.tienda} con historial diario. Otras tiendas, todavía no.
         </p>
       </div>
       <a class="card example" href={ejemploHref}>
@@ -77,13 +76,14 @@ const ejemploHref = `/${FICHA_EJEMPLO.tienda}/${encodeURIComponent(FICHA_EJEMPLO
         class="btn btn-secondary"
         href={TELEGRAM_URL}
         target="_blank"
-        rel="noopener">Abrir @precioreal_mx</a
+        rel="noopener"
       >
+        Abrir @precioreal_mx
+      </a>
     </div>
     <p class="b2b">
-      ¿Necesitas estos datos para tu negocio? <a href="/datos"
-        >Datos para negocios</a
-      >
+      ¿Necesitas estos datos para tu negocio?{" "}
+      <a href="/datos">Datos para negocios</a>
     </p>
   </section>
 </Base>

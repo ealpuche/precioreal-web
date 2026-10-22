@@ -23,14 +23,18 @@ const { size = 32, variant = "dark", title } = Astro.props;
   aria-label={title}
 >
   <g stroke-linejoin="round" stroke-linecap="round">
-    <polygon class="tag" points="12,50 34,24 88,24 88,76 34,76" stroke-width="8"
+    <polygon
+      class="tag"
+      points="12,50 34,24 88,24 88,76 34,76"
+      stroke-width="8"
     ></polygon>
     <circle class="hole" cx="30" cy="50" r="5"></circle>
     <polyline
       class="ink"
       points="44,64 55,50 65,60 78,43"
       fill="none"
-      stroke-width="6"></polyline>
+      stroke-width="6"
+    ></polyline>
     <circle class="dot" cx="78" cy="43" r="7.5"></circle>
   </g>
 </svg>

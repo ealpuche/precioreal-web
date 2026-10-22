@@ -124,6 +124,28 @@ describe("normalizePastedUrl", () => {
     ).toBe("cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html");
   });
 
+  it("drops typographic quotes and WhatsApp marks (CR PR #62 ronda 2, H1)", () => {
+    for (const texto of [
+      "“https://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html”",
+      "*https://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html*",
+      "_https://www.cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html_…",
+    ]) {
+      expect(normalizePastedUrl(texto)).toBe(
+        "cyberpuerta.mx/Computadoras/Laptops/Laptop-Dell.html",
+      );
+    }
+  });
+
+  it("stays linear on a long run of trailing dots (CR PR #62 ronda 2)", () => {
+    // Con `/[…]+$/` esto tardaba ~350 ms por llamada; el recorrido desde el final, ~0 ms.
+    // Lo que devuelva no importa (el parser acepta un host de puntos): importa que no
+    // bloquee al worker.
+    const t0 = performance.now();
+    normalizePastedUrl("https://" + ".".repeat(16000) + "a");
+    normalizePastedUrl("https://x.html" + ".".repeat(16000));
+    expect(performance.now() - t0).toBeLessThan(100);
+  });
+
   it("keeps the canonical normalizer cheap for the index: no link extraction", () => {
     // `resolveProductUrl` llama a normalizeProductUrl 31,903 veces por búsqueda.
     expect(

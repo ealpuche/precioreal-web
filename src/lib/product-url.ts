@@ -34,9 +34,19 @@ export function normalizeProductUrl(raw: string): string | null {
 // (#42: 36 de 92 búsquedas por enlace entre el 2 y el 22 de octubre).
 const ENLACE_EN_TEXTO = /https?:\/\/\S+/i;
 
-// Puntuación y comillas que una frase pega al final de un enlace ("(…html)." , «…html»).
-// Las URLs del índice terminan en `.html`, así que quitarlas nunca rompe una real.
-const PUNTUACION_FINAL = /[.,;:!?)\]"'»>]+$/;
+// Puntuación, comillas (rectas, tipográficas, guillemets) y marcas de WhatsApp (`*…*`,
+// `_…_`) que una frase pega al final de un enlace. Las URLs del índice terminan en `.html`,
+// así que quitarlas nunca rompe una real.
+const PUNTUACION_FINAL = new Set([...'".,;:!?)]"\'»>”’…*_']);
+
+// Recorre desde el final en vez de `/[…]+$/`: esa expresión reintenta desde cada posición y
+// con 16 KB de puntos seguidos de una letra tardaba ~350 ms por llamada (medido en Node,
+// CR PR #62 ronda 2). Así es lineal.
+function sinPuntuacionFinal(s: string): string {
+  let fin = s.length;
+  while (fin > 0 && PUNTUACION_FINAL.has(s[fin - 1])) fin--;
+  return s.slice(0, fin);
+}
 
 /**
  * Normaliza lo que el usuario pegó: el enlace que haya dentro del texto, o el texto entero
@@ -50,7 +60,7 @@ const PUNTUACION_FINAL = /[.,;:!?)\]"'»>]+$/;
  */
 export function normalizePastedUrl(raw: string): string | null {
   const enlace = ENLACE_EN_TEXTO.exec(raw)?.[0] ?? raw.trim();
-  const candidato = enlace.replace(PUNTUACION_FINAL, "");
+  const candidato = sinPuntuacionFinal(enlace);
   if (!candidato || /\s/.test(candidato)) return null;
   return normalizeProductUrl(candidato);
 }

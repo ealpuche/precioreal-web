@@ -303,3 +303,38 @@ describe("formatDayYear", () => {
     );
   });
 });
+
+describe("historySentences: regresiones de la revisión del PR #41", () => {
+  it("H1: con el producto agotado no afirma un precio de hoy ni días vigente", () => {
+    const p = make({
+      current: {
+        price: "100.00",
+        since: "2026-10-01T00:00:00Z",
+        available: false,
+      },
+    });
+    const text = historySentences(p).join(" ");
+    expect(text).not.toMatch(/precio de hoy|Lleva|precio actual/);
+    expect(text).toContain("último precio visto");
+  });
+
+  it("no afirma cuánto duró un nivel pasado: la serie no publica los periodos sin stock", () => {
+    // build_levels del productor termina un nivel en el siguiente estado de CUALQUIER tipo,
+    // pero el contrato solo publica los disponibles: la distancia al siguiente punto puede
+    // incluir días agotado.
+    const p = make({
+      current: {
+        price: "130.00",
+        since: "2026-10-01T00:00:00Z",
+        available: true,
+      },
+      series: [
+        ["2026-09-01T00:00:00Z", "120.00", true],
+        ["2026-09-11T00:00:00Z", "100.00", true],
+        ["2026-09-15T00:00:00Z", "150.00", true],
+        ["2026-10-01T00:00:00Z", "130.00", true],
+      ],
+    });
+    expect(historySentences(p).join(" ")).not.toContain("duró");
+  });
+});

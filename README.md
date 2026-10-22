@@ -1,12 +1,22 @@
 # precioreal-web
 
-Frontend de PrecioReal.mx — estático en Cloudflare Pages + Pages Functions.
+Frontend de PrecioReal.mx — Astro en Cloudflare Pages (ADR-001, ADR-002).
+
+## Páginas
+
+- `/` portada: buscador como acción principal, cobertura publicada y canales secundarios.
+- `/buscar` resuelve código o enlace de Cyberpuerta a su ficha.
+- `/{tienda}/{slug}` ficha: veredicto, ancla habitual → hoy, gráfica, historial en frases y
+  tabla de cambios (todo en el HTML del servidor, `src/lib/history.ts`).
+- `/datos` Datos para negocios (prerenderizada; contacto por correo).
+
+Identidad visual: `src/styles/tokens.css`, `src/components/Symbol.astro`. La guía vive en
+`ealpuche/precioreal-brand`; el diseño de pantallas en V0.
 
 ## Contratos
 
-- Feed: GET https://feed.precioreal.mx/public/deals.json
-  { generated_at: ISO8601, deals: [{ product, store, url, current_price(str),
-  reference_price(str), discount_pct(float), detected_at }] } (máx 50)
+- Catálogo: `specs/contracts/catalog.md` (fichas e índice por tienda en R2).
+- Feed de ofertas (`public/deals.json`): ya no lo consume la web desde #40; lo usa el canal.
 - Captura: POST /api/subscribe { email, turnstileToken } → 200 {ok:true} | 400 | 500
 
 ## Bindings requeridos en Pages

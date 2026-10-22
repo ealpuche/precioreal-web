@@ -42,10 +42,10 @@ Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), l
 - Campos nuevos se agregan; nunca se renombran ni se quitan sin issue en ambos repos.
 - `series` no está paginada. Si un SKU supera ~2000 puntos, el productor emite `series`
   diezmada más `series_full_url`; issue coordinado en ambos repos antes de rebasar el umbral.
-- Tipos espejo en `src/contracts/catalog.ts`. Pendiente: test que valide un fixture real
-  producido por el crawler — hoy los tests usan literales escritos a mano (`sampleProduct`,
-  `makeProduct()`); el contrato sigue sin verificarse contra la forma real que emite el
-  productor (CR PR #7, H1).
+- Tipos espejo en `src/contracts/catalog.ts`. Desde #40 existe un fixture real producido por
+  el crawler (`tests/fixtures/kpm-610b.json`, `generated_at` 2026-10-20) que usan los tests de
+  `src/lib/history.ts`. Los tests de `catalog.ts` siguen con literales escritos a mano
+  (`sampleProduct`, `makeProduct()`); pasarlos al fixture queda pendiente (CR PR #7, H1).
 - `is_from_price` en `{slug}.json` es **opcional para el consumidor**: lo agrega
   price-crawler-saas#132, pero las fichas publicadas antes de ese cambio no lo traen hasta que
   el backfill diario las reescriba. La UI trata su ausencia como `false`, nunca como un error

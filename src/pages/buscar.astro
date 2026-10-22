@@ -4,13 +4,7 @@ export const prerender = false;
 import Base from "../layouts/Base.astro";
 import { logEvent, validateEvent } from "../lib/event";
 import { storeEvent } from "../lib/event-store";
-import { resolveProductUrl } from "../lib/catalog";
-import {
-  hostPertenece,
-  normalizeProductUrl,
-  tiendaNoPublicada,
-} from "../lib/product-url";
-import { SKU_RE } from "../lib/sku";
+import { decidirBusqueda } from "../lib/buscar";
 import SearchBox from "../components/SearchBox.astro";
 
 const q = (Astro.url.searchParams.get("q") ?? "").trim();
@@ -24,53 +18,20 @@ if (q) {
   // el tiempo — nunca lo que el usuario pegó, que no aporta a la decisión y sí crearía una
   // retención que habría que justificar.
   const t0 = Date.now();
-  let modo = "sku";
-  let resultado = "redirigido";
+  // La lógica vive en src/lib/buscar.ts, probada en vitest (#42); aquí solo se ejecuta la
+  // decisión y se registra. Si `decidirBusqueda` lanzara (no debería: `resolveProductUrl` no
+  // lanza), la fila se registra como `error_upstream` y Astro responde su 500.
+  let modo = "url";
+  let resultado = "error_upstream";
 
   try {
-    // Sin `!looksLikeUrl(q)`: SKU_RE ya excluye `/` y `:`, así que era condición muerta
-    // (CR PR #11, H5).
-    if (SKU_RE.test(q)) {
-      return Astro.redirect(`/cyberpuerta/${encodeURIComponent(q)}`, 302);
+    const decision = await decidirBusqueda(q);
+    modo = decision.modo;
+    resultado = decision.resultado;
+    if (decision.resultado === "redirigido") {
+      return Astro.redirect(decision.destino, 302);
     }
-    modo = "url";
-    const normalized = normalizeProductUrl(q);
-    if (!normalized) {
-      resultado = "ilegible";
-      // Casi siempre es un nombre tecleado: el mensaje da la salida en vez de un callejón
-      // (auditoría V0, #40). La búsqueda por nombre es #15.
-      error =
-        "Eso no parece un código ni un enlace. Todavía no buscamos por nombre: abre el producto en Cyberpuerta y copia su código (SKU) o el enlace de la página.";
-    } else {
-      const tiendaPendiente = tiendaNoPublicada(normalized);
-      if (tiendaPendiente) {
-        resultado = "tienda_no_publicada";
-        error = `Rastreamos ${tiendaPendiente}, pero su historial todavía no está disponible en el sitio. Por ahora solo puedes consultar Cyberpuerta.`;
-      } else if (!hostPertenece(normalized, "cyberpuerta.mx")) {
-        resultado = "tienda_desconocida";
-        error = "Por ahora solo tenemos historial de Cyberpuerta.";
-      } else if (!normalized.includes("/")) {
-        resultado = "sin_ruta";
-        error =
-          "Ese es el enlace de la portada de Cyberpuerta. Pega el de un producto.";
-      } else {
-        const resolved = await resolveProductUrl("cyberpuerta", normalized);
-        if (resolved.ok) {
-          return Astro.redirect(
-            `/cyberpuerta/${encodeURIComponent(resolved.sku)}`,
-            302,
-          );
-        }
-        resultado =
-          resolved.reason === "upstream_error"
-            ? "error_upstream"
-            : "no_encontrado";
-        error =
-          resolved.reason === "upstream_error"
-            ? "No pudimos consultar el catálogo con ese enlace en este momento. Prueba con el código del producto: aparece como SKU en su página de Cyberpuerta."
-            : "No encontramos ese producto en nuestro catálogo de Cyberpuerta.";
-      }
-    }
+    error = decision.error;
   } finally {
     // En `finally` porque los caminos exitosos salen por `return Astro.redirect(...)`: sin
     // esto, justo las búsquedas que funcionan serían las que no se registran.
@@ -92,7 +53,7 @@ if (q) {
       await storeEvent(Astro.locals?.runtime, evento);
     }
     // Solo valores internos, nunca `q`. Si aparece, RESULTADOS_BUSCAR y los
-    // literales de este archivo se desincronizaron (CR PR #31, H5).
+    // literales de buscar.ts se desincronizaron (CR PR #31, H5).
     else
       console.warn(
         JSON.stringify({ t: "evt_invalid", evento: "buscar", modo, resultado }),

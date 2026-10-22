@@ -370,22 +370,45 @@ describe("historySentences: precio vigente y agotado", () => {
   });
 });
 
-it("agotado sin ser el mínimo: cierra con el último precio visto y su fecha", () => {
-  const p = make({
-    current: {
-      price: "130.00",
-      since: "2026-10-05T00:00:00Z",
-      available: false,
-    },
-    series: [
-      ["2026-09-01T00:00:00Z", "120.00", true],
-      ["2026-09-11T00:00:00Z", "100.00", true],
-      ["2026-09-15T00:00:00Z", "150.00", true],
-      ["2026-10-01T00:00:00Z", "130.00", true],
-    ],
+describe("historySentences: regresiones de la segunda revisión del PR #41", () => {
+  it("H1: agotado no repite el último precio con otra fecha (el veredicto ya lo dice)", () => {
+    const p = make({
+      current: {
+        price: "130.00",
+        since: "2026-10-05T00:00:00Z",
+        available: false,
+      },
+      series: [
+        ["2026-09-01T00:00:00Z", "120.00", true],
+        ["2026-09-11T00:00:00Z", "100.00", true],
+        ["2026-09-15T00:00:00Z", "150.00", true],
+        ["2026-10-01T00:00:00Z", "130.00", true],
+      ],
+    });
+    const text = historySentences(p).join(" ");
+    expect(text).not.toMatch(/último precio visto|registrado el|Lleva/);
   });
-  const s = historySentences(p);
-  expect(s[s.length - 1]).toBe(
-    "El último precio visto fue $130, registrado el 30 sep.",
-  );
+
+  it("H2: con is_from_price el precio vigente lleva 'desde', como la grilla y el veredicto", () => {
+    const p = make({
+      is_from_price: true,
+      min_90d: "50.00",
+      current: {
+        price: "100.00",
+        since: "2026-10-01T00:00:00Z",
+        available: true,
+      },
+    });
+    const s = historySentences(p);
+    expect(s[s.length - 1]).toBe(
+      "Lleva 9 días con precio desde $100, desde el 30 sep.",
+    );
+  });
+
+  it("H2: el mínimo vigente con is_from_price también lleva 'desde'", () => {
+    const p = { ...real, is_from_price: true } as CatalogProduct;
+    expect(historySentences(p)).toContain(
+      "Su mínimo de 90 días, desde $559, empezó el 19 oct y es el precio de hoy.",
+    );
+  });
 });

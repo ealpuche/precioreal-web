@@ -1,15 +1,13 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { readFileSync } from "node:fs";
+import ficha from "./fixtures/kpm-610b.json";
+// Vite importa el texto con ?raw; evita depender de los tipos de Node en astro check.
+import robots from "../public/robots.txt?raw";
 import { GET } from "../src/pages/ir/[tienda]/[slug]";
 import { POST } from "../src/pages/api/event";
 
 // web#60: los enlaces de las ofertas (Telegram y deals.json) pasan por precioreal.mx,
 // se cuentan en D1 con su origen y redirigen a la tienda. Hoy no sabemos qué ofertas
 // generan clics: la columna `origen` existe y siempre va en null.
-
-const ficha = JSON.parse(
-  readFileSync(new URL("./fixtures/kpm-610b.json", import.meta.url), "utf-8"),
-);
 
 function mockDb() {
   const calls: unknown[][] = [];
@@ -134,10 +132,6 @@ describe("/ir/{tienda}/{slug} (web#60)", () => {
   });
 
   it("robots.txt aparta /ir/ de los rastreadores", () => {
-    const robots = readFileSync(
-      new URL("../public/robots.txt", import.meta.url),
-      "utf-8",
-    );
     expect(robots).toMatch(/^Disallow: \/ir\/$/m);
   });
 });

@@ -60,7 +60,7 @@ export async function storeEvent(
         evento,
         textOrNull(props.tienda),
         textOrNull(props.slug),
-        null,
+        textOrNull(props.origen),
         JSON.stringify(props),
       )
       .run()

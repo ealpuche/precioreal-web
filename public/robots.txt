@@ -10,5 +10,7 @@ User-agent: *
 Allow: /cyberpuerta/
 Allow: /buscar
 Disallow: /api/
+# Enlaces de salida de las ofertas (web#60): un rastreador que los siga contaría clics falsos.
+Disallow: /ir/
 
 Sitemap: https://precioreal.mx/sitemap.xml

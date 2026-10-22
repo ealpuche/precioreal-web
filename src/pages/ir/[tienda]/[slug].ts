@@ -32,8 +32,10 @@ function redirigir(destino: string): Response {
 // Agentes que piden la URL sin que nadie haya hecho clic: las vistas previas de Telegram y de
 // otras apps de mensajería, y los rastreadores que ignoran robots.txt. Se les redirige igual,
 // pero no se cuentan (CR PR #63). El user agent se lee para decidir y no se guarda.
+// Agentes concretos y no la subcadena "bot": un teléfono CUBOT lleva "BOT" en el modelo y
+// es un clic real (CR PR #63 ronda 2). `crawler`/`spider` sí son genéricos de rastreador.
 const NO_ES_CLIC =
-  /bot|crawler|spider|preview|facebookexternalhit|whatsapp|slack|discord|embedly/i;
+  /telegrambot|twitterbot|facebookexternalhit|facebot|whatsapp|slackbot|slack-imgproxy|discordbot|linkedinbot|skypeuripreview|googlebot|bingbot|applebot|yandexbot|duckduckbot|baiduspider|embedly|crawler|spider/i;
 
 type Destino = { url: string } | { ficha: string } | { portada: true };
 

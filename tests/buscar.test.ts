@@ -28,6 +28,16 @@ describe("decidirBusqueda", () => {
     expect(resolver).not.toHaveBeenCalled();
   });
 
+  it("una palabra con charset de SKU sigue el camino de código, como antes del PR", async () => {
+    // Documentado en el README como serie que NO cambia de significado (CR PR #62 ronda 4).
+    const d = await decidirBusqueda("monitor", vi.fn<Resolver>());
+    expect(d).toEqual({
+      modo: "sku",
+      resultado: "redirigido",
+      destino: "/cyberpuerta/monitor",
+    });
+  });
+
   it("un enlace de producto redirige a la clave que devuelve el catálogo", async () => {
     const d = await decidirBusqueda(KPM + "?utm_source=share", resuelveKpm);
     expect(d).toEqual({

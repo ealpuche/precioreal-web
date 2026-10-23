@@ -52,11 +52,15 @@ async function resolver(tienda: string, slug: string): Promise<Destino> {
   // Se valida y se redirige la MISMA URL ya parseada: normalizeProductUrl acepta una URL
   // sin esquema, y redirigir el texto crudo "www.cyberpuerta.mx/…" sería un salto relativo
   // dentro de precioreal.mx (CR PR #63, H1).
+  const rechazar = (): Destino => {
+    console.warn(JSON.stringify({ t: "ir_destino_rechazado", tienda, slug }));
+    return { ficha };
+  };
   let parsed: URL;
   try {
     parsed = new URL(resultado.product.url);
   } catch {
-    return { ficha };
+    return rechazar();
   }
   const dominio = DOMINIO_DE_TIENDA[tienda];
   const normalizado = normalizeProductUrl(parsed.href);
@@ -66,8 +70,7 @@ async function resolver(tienda: string, slug: string): Promise<Destino> {
     !dominio ||
     !hostPertenece(normalizado, dominio)
   ) {
-    console.warn(JSON.stringify({ t: "ir_destino_rechazado", tienda, slug }));
-    return { ficha };
+    return rechazar();
   }
   return { url: parsed.href };
 }

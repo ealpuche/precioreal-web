@@ -122,6 +122,18 @@ describe("/ir/{tienda}/{slug} (web#60)", () => {
     expect(db.calls).toHaveLength(0);
   });
 
+  it("un destino que no se puede parsear queda en el log (CR PR #63 ronda 4)", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    feedResponde({ ...ficha, url: "http://[roto" });
+    const { res, db } = llamar("/ir/cyberpuerta/KPM-610B?de=telegram");
+    const r = await res;
+    expect(r.headers.get("Location")).toBe("/cyberpuerta/KPM-610B");
+    expect(db.calls).toHaveLength(0);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('"t":"ir_destino_rechazado"'),
+    );
+  });
+
   it.each([
     "TelegramBot (like TwitterBot)",
     "WhatsApp/2.23.20.0",

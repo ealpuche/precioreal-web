@@ -73,11 +73,22 @@ Regla de ubicación: un evento se emite en servidor si el servidor ya ve la
 acción (búsquedas, altas de alerta) y en cliente solo si nunca la ve (un clic
 hacia otro sitio).
 
-| Evento          | Dónde se emite                                                          | Props                                   |
-| --------------- | ----------------------------------------------------------------------- | --------------------------------------- |
-| `buscar`        | Servidor, en `/buscar`, una vez por búsqueda, también las que redirigen | `modo`, `resultados`, `resultado`, `ms` |
-| `salida_tienda` | Cliente, clic en "Ver en {tienda}" de la ficha                          | `tienda`, `slug`                        |
-| `alerta_alta`   | Servidor, desde el endpoint de #17 (aún no se emite)                    | `tienda`                                |
+| Evento          | Dónde se emite                                                          | Props                                    |
+| --------------- | ----------------------------------------------------------------------- | ---------------------------------------- |
+| `buscar`        | Servidor, en `/buscar`, una vez por búsqueda, también las que redirigen | `modo`, `resultados`, `resultado`, `ms`  |
+| `salida_tienda` | Cliente, clic en "Ver en {tienda}" de la ficha; servidor, en `/ir/`     | `tienda`, `slug`, `origen` (solo `/ir/`) |
+| `alerta_alta`   | Servidor, desde el endpoint de #17 (aún no se emite)                    | `tienda`                                 |
+
+Cómo leer `salida_tienda`:
+
+- `origen` (columna y prop) vale `telegram`, `feed` u `otro` cuando el clic pasó por
+  `/ir/{tienda}/{slug}?de=…`, la ruta que usan los enlaces de las ofertas (web#60); `otro`
+  es un `de` ausente o desconocido. Los clics desde la ficha no pasan por `/ir/` y dejan
+  `origen` en null. `/api/event` rechaza un `origen` enviado por el navegador.
+- `/ir/` redirige (302, sin caché) a la URL del producto que dice la ficha del feed, nunca
+  a una que venga en la petición, y solo si su host es el de la tienda. Si la ficha no
+  existe o el feed falla, manda a la ficha propia sin registrar el clic. `robots.txt` la
+  excluye para que los rastreadores no cuenten clics.
 
 Cómo leer `buscar`:
 

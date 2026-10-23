@@ -11,6 +11,10 @@ export type EventPayload = {
 export const MAX_BODY_BYTES = 1024;
 
 export const MODOS_BUSCAR = ["sku", "url", "texto"] as const;
+
+// De dónde viene un clic hacia la tienda que pasa por /ir/ (web#60). `otro` cubre un `de`
+// ausente o desconocido. Los clics de la ficha no pasan por /ir/ y dejan `origen` en null.
+export const ORIGENES_SALIDA = ["telegram", "feed", "otro"] as const;
 export const RESULTADOS_BUSCAR = [
   "redirigido",
   "ilegible",
@@ -26,15 +30,23 @@ type Validator = (val: unknown) => boolean;
 const isPlainObject = (val: unknown): val is Record<string, unknown> =>
   typeof val === "object" && val !== null && !Array.isArray(val);
 
+// Props que un evento puede omitir. `origen` de `salida_tienda` solo lo pone el servidor
+// en /ir/; el navegador no puede enviarlo (ver handleEvent).
+const OPCIONALES: Partial<Record<Evento, ReadonlySet<string>>> = {
+  salida_tienda: new Set(["origen"]),
+};
+
 function hasExactKeys(
+  evento: Evento,
   props: Record<string, unknown>,
   schema: Record<string, Validator>,
 ): boolean {
-  const propKeys = Object.keys(props);
-  const schemaKeys = Object.keys(schema);
-  if (propKeys.length !== schemaKeys.length) return false;
-  return schemaKeys.every((key) =>
-    Object.prototype.hasOwnProperty.call(props, key),
+  const opcionales = OPCIONALES[evento] ?? new Set<string>();
+  const has = (key: string) => Object.prototype.hasOwnProperty.call(props, key);
+  return (
+    Object.keys(props).every((key) =>
+      Object.prototype.hasOwnProperty.call(schema, key),
+    ) && Object.keys(schema).every((key) => opcionales.has(key) || has(key))
   );
 }
 
@@ -57,6 +69,9 @@ const SCHEMAS: Record<Evento, Record<string, Validator>> = {
   salida_tienda: {
     tienda: (v) => typeof v === "string" && /^[a-z]{1,32}$/.test(v),
     slug: (v) => typeof v === "string" && SKU_RE.test(v),
+    origen: (v) =>
+      typeof v === "string" &&
+      (ORIGENES_SALIDA as readonly string[]).includes(v),
   },
   alerta_alta: {
     tienda: (v) => typeof v === "string" && /^[a-z]{1,32}$/.test(v),
@@ -77,7 +92,7 @@ export function validateEvent(input: unknown): EventPayload | null {
   if (!isPlainObject(props)) return null;
 
   const schema = SCHEMAS[evento];
-  if (!hasExactKeys(props, schema)) return null;
+  if (!hasExactKeys(evento, props, schema)) return null;
 
   for (const [key, val] of Object.entries(props)) {
     const validator = schema[key];
@@ -177,6 +192,9 @@ export async function handleEvent(
 
   const payload = validateEvent(parsed);
   if (!payload || !EVENTOS_DE_CLIENTE.has(payload.evento)) return vacio(400);
+  // `origen` lo asigna /ir/ en el servidor; aceptarlo del navegador dejaría inventar clics
+  // "de Telegram" (web#60).
+  if ("origen" in payload.props) return vacio(400);
 
   logEvent(payload, now);
   await storeEvent(runtime, payload, now);

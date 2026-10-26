@@ -43,6 +43,10 @@ Nota: crear `.dev.vars` con `TURNSTILE_SECRET=...` para probar suscripción loca
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Variable de entorno: `NODE_VERSION=22`
+- Variables públicas solo en **Production**: `PUBLIC_CF_BEACON_TOKEN` (Web Analytics) y
+  `PUBLIC_GA_MEASUREMENT_ID` (Google Analytics 4, forma `G-XXXXXXXX`; con otra forma GA4
+  queda apagado sin aviso: verificar en el HTML de producción que aparece
+  `googletagmanager` tras el despliegue)
 - Bindings: KV `SUBSCRIBERS` → `precioreal-subscribers`; D1 `EVENTS_DB` →
   `precioreal-events` (Production) y `precioreal-events-dev` (Preview); secreto
   `TURNSTILE_SECRET`
@@ -51,7 +55,7 @@ Nota: crear `.dev.vars` con `TURNSTILE_SECRET=...` para probar suscripción loca
 
 ## Métricas
 
-Dos fuentes, con retención distinta.
+Tres fuentes, con retención distinta.
 
 **Cloudflare Web Analytics** — visitas y páginas vistas, sin cookies ni banner
 de consentimiento. Dashboard de Cloudflare → Analytics & Logs → Web Analytics →
@@ -61,6 +65,15 @@ cuentan. El sitio usa el snippet manual, no la inyección automática de
 Cloudflare: con las dos activas, cada página cargaría dos beacons y las visitas
 se contarían doble. Los bloqueadores de anuncios pueden impedir la carga del
 beacon; es una métrica de referencia, no un conteo exacto.
+
+**Google Analytics 4** (#64) — adquisición (de dónde llegan las visitas), sesiones y,
+enlazado con Search Console, qué búsquedas de Google traen tráfico. Usa cookies; sin
+banner por decisión de Elmer (2026-10-25), con aviso en `/datos#medicion`. Google
+Signals y la personalización de anuncios van apagados (`src/lib/analytics.ts`). Solo
+carga con `PUBLIC_GA_MEASUREMENT_ID` (Production). Recibe la URL completa de cada
+página, incluido el texto buscado en `/buscar?q=…` (búsqueda en el sitio). `track()`
+manda a GA4 el mismo evento que a D1; los clics vía `/ir/` (Telegram, feed) son
+redirects de servidor y GA4 no los ve: para eso está D1.
 
 **Eventos de producto** — una fila por evento en la base D1 `precioreal-events`
 (tabla `events`: `ts`, `evento`, `tienda`, `slug`, `origen`, `props`). Se consulta

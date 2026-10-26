@@ -15,8 +15,10 @@ declare namespace App {
   interface Locals extends Runtime {}
 }
 
-// Variables públicas de build. `PUBLIC_CF_BEACON_TOKEN` se define solo en el
-// entorno Production de Pages: previews y local no inyectan Web Analytics (#24).
+// Variables públicas de build. `PUBLIC_CF_BEACON_TOKEN` y `PUBLIC_GA_MEASUREMENT_ID` se
+// definen solo en el entorno Production de Pages: previews y local no inyectan Web
+// Analytics (#24) ni Google Analytics (#64).
 interface ImportMetaEnv {
   readonly PUBLIC_CF_BEACON_TOKEN?: string;
+  readonly PUBLIC_GA_MEASUREMENT_ID?: string;
 }

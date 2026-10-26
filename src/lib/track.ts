@@ -1,3 +1,4 @@
+import { enviarAGa } from "./analytics";
 import { validateEvent, type Evento } from "./event";
 
 export function track(
@@ -9,6 +10,8 @@ export function track(
     if (!payload) return false;
 
     const body = JSON.stringify(payload);
+    // Mismo evento validado a GA4 (#64). No lanza, así que no puede impedir el envío a D1.
+    enviarAGa(payload.evento, payload.props);
 
     if (
       typeof navigator !== "undefined" &&

@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { GA_CONFIG, enviarAGa, gaMeasurementId } from "../src/lib/analytics";
+import {
+  GA_CONFIG,
+  enviarAGa,
+  gaInitScript,
+  gaMeasurementId,
+} from "../src/lib/analytics";
 
 describe("src/lib/analytics.ts (#64)", () => {
   afterEach(() => {
@@ -54,5 +59,27 @@ describe("src/lib/analytics.ts (#64)", () => {
       }),
     );
     expect(() => enviarAGa("salida_tienda", { tienda: "x" })).not.toThrow();
+  });
+});
+
+describe("gaInitScript (#64)", () => {
+  it("arranca gtag con el ID y la configuración sin señales", () => {
+    const script = gaInitScript("G-ABC123XYZ9");
+    expect(script).toContain('window.gtag("config","G-ABC123XYZ9",');
+    expect(script).toContain('"allow_google_signals":false');
+    expect(script).toContain('"allow_ad_personalization_signals":false');
+  });
+
+  it("el script define gtag y encola en dataLayer", () => {
+    const ventana: Record<string, unknown> = {};
+    new Function("window", gaInitScript("G-ABC123XYZ9"))(ventana);
+    const capa = ventana.dataLayer as unknown[][];
+    expect(typeof ventana.gtag).toBe("function");
+    expect(capa).toHaveLength(2);
+    expect(Array.from(capa[1] as ArrayLike<unknown>)).toEqual([
+      "config",
+      "G-ABC123XYZ9",
+      { allow_google_signals: false, allow_ad_personalization_signals: false },
+    ]);
   });
 });

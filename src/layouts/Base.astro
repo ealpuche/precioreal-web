@@ -3,6 +3,7 @@ import "../styles/tokens.css";
 import "../styles/global.css";
 import Wordmark from "../components/Wordmark.astro";
 import { CONTACT_EMAIL, COBERTURA, TELEGRAM_URL } from "../lib/site";
+import { gaInitScript, gaMeasurementId } from "../lib/analytics";
 
 interface Props {
   title?: string;
@@ -19,6 +20,9 @@ const beacon =
   typeof beaconToken === "string" && beaconToken.trim() !== ""
     ? JSON.stringify({ token: beaconToken.trim() })
     : null;
+
+// Google Analytics 4 (#64): solo con un ID válido, que existe únicamente en Production.
+const gaId = gaMeasurementId(import.meta.env.PUBLIC_GA_MEASUREMENT_ID);
 ---
 
 <!doctype html>
@@ -50,6 +54,18 @@ const beacon =
           src="https://static.cloudflareinsights.com/beacon.min.js"
           data-cf-beacon={beacon}
         />
+      )
+    }
+    {
+      gaId && (
+        <>
+          <script
+            is:inline
+            async
+            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+          />
+          <script is:inline set:html={gaInitScript(gaId)} />
+        </>
       )
     }
   </head>
@@ -85,6 +101,7 @@ const beacon =
             >Ofertas en Telegram</a
           >
           <a href={`mailto:${CONTACT_EMAIL}`}>Contacto</a>
+          <a href="/datos#medicion">Qué medimos</a>
         </nav>
         <p class="legal">
           Los precios provienen de las páginas públicas de cada tienda. Las

@@ -24,8 +24,8 @@ Identidad visual: `src/styles/tokens.css`, `src/components/Symbol.astro`. La gu�
 - KV: SUBSCRIBERS → precioreal-subscribers (d5841532f55d4718a5ab3c16845a83b3)
 - Secret: TURNSTILE_SECRET
 - D1: EVENTS_DB → precioreal-events (Production) / precioreal-events-dev (Preview)
-- R2: CATALOG → precioreal-public (Production y Preview). Opcional: sin él, el catálogo se
-  lee por HTTP (ver "Catálogo por binding de R2")
+- R2: CATALOG → precioreal-public (solo Production). Opcional: sin él, el catálogo se lee
+  por HTTP, que es como leen los previews (ver "Catálogo por binding de R2")
 
 ## Local
 
@@ -75,14 +75,15 @@ Las rutas SSR (ficha, `/buscar`, `/ir/` y sitemaps) leen el catálogo con el bin
 WAF ni Bot Fight Mode, que del 5 al 26 de octubre de 2026 bloqueó esos subrequests y dejó
 las fichas en 502 y el sitemap en 503.
 
-El binding se crea a mano, una vez por entorno, y el código puede desplegarse antes: sin
+El binding se crea a mano, solo en Production, y el código puede desplegarse antes: sin
 binding todo sigue por HTTP, como antes de #67.
 
 1. Dashboard de Cloudflare → Workers & Pages → `precioreal-web` → Settings → Bindings.
 2. Con el entorno **Production** elegido: Add → R2 bucket → Variable name `CATALOG`,
    bucket `precioreal-public`. Guardar.
-3. Lo mismo con el entorno **Preview** (mismo bucket: el catálogo es público y el binding
-   solo se usa para leer).
+3. El entorno **Preview** se queda sin binding y lee por HTTP. Un binding de R2 da lectura
+   y escritura: con él, el código de cualquier PR, incluidos los de Dependabot, correría
+   en un preview con permiso de escribir y borrar en el bucket de producción.
 4. Los bindings aplican al siguiente despliegue: relanzar el último de Production (Retry
    deployment) o esperar al próximo merge.
 5. Verificar qué vía quedó activa:
@@ -99,8 +100,10 @@ Con el binding activo no hay respaldo por HTTP: un fallo de R2 da el mismo 502 (
 en la consola del worker. Para revertir, quitar el binding `CATALOG` del entorno y
 redesplegar: vuelve a leer por HTTP sin tocar el código.
 
-Costo: $0. Cada lectura por binding es una operación Class B de R2, igual que la que
-hacía el dominio `feed.precioreal.mx` cuando su caché de borde no tenía el objeto.
+Costo: sin medir. Cada lectura por binding es una operación Class B de R2. Antes solo la
+generaba el dominio `feed.precioreal.mx` cuando su caché de borde no tenía el objeto; ahora
+la genera cada vista de ficha y cada `/ir/`. Falta el dato de operaciones por día frente a
+la cuota de la cuenta (#67).
 
 ## Métricas
 

@@ -5,6 +5,7 @@ import Base from "../layouts/Base.astro";
 import { logEvent, validateEvent } from "../lib/event";
 import { storeEvent } from "../lib/event-store";
 import { decidirBusqueda } from "../lib/buscar";
+import { resolveProductUrl } from "../lib/catalog";
 import SearchBox from "../components/SearchBox.astro";
 
 const q = (Astro.url.searchParams.get("q") ?? "").trim();
@@ -25,7 +26,10 @@ if (q) {
   let resultado = "error_upstream";
 
   try {
-    const decision = await decidirBusqueda(q);
+    // El resolver lleva el runtime para que el índice se lea por el binding de R2 (#67).
+    const decision = await decidirBusqueda(q, (tienda, url) =>
+      resolveProductUrl(tienda, url, Astro.locals?.runtime),
+    );
     modo = decision.modo;
     resultado = decision.resultado;
     if (decision.resultado === "redirigido") {

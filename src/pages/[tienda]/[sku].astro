@@ -5,7 +5,11 @@ import Base from "../../layouts/Base.astro";
 import StatGrid from "../../components/StatGrid.astro";
 import PriceChart from "../../components/PriceChart.astro";
 import SearchBox from "../../components/SearchBox.astro";
-import { fetchProduct } from "../../lib/catalog";
+import {
+  CATALOG_SOURCE_HEADER,
+  catalogSource,
+  fetchProduct,
+} from "../../lib/catalog";
 import { formatMXN, buildVerdict, pricePrefix } from "../../lib/format";
 import {
   buildAnchor,
@@ -22,7 +26,11 @@ import {
 } from "../../lib/seo";
 
 const { tienda, sku } = Astro.params;
-const result = await fetchProduct(tienda!, sku!);
+// Con el binding CATALOG la ficha se lee de R2 sin pasar por la zona; sin él, por HTTP. La
+// cabecera dice cuál de las dos usó este worker, para comprobarlo con curl (#67).
+const runtime = Astro.locals?.runtime;
+const result = await fetchProduct(tienda!, sku!, runtime);
+Astro.response.headers.set(CATALOG_SOURCE_HEADER, catalogSource(runtime));
 
 const siteUrl = (Astro.site ?? new URL("https://precioreal.mx")).origin;
 const canonical = result.ok ? buildCanonical(siteUrl, tienda!, sku!) : null;

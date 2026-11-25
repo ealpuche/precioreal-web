@@ -13,6 +13,114 @@ const TIENDAS_VALIDAS = new Set(["cyberpuerta"]);
 // que el runtime corte la invocación: el usuario no ve ni el 502 ni contenido (CR PR #7, H2).
 const UPSTREAM_TIMEOUT_MS = 5000;
 
+// Forma mínima del binding de R2 que este módulo usa (mismo criterio que `EventsDb`: el
+// proyecto no depende de @cloudflare/workers-types). `get` resuelve a null cuando la clave
+// no existe.
+export type CatalogBucket = {
+  get(key: string): Promise<{ json(): Promise<unknown> } | null>;
+};
+
+// Subconjunto estructural de `locals.runtime`. Todo es opcional: el binding `CATALOG` se
+// crea a mano en el dashboard de Pages, así que puede no existir (tests, un preview sin
+// configurar, producción antes de crearlo o después de quitarlo para revertir).
+export type CatalogRuntime = { env?: { CATALOG?: unknown } } | undefined;
+
+export type CatalogSource = "r2" | "http";
+
+/** Cabecera de diagnóstico: por qué vía lee el catálogo el worker que respondió (#67). */
+export const CATALOG_SOURCE_HEADER = "X-Catalog-Source";
+
+// Con forma de bucket y no solo "definido": una variable de texto llamada CATALOG creada
+// por error en el dashboard no debe convertir cada ficha en un 502.
+function catalogBucket(runtime: CatalogRuntime): CatalogBucket | null {
+  const bucket = runtime?.env?.CATALOG as CatalogBucket | undefined;
+  return typeof bucket?.get === "function" ? bucket : null;
+}
+
+/**
+ * Vía por la que se lee el catálogo: el binding de R2 si existe, HTTP a feed.precioreal.mx
+ * si no. Con binding nunca se cae a HTTP, ni siquiera ante un error: el objetivo de #67 es
+ * que las páginas SSR no dependan de las reglas de seguridad de la zona, y un respaldo
+ * silencioso escondería un binding roto hasta el siguiente bloqueo.
+ */
+export function catalogSource(runtime: CatalogRuntime): CatalogSource {
+  return catalogBucket(runtime) ? "r2" : "http";
+}
+
+type Lectura =
+  { estado: "ok"; data: unknown } | { estado: "ausente" } | { estado: "error" };
+
+// El binding no acepta AbortSignal: el mismo límite que la vía HTTP se impone con una
+// carrera, y cubre también la lectura del cuerpo.
+async function conLimite<T>(promesa: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const limite = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("timeout")), ms);
+  });
+  try {
+    return await Promise.race([promesa, limite]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function leerPorBinding(
+  bucket: CatalogBucket,
+  key: string,
+): Promise<Lectura> {
+  try {
+    return await conLimite(
+      (async (): Promise<Lectura> => {
+        const objeto = await bucket.get(key);
+        if (objeto === null) return { estado: "ausente" };
+        return { estado: "ok", data: await objeto.json() };
+      })(),
+      UPSTREAM_TIMEOUT_MS,
+    );
+  } catch (err) {
+    // Solo el mensaje del error: un binding mal enlazado se ve en la consola del worker
+    // en vez de parecer un fallo cualquiera del catálogo.
+    console.error(
+      JSON.stringify({
+        t: "catalog_error",
+        via: "r2",
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+    return { estado: "error" };
+  }
+}
+
+async function leerPorHttp(tienda: string, archivo: string): Promise<Lectura> {
+  try {
+    const res = await fetch(
+      `${FEED_BASE}/${encodeURIComponent(tienda)}/products/${encodeURIComponent(archivo)}`,
+      { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) },
+    );
+    if (res.status === 404) return { estado: "ausente" };
+    if (!res.ok) return { estado: "error" };
+    return { estado: "ok", data: await res.json() };
+  } catch {
+    return { estado: "error" };
+  }
+}
+
+/**
+ * Lee `{tienda}/products/{archivo}` del catálogo. No lanza. La clave de R2 es la ruta del
+ * feed sin codificar: feed.precioreal.mx sirve la raíz del bucket y el productor escribe
+ * esas mismas claves (specs/contracts/catalog.md).
+ */
+function leerCatalogo(
+  runtime: CatalogRuntime,
+  tienda: string,
+  archivo: string,
+): Promise<Lectura> {
+  const bucket = catalogBucket(runtime);
+  return bucket
+    ? leerPorBinding(bucket, `${tienda}/products/${archivo}`)
+    : leerPorHttp(tienda, archivo);
+}
+
 export type FetchProductResult =
   | { ok: true; product: CatalogProduct }
   | { ok: false; reason: "not_found" | "invalid_route" | "upstream_error" };
@@ -75,41 +183,27 @@ function hasExpectedShape(value: unknown): value is CatalogProduct {
 /**
  * Trae la ficha de un producto desde R2. No lanza. Tres casos de fallo, cada uno con su
  * mensaje: `invalid_route` (tienda o sku que no pueden existir — información local, no hace
- * falta preguntarle a R2), `not_found` (404 real del feed) y `upstream_error` (red, 5xx,
- * JSON inválido o forma inesperada).
+ * falta preguntarle a R2), `not_found` (la clave no existe: null del binding o 404 del feed)
+ * y `upstream_error` (binding o red, 5xx, JSON inválido o forma inesperada).
+ *
+ * `runtime` es `locals.runtime`: con el binding `CATALOG` se lee por R2; sin él, por HTTP.
  */
 export async function fetchProduct(
   tienda: string,
   sku: string,
+  runtime?: CatalogRuntime,
 ): Promise<FetchProductResult> {
   if (!TIENDAS_VALIDAS.has(tienda) || !SKU_RE.test(sku)) {
     return { ok: false, reason: "invalid_route" };
   }
-  const url = `${FEED_BASE}/${encodeURIComponent(tienda)}/products/${encodeURIComponent(sku)}.json`;
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-    });
-  } catch {
-    return { ok: false, reason: "upstream_error" };
-  }
-  if (res.status === 404) {
+  const lectura = await leerCatalogo(runtime, tienda, `${sku}.json`);
+  if (lectura.estado === "ausente") {
     return { ok: false, reason: "not_found" };
   }
-  if (!res.ok) {
+  if (lectura.estado === "error" || !hasExpectedShape(lectura.data)) {
     return { ok: false, reason: "upstream_error" };
   }
-  let parsed: unknown;
-  try {
-    parsed = await res.json();
-  } catch {
-    return { ok: false, reason: "upstream_error" };
-  }
-  if (!hasExpectedShape(parsed)) {
-    return { ok: false, reason: "upstream_error" };
-  }
-  return { ok: true, product: parsed };
+  return { ok: true, product: lectura.data };
 }
 
 /**
@@ -133,7 +227,10 @@ const indexCache = new Map<string, Promise<CatalogIndex | null>>();
 const INDEX_TTL_MS = 4 * 3600 * 1000;
 const indexCacheAt = new Map<string, number>();
 
-export async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
+export async function fetchIndex(
+  tienda: string,
+  runtime?: CatalogRuntime,
+): Promise<CatalogIndex | null> {
   const cached = indexCache.get(tienda);
   const cachedAt = indexCacheAt.get(tienda);
   if (
@@ -145,17 +242,10 @@ export async function fetchIndex(tienda: string): Promise<CatalogIndex | null> {
   }
 
   const pending = (async () => {
-    try {
-      const res = await fetch(
-        `${FEED_BASE}/${encodeURIComponent(tienda)}/products/index.json`,
-        { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) },
-      );
-      if (!res.ok) return null;
-      const parsed = (await res.json()) as CatalogIndex;
-      return Array.isArray(parsed?.products) ? parsed : null;
-    } catch {
-      return null;
-    }
+    const lectura = await leerCatalogo(runtime, tienda, "index.json");
+    if (lectura.estado !== "ok") return null;
+    const parsed = lectura.data as CatalogIndex;
+    return Array.isArray(parsed?.products) ? parsed : null;
   })();
 
   // Se cachea la promesa en vuelo para que dos búsquedas simultáneas no pidan el índice dos
@@ -185,11 +275,12 @@ export type ResolveUrlResult =
 export async function resolveProductUrl(
   tienda: string,
   normalizedUrl: string,
+  runtime?: CatalogRuntime,
 ): Promise<ResolveUrlResult> {
   if (!TIENDAS_VALIDAS.has(tienda)) {
     return { ok: false, reason: "not_found" };
   }
-  const index = await fetchIndex(tienda);
+  const index = await fetchIndex(tienda, runtime);
   if (!index) return { ok: false, reason: "upstream_error" };
 
   for (const p of index.products) {

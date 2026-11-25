@@ -24,6 +24,8 @@ Identidad visual: `src/styles/tokens.css`, `src/components/Symbol.astro`. La gu�
 - KV: SUBSCRIBERS → precioreal-subscribers (d5841532f55d4718a5ab3c16845a83b3)
 - Secret: TURNSTILE_SECRET
 - D1: EVENTS_DB → precioreal-events (Production) / precioreal-events-dev (Preview)
+- R2: CATALOG → precioreal-public (Production y Preview). Opcional: sin él, el catálogo se
+  lee por HTTP (ver "Catálogo por binding de R2")
 
 ## Local
 
@@ -32,6 +34,18 @@ npm ci && npm run dev
 ```
 
 Nota: crear `.dev.vars` con `TURNSTILE_SECRET=...` para probar suscripción localmente.
+
+En `astro dev` el catálogo se lee de un bucket de R2 simulado (`CATALOG` en
+`wrangler.jsonc`), que arranca vacío: las fichas dan 404 y el sitemap 503 hasta sembrarlo.
+Para sembrar la ficha de prueba:
+
+```bash
+npx wrangler r2 object put precioreal-public-dev/cyberpuerta/products/KPM-610B.json \
+  --file tests/fixtures/kpm-610b.json --local
+```
+
+Con eso `/cyberpuerta/KPM-610B` responde 200 con `X-Catalog-Source: r2`. Para leer el feed
+real por HTTP en local, comenta el bloque `r2_buckets` de `wrangler.jsonc`.
 
 ## Despliegue (Pages)
 
@@ -52,6 +66,41 @@ Nota: crear `.dev.vars` con `TURNSTILE_SECRET=...` para probar suscripción loca
   `TURNSTILE_SECRET`
 - El entorno **Preview** tiene su propia configuración: sin `TURNSTILE_SECRET` ahí, la
   suscripción responde `server_misconfigured` en los previews de PR.
+
+### Catálogo por binding de R2 (#67)
+
+Las rutas SSR (ficha, `/buscar`, `/ir/` y sitemaps) leen el catálogo con el binding de R2
+`CATALOG` cuando existe, y por HTTP a `feed.precioreal.mx` cuando no
+(`src/lib/catalog.ts`). Por el binding la lectura no pasa por la zona `precioreal.mx`: ni
+WAF ni Bot Fight Mode, que del 5 al 26 de octubre de 2026 bloqueó esos subrequests y dejó
+las fichas en 502 y el sitemap en 503.
+
+El binding se crea a mano, una vez por entorno, y el código puede desplegarse antes: sin
+binding todo sigue por HTTP, como antes de #67.
+
+1. Dashboard de Cloudflare → Workers & Pages → `precioreal-web` → Settings → Bindings.
+2. Con el entorno **Production** elegido: Add → R2 bucket → Variable name `CATALOG`,
+   bucket `precioreal-public`. Guardar.
+3. Lo mismo con el entorno **Preview** (mismo bucket: el catálogo es público y el binding
+   solo se usa para leer).
+4. Los bindings aplican al siguiente despliegue: relanzar el último de Production (Retry
+   deployment) o esperar al próximo merge.
+5. Verificar qué vía quedó activa:
+
+   ```bash
+   curl -sI https://precioreal.mx/sitemap.xml | grep -i x-catalog-source
+   curl -sI https://precioreal.mx/cyberpuerta/KPM-610B | grep -i x-catalog-source
+   ```
+
+   `x-catalog-source: r2` es el binding; `http` es que el worker que respondió no lo tiene.
+
+Con el binding activo no hay respaldo por HTTP: un fallo de R2 da el mismo 502 (ficha) o
+503 (sitemap) que antes daba un fallo del feed, y deja `{"t":"catalog_error","via":"r2",…}`
+en la consola del worker. Para revertir, quitar el binding `CATALOG` del entorno y
+redesplegar: vuelve a leer por HTTP sin tocar el código.
+
+Costo: $0. Cada lectura por binding es una operación Class B de R2, igual que la que
+hacía el dominio `feed.precioreal.mx` cuando su caché de borde no tenía el objeto.
 
 ## Métricas
 

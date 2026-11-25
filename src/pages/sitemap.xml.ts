@@ -1,7 +1,12 @@
 export const prerender = false;
 
 import type { APIRoute } from "astro";
-import { fetchIndex } from "../lib/catalog";
+import {
+  CATALOG_SOURCE_HEADER,
+  catalogSource,
+  fetchIndex,
+  type CatalogRuntime,
+} from "../lib/catalog";
 import {
   TIENDAS_SITEMAP,
   SITEMAP_MAX_AGE,
@@ -13,14 +18,26 @@ import {
   URLS_POR_ARCHIVO,
 } from "../lib/sitemap";
 
+// La cabecera va en toda respuesta, también en el 503: dice por qué vía leyó el índice el
+// worker que respondió (#67).
 export const GET: APIRoute = async (context) => {
-  const siteUrl = (context.site ?? new URL("https://precioreal.mx")).origin;
+  const runtime = context.locals?.runtime;
+  const res = await responder(context.site, runtime);
+  res.headers.set(CATALOG_SOURCE_HEADER, catalogSource(runtime));
+  return res;
+};
+
+async function responder(
+  site: URL | undefined,
+  runtime: CatalogRuntime,
+): Promise<Response> {
+  const siteUrl = (site ?? new URL("https://precioreal.mx")).origin;
 
   const entradas: Array<{ tienda: string; n: number; lastmod: string | null }> =
     [];
 
   for (const tienda of TIENDAS_SITEMAP) {
-    const index = await fetchIndex(tienda);
+    const index = await fetchIndex(tienda, runtime);
     if (index === null) return respuesta503();
 
     const indexables = productosIndexables(index);
@@ -53,4 +70,4 @@ export const GET: APIRoute = async (context) => {
       "Cache-Control": `public, max-age=${SITEMAP_MAX_AGE}`,
     },
   });
-};
+}

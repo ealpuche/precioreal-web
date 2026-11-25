@@ -9,6 +9,9 @@ type ENV = {
   // Opcional: no existe en tests ni en un preview sin configurar. En `astro dev` sí
   // existe (wrangler.jsonc) y apunta a una base local (#32).
   EVENTS_DB?: import("./lib/event-store").EventsDb;
+  // Opcional: binding de R2 del catálogo (#67). Se crea a mano en el dashboard de Pages;
+  // sin él, src/lib/catalog.ts lee por HTTP a feed.precioreal.mx.
+  CATALOG?: import("./lib/catalog").CatalogBucket;
 };
 type Runtime = import("@astrojs/cloudflare").Runtime<ENV>;
 declare namespace App {

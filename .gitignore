@@ -6,3 +6,6 @@ repomix-output.md
 dist/
 .astro/
 coverage/
+
+# Reportes de crapper y dryer (skill ub-mode, #78)
+.metrics/

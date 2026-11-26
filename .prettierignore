@@ -2,3 +2,5 @@ design/
 node_modules/
 dist/
 .astro/
+# Skills de terceros: se conservan tal como las publica su autor (#78)
+.claude/skills/

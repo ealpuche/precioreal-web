@@ -9,7 +9,7 @@ description: >
 # ub-mode
 
 Source: https://github.com/unclebob/ub-mode (commit 3da62bf, 2026-11-02), by Robert C. Martin, MIT License.
-One line differs from the original: the last line of "Commit and Push".
+Two edits against the original: this provenance note, and the last line of "Commit and Push".
 
 Every time you are asked to make a change follow:
 * First Make it Work.

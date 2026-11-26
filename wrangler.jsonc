@@ -24,4 +24,14 @@
       "database_id": "e59b612c-c110-430d-9fef-e0abec0c82ba",
     },
   ],
+  "r2_buckets": [
+    {
+      // Catálogo por binding (#67). Bucket SIMULADO en local (.wrangler/state), nunca el de
+      // producción (precioreal-public): el nombre -dev no existe en la cuenta ni hace falta.
+      // Arranca vacío, así que en `astro dev` las fichas dan 404 y el sitemap 503 hasta
+      // sembrarlo (README → Local). Para leer el feed real por HTTP, comenta este bloque.
+      "binding": "CATALOG",
+      "bucket_name": "precioreal-public-dev",
+    },
+  ],
 }

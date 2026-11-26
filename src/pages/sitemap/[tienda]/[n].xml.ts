@@ -1,7 +1,12 @@
 export const prerender = false;
 
 import type { APIRoute } from "astro";
-import { fetchIndex } from "../../../lib/catalog";
+import {
+  CATALOG_SOURCE_HEADER,
+  catalogSource,
+  fetchIndex,
+  type CatalogRuntime,
+} from "../../../lib/catalog";
 import {
   TIENDAS_SITEMAP,
   SITEMAP_MAX_AGE,
@@ -12,8 +17,21 @@ import {
   buildUrlset,
 } from "../../../lib/sitemap";
 
+// La cabecera va en toda respuesta, también en el 503: dice por qué vía leyó el índice el
+// worker que respondió (#67).
 export const GET: APIRoute = async (context) => {
-  const { tienda, n } = context.params;
+  const runtime = context.locals?.runtime;
+  const res = await responder(context.params, context.site, runtime);
+  res.headers.set(CATALOG_SOURCE_HEADER, catalogSource(runtime));
+  return res;
+};
+
+async function responder(
+  params: Record<string, string | undefined>,
+  site: URL | undefined,
+  runtime: CatalogRuntime,
+): Promise<Response> {
+  const { tienda, n } = params;
 
   if (typeof tienda !== "string" || !TIENDAS_SITEMAP.includes(tienda)) {
     return new Response("No encontrado", { status: 404 });
@@ -25,7 +43,7 @@ export const GET: APIRoute = async (context) => {
 
   const num = Number(n);
 
-  const index = await fetchIndex(tienda);
+  const index = await fetchIndex(tienda, runtime);
   if (index === null) return respuesta503();
 
   const indexables = productosIndexables(index);
@@ -39,7 +57,7 @@ export const GET: APIRoute = async (context) => {
     (num - 1) * URLS_POR_ARCHIVO,
     num * URLS_POR_ARCHIVO,
   );
-  const siteUrl = (context.site ?? new URL("https://precioreal.mx")).origin;
+  const siteUrl = (site ?? new URL("https://precioreal.mx")).origin;
   const xml = buildUrlset(siteUrl, tienda, slice);
 
   return new Response(xml, {
@@ -49,4 +67,4 @@ export const GET: APIRoute = async (context) => {
       "Cache-Control": `public, max-age=${SITEMAP_MAX_AGE}`,
     },
   });
-};
+}

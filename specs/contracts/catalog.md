@@ -3,6 +3,12 @@
 Productor: ealpuche/price-crawler-saas#128 · Consumidor: esta web (#3)
 Base: https://feed.precioreal.mx · Bucket: precioreal-public
 
+Lectura desde esta web (#67): por el binding de R2 `CATALOG` cuando existe en el entorno de
+Pages, con la clave del recurso tal cual (`cyberpuerta/products/index.json`, sin codificar);
+por HTTP a la base cuando no. El feed sirve la raíz del bucket, así que clave y ruta son la
+misma cadena. Los objetos se publican sin `Content-Encoding`: el consumidor los parsea como
+JSON UTF-8 directo.
+
 Nombres de recurso al estilo Richardson nivel 1: si un día hay API (nivel 2), las URIs no cambian.
 
 ## Recursos

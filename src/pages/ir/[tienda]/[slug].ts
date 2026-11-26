@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { fetchProduct } from "../../../lib/catalog";
+import { fetchProduct, type CatalogRuntime } from "../../../lib/catalog";
 import { logEvent, ORIGENES_SALIDA, validateEvent } from "../../../lib/event";
 import { storeEvent } from "../../../lib/event-store";
 import { hostPertenece, normalizeProductUrl } from "../../../lib/product-url";
@@ -39,8 +39,12 @@ const NO_ES_CLIC =
 
 type Destino = { url: string } | { ficha: string } | { portada: true };
 
-async function resolver(tienda: string, slug: string): Promise<Destino> {
-  const resultado = await fetchProduct(tienda, slug);
+async function resolver(
+  tienda: string,
+  slug: string,
+  runtime: CatalogRuntime,
+): Promise<Destino> {
+  const resultado = await fetchProduct(tienda, slug, runtime);
   // Tienda o slug imposibles: fetchProduct no consulta R2 y no hay ficha a la cual volver.
   if (!resultado.ok && resultado.reason === "invalid_route") {
     return { portada: true };
@@ -84,7 +88,7 @@ function responder(destino: Destino): Response {
 export const GET: APIRoute = async ({ params, url, request, locals }) => {
   const tienda = params.tienda ?? "";
   const slug = params.slug ?? "";
-  const destino = await resolver(tienda, slug);
+  const destino = await resolver(tienda, slug, locals?.runtime);
 
   const ua = request.headers.get("user-agent") ?? "";
   if ("url" in destino && !NO_ES_CLIC.test(ua)) {
@@ -106,5 +110,7 @@ export const GET: APIRoute = async ({ params, url, request, locals }) => {
 
 // HEAD explícito: un verificador de enlaces que solo pregunta si la URL existe recibe la
 // misma redirección y no cuenta como clic.
-export const HEAD: APIRoute = async ({ params }) =>
-  responder(await resolver(params.tienda ?? "", params.slug ?? ""));
+export const HEAD: APIRoute = async ({ params, locals }) =>
+  responder(
+    await resolver(params.tienda ?? "", params.slug ?? "", locals?.runtime),
+  );
